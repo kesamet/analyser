@@ -7,7 +7,7 @@ import altair as alt
 import streamlit as st
 from streamlit.elements import altair
 
-import utils_charts as F
+import analyser.utils_charts as F
 from symbols_dicts import reits_dict
 
 

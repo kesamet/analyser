@@ -3,7 +3,7 @@ import tempfile
 
 import streamlit as st
 
-from utils_parser import (
+from .utils_parser import (
     perform,
     extract_pages_keyword,
     extract_all_lines_slides,
@@ -12,11 +12,11 @@ from utils_parser import (
     page_parse_table,
     extract_all_tables_report,
 )
-from utils_app import get_pdf_display, download_button
+from .utils_app import get_pdf_display, download_button
 
 
 def search_highlight():
-    from constants import search_words, search_words2
+    from .constants import search_words, search_words2
 
     uploaded_file = st.file_uploader("Upload a PDF.")
     option = st.selectbox("Options.", ["Search for ...", "Predefined"])
@@ -131,7 +131,7 @@ def extract_tables(uploaded_file, key):
 
 
 def search_extract_v2():
-    from constants import dct
+    from .constants import dct
 
     key = st.selectbox("Select report.", list(dct.keys()))
     uploaded_file = st.file_uploader("Upload a PDF.")

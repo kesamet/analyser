@@ -1,7 +1,7 @@
 import streamlit as st
 
-from charts import page_charts, page_ta, page_analysis
-from parser import search_highlight, table_ocr, search_extract, search_extract_v2
+from analyser.charts import page_charts, page_ta, page_analysis
+from analyser.parser import search_highlight, table_ocr, search_extract, search_extract_v2
 
 
 def main():
