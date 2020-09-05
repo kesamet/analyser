@@ -440,7 +440,7 @@ def extract_pages_keyword(filename, keywords, mode="and"):
         if mode == "and":
             all_instances = and_search_for_keyword(doc, keywords)
         elif mode == "or":
-            all_instances = and_search_for_keyword(doc, keywords)
+            all_instances = or_search_for_keyword(doc, keywords)
         else:
             raise ValueError("Unknown mode")
 
@@ -580,7 +580,7 @@ def extract_tables_report(doc, dct):
     
     
 def extract_all_tables_report(filename, key):
-    from constants import dct
+    from .constants import dct
 
     doc = fitz.Document(filename)
     results = extract_tables_report(doc, dct[key])

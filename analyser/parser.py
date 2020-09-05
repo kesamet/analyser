@@ -1,9 +1,12 @@
+"""
+Parser
+"""
 import os
 import tempfile
 
 import streamlit as st
 
-from .utils_parser import (
+from analyser.utils_parser import (
     perform,
     extract_pages_keyword,
     extract_all_lines_slides,
@@ -12,31 +15,57 @@ from .utils_parser import (
     page_parse_table,
     extract_all_tables_report,
 )
-from .utils_app import get_pdf_display, download_button
+from analyser.utils_app import get_pdf_display, download_button
 
 
 def search_highlight():
-    from .constants import search_words, search_words2
+    st.write("**To search for terms in the uploaded PDF, extract the pages containing these terms, and highlight the terms in the pages.**")
+    search_words = [
+        "Net property income",
+        "Distribution per unit", "DPU",
+        "Investment properties",
+        "Total assets",
+        "Total liabilities",
+        "Perpetual securities",
+        "Total debts",
+        "Units", "Units in issue",
+        "Net asset value", "NAV",
+        "Aggregate leverage", "Gearing",
+        "Cost of debt",
+        "Interest cover",
+        "Average term to maturity",
+        "WALE", "Weighted average",
+        "Unit price performance",
+        "Total return",
+        "Distribution",
+        "Financial position",
+    ]
+
+    search_wordsets = [
+        "Total return,Net property income",
+        "Distribution statement,Distribution per unit",
+        "Financial position,Total assets,Total liabilities,Investment properties",
+        "Aggregate leverage,Cost of debt,Interest cover,Average term to maturity",
+        "Unit price performance,Closing,Highest,Lowest",
+    ]
 
     uploaded_file = st.file_uploader("Upload a PDF.")
-    option = st.selectbox("Options.", ["Search for ...", "Predefined"])
-    option1 = st.radio("Single or multiple searches?", ["Single", "Multiple"])
-    if option == "Search for ...":
-        input_txt = st.text_input("Search for")
-    else:
-        if option1 == "Single":
-            input_txt = st.selectbox("Select one.", search_words)
+    option = st.selectbox("Mode", ["Predefined", "Enter your own search"])
+    is_single = st.radio("Single or multiple terms?", ["Single", "Multiple"]) == "Single"
+    if option == "Predefined":
+        if is_single:
+            input_txt = st.selectbox("Options", search_words)
         else:
-            input_txt = st.selectbox("Select one.", search_words2)
+            input_txt = st.selectbox("Options", search_wordsets)
+            input_txt = input_txt.split(",")
+    else:
+        input_txt = st.text_input("Search for (For multiple terms, use comma to separate)")
+        if not is_single:
+            input_txt = input_txt.split(",")
 
     if uploaded_file is not None and input_txt != "":
-        if option1 == "Multiple":
-            input_txt = input_txt.split(",")
-            extracted_doc, page_nums = perform(
-                uploaded_file.read(), lambda x: extract_pages_keyword(x, input_txt, mode="and"))
-        else:
-            extracted_doc, page_nums = perform(
-                uploaded_file.read(), lambda x: extract_pages_keyword(x, input_txt))
+        extracted_doc, page_nums = perform(
+            uploaded_file.read(), lambda x: extract_pages_keyword(x, input_txt))
 
         st.header("Output")
         if extracted_doc is not None:
@@ -70,10 +99,11 @@ def read_table_custom(uploaded_file, page_num, heading, ending):
 
 
 def table_ocr():
-    uploaded_file = st.file_uploader("Upload a PDF.")        
-    heading = st.text_input("Enter heading.", "Group")
-    ending = st.text_input("Enter ending.", "Page")
-    page_num = st.text_input("Page to extract.")
+    st.write("**To extract table from a PDF page into a csv.**")
+    uploaded_file = st.file_uploader("Upload a PDF.")       
+    page_num = st.text_input("Page to extract from.") 
+    heading = st.text_input("Enter table heading.", "Group")
+    ending = st.text_input("Enter table ending.", "Page")
     run_ocr = st.button("Run")
 
     if run_ocr:
@@ -99,6 +129,7 @@ def extract_lines(uploaded_file, mode):
 
 
 def search_extract():
+    st.write("**To search for predefined terms in the uploaded PDF, and extract plausible lines containing the information.**")
     mode = st.radio("Select PDF type.", ["slides", "financials"])
     uploaded_file = st.file_uploader("Upload a PDF.")
 

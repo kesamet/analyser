@@ -1,12 +1,12 @@
 """
 Script to compute efficient frontier using Modern Portfolio Theory.
 """
-import datetime
 import numpy as np
 import pandas as pd  
 import scipy.optimize as sco
 import matplotlib.pyplot as plt
 from IPython.display import display
+
 plt.style.use('seaborn-darkgrid')
 # plt.style.use('fivethirtyeight')
 

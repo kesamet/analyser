@@ -1,5 +1,5 @@
 """
-Script containing utility functions for the app.
+General utility functions for Streamlit app.
 """
 import base64
 import json
@@ -87,3 +87,16 @@ def download_button(object_to_download, download_filename, button_text, pickle_i
 
     dl_link = custom_css + f'<a download="{download_filename}" id="{button_id}" href="data:file/txt;base64,{b64}">{button_text}</a><br></br>'
     return dl_link
+
+
+def adjust_container_width(width=1000):
+    st.markdown(
+        f"""
+        <style>
+        .reportview-container .main .block-container{{
+            max-width: {width}px;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )

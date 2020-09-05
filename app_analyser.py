@@ -1,32 +1,24 @@
+"""
+Streamlit app
+"""
 import streamlit as st
 
-from analyser.charts import page_charts, page_ta, page_analysis
-from analyser.parser import search_highlight, table_ocr, search_extract, search_extract_v2
+from analyser.charts import page_ta
+from analyser.parser import search_highlight, table_ocr, search_extract
 
 
 def main():
-    st.markdown(
-        f"""
-        <style>
-        .reportview-container .main .block-container{{
-            max-width: 1000px;
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+    st.sidebar.title("Analyser")
 
     dict_pages = {
-        "Charts": page_charts,
         "Technical Analysis": page_ta,
-        "Analysis": page_analysis,
         "Search and Highlight": search_highlight,
-        "Table OCR": table_ocr,
         "Search and Extract": search_extract,
-        "Search and Extract (custom)": search_extract_v2,
+        # "Search and Extract (custom)": search_extract_v2,
+        "Table OCR": table_ocr,
     }
 
-    select_page = st.sidebar.selectbox("Pages", list(dict_pages.keys()))
+    select_page = st.sidebar.radio("Pages", list(dict_pages.keys()))
     st.title(select_page)
     dict_pages[select_page]()
 

@@ -1,33 +1,6 @@
-search_words = [
-    "Net property income",
-    "Distribution per unit", "DPU",
-    "Investment properties",
-    "Total assets",
-    "Total liabilities",
-    "Perpetual securities",
-    "Total debts",
-    "Units", "Units in issue",
-    "Net asset value", "NAV",
-    "Aggregate leverage", "Gearing",
-    "Cost of debt",
-    "Interest cover",
-    "Average term to maturity",
-    "WALE", "Weighted average",
-    "Unit price performance",
-    "Total return",
-    "Distribution",
-    "Financial position",
-]
-
-search_words2 = [
-    "Total return,Net property income",
-    "Distribution statement,Distribution per unit",
-    "Financial position,Total assets,Total liabilities,Investment properties",
-    "Aggregate leverage,Cost of debt,Interest cover,Average term to maturity",
-    "Unit price performance,Closing,Highest,Lowest",
-]
-
-
+"""
+Constants and parameters
+"""
 dct = {
     "Ascendas": {
         "Net property income": {

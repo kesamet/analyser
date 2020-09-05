@@ -1,13 +1,30 @@
 """
-Script containing commonly used functions for analysis.
+Script containing commonly used functions.
 """
 import datetime
 import os
 
 import numpy as np
 import pandas as pd
-import scipy.optimize as sco
-import matplotlib.pyplot as plt
+
+
+def download_data(symbol, start_date, end_date, time_interval='daily', dirname='data'):
+    """Download data given ticker symbols."""
+    try:
+        from yahoofinancials import YahooFinancials as yf
+
+        tick = yf(symbol)
+        data = tick.get_historical_price_data(
+            start_date=start_date, end_date=end_date, time_interval=time_interval)
+        df = pd.DataFrame.from_dict(data[symbol]['prices'])
+        df['date'] = pd.to_datetime(df['formatted_date'])
+        df = df[['date', 'adjclose', 'close', 'high', 'low', 'open', 'volume']]
+        if dirname is not None:
+            df.to_csv(os.path.join(dirname, f'{symbol}.csv'), index=False)
+        else:
+            return df
+    except KeyError:
+        print(f'... Data not found for {symbol}')
 
 
 def get_data(symbols, dates, base_symbol='D05.SI', col='adjclose', dirname='data'):
@@ -22,6 +39,8 @@ def get_data(symbols, dates, base_symbol='D05.SI', col='adjclose', dirname='data
     for symbol in symbols:
         if symbol == "SB.SI":
             df[symbol] = 1000
+        elif symbol == "UT.SI":
+            df[symbol] = 1
         else:
             df_temp = pd.read_csv(
                 os.path.join(dirname, f'{symbol}.csv'), index_col='date',
@@ -46,7 +65,7 @@ def get_data_xlsx(symbols, dates, base_symbol='USDSGD', col='Close', dirname='da
 
     for symbol in symbols:
         df_temp = pd.read_excel(
-            os.path.join(dirname, 'prices.xlsx'), index_col='Date',
+            os.path.join(dirname, 'summary/prices.xlsx'), index_col='Date',
             parse_dates=True, sheet_name=symbol, usecols=['Date', col])
         df_temp.index = df_temp.index.date
         df_temp = df_temp.rename(columns={col: symbol})
@@ -86,13 +105,15 @@ def fill_missing_values(df):
     df.fillna(method='bfill', inplace=True)
 
 
-def get_ie_data(start_date="1871-01-01"):
+def get_ie_data(start_date="1871-01-01", dirname="data"):
     """Load Shiller data."""
-    df = pd.read_excel('data/ie_data.xls', sheet_name='Data', skiprows=7)
+    df = pd.read_excel(os.path.join(dirname, 'summary/ie_data.xls'), sheet_name='Data', skiprows=7)
     df.drop(['Fraction', 'Unnamed: 13', 'Unnamed: 15'], axis=1, inplace=True)
     df.columns = ['Date', 'S&P500', 'Dividend', 'Earnings', 'CPI', 'Long_IR',
                   'Real_Price', 'Real_Dividend', 'Real_TR_Price',
-                  'Real_Earnings', 'Real_TR_Scaled_Earnings', 'CAPE', 'TRCAPE']
+                  'Real_Earnings', 'Real_TR_Scaled_Earnings', 'CAPE', 'TRCAPE',
+                  'Excess_CAPE_Yield', 'Mth_Bond_TR', 'Bond_RTR',
+                  '10Y_Stock_RR', '10Y_Bond_RR', '10Y_Excess_RR']
     df['Date'] = pd.to_datetime(df['Date'].astype(str))
     df.set_index('Date', inplace=True)
     df = df.iloc[:-1]
@@ -130,6 +151,8 @@ def plot_bollinger(df, title=None, ax=None):
 
 def plot_with_two_scales(df1, df2, xlabel='Date', ylabel1='Normalized', ylabel2=None):
     """Plot two graphs together."""
+    import matplotlib.pyplot as plt
+
     fig, ax1 = plt.subplots(figsize=(9, 6.5))
 
     color = 'tab:blue'
@@ -182,6 +205,11 @@ def last_bdate(df, date):
     return date.strftime('%Y-%m-%d'), v.item()
 
 
+def annualise(p, years):
+    """Compute annualized rate of p."""
+    return (1 + p) ** (1 / years) - 1
+
+
 # Technical indicators
 def compute_sma(ts, window):
     """Compute simple moving average."""
@@ -213,101 +241,3 @@ def compute_bbands(ts, window=20, nbdevup=2, nbdevdn=2):
     upper_band = sma + nbdevup * rstd
     lower_band = sma - nbdevdn * rstd
     return sma, upper_band, lower_band
-
-
-def linearfit(ts):
-    """Computes linear fit of values."""
-    y = ts.values
-    p = np.polyfit(range(len(y)), y, deg=1)
-    yfit = np.polyval(p, range(len(y)))
-    last = yfit[-1]
-    residual = np.sqrt(np.mean((yfit - y) ** 2))
-    level = 50 + 100 * (y[-1] - last) / (4 * residual)
-    grad = p[0] / y[0]
-    pred = np.polyval(p, [len(y)])[0]
-    return yfit, level, residual, last, grad, pred
-
-
-def compute_trend(dates, symbol):
-    """Compute linear trend."""
-    df = get_data([symbol], dates)[[symbol]]
-
-    yfit, level, residual, last, grad, _ = linearfit(df[symbol])
-    df["p0"] = yfit - residual * 2
-    df["p25"] = yfit - residual
-    df["p50"] = yfit
-    df["p75"] = yfit + residual
-    df["p100"] = yfit + residual * 2
-    return df, level, residual, last, grad
-
-
-def plot_trend(symbol, start_date, end_date, name='', ax=None):
-    """Plot time series with trends."""
-    dates = pd.date_range(start_date, end_date)
-    df, level, res, last, grad = compute_trend(dates, symbol)
-
-    title = (
-        f'{name} ({symbol}): {df[symbol].iloc[-1]:.3f} ({level:.1f}%)\n'
-        f'[{last-2*res:.3f}, {last-res:.3f}, {last:.3f}, {last+res:.3f}, {last+2*res:.3f}], '
-        f'{grad * 1e3:.3f}'
-    )
-
-    df[symbol].plot(color='blue', ax=ax)
-    df["p0"].plot(color='green', ax=ax)
-    df["p25"].plot(color='green', ax=ax)
-    df["p50"].plot(color='green', ax=ax)
-    df["p75"].plot(color='red', ax=ax)
-    df["p100"].plot(color='red', ax=ax)
-    ax.set_title(title)
-    return ax
-
-
-def get_trending(dates, symbols, misc_symbols=None):
-    """Compute list of top trending."""
-    results = list()
-    df1 = get_data(symbols, dates)
-    for symbol in symbols:
-        _, level, res, _, grad, pred = linearfit(df1[symbol])
-        results.append([symbol, df1[symbol].iloc[-1], level, grad * 1e3,
-                        pred - 2 * res, pred - res, pred, pred + res, pred + 2 * res])
-
-    if misc_symbols is not None:
-        df2 = get_data_xlsx(misc_symbols, dates)
-        for symbol in misc_symbols:
-            _, level, res, _, grad, pred = linearfit(df2[symbol])
-            results.append([symbol, df2[symbol].iloc[-1], level, grad * 1e3,
-                            pred - 2 * res, pred - res, pred, pred + res, pred + 2 * res])
-
-    results = pd.DataFrame(results, columns=[
-        "symbol", "close", "level", "grad", "p0", "p25", "p50", "p75", "p100"])
-    return results
-
-
-# Portfolio
-def compute_xnpv(cashflows, rate):
-    """Compute the net present value of a series of cashflows
-    at irregular intervals.
-
-    Args:
-        cashflows: pandas.Series of values with dates as index
-
-    Returns:
-        NPV of the given cash flows
-    """
-    arr = cashflows.reset_index().values
-    t0 = arr[0, 0]
-    return np.sum([r[1] / (1 + rate) ** ((r[0] - t0).days / 365.25) for r in arr])
-
-
-def compute_xirr(cashflows, initial=0.1):
-    """Compute internal rate of return of a series of cashflows
-    at irregular intervals.
-
-    Args:
-        cashflows: numpy.array of datetimes and values
-        initial: initial guess
-
-    Returns:
-        XIRR
-    """
-    return sco.newton(lambda r: compute_xnpv(cashflows, r), initial)

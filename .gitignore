@@ -133,7 +133,8 @@ dmypy.json
 .idea/
 
 # others
-ML4T-master/
-summary/
+ML4T/
+data/
 app.py
-utils.py
+config.py
+utils_pm.py
