@@ -4,8 +4,13 @@ Script to download data.
 import argparse
 import datetime
 
-from analyser.symbols_dicts import keys_dict, etf_dict, reits_dict
 from analyser.utils_charts import download_data
+try:
+    from config import SYMBOLS
+    DEST = None
+except ModuleNotFoundError:
+    SYMBOLS = ['ACWI', 'URTH']
+    DEST = "samples"
 
 
 if __name__ == "__main__":
@@ -19,8 +24,6 @@ if __name__ == "__main__":
     print(f"\nDownloading to {args.dest}/")
     print(f"Period: {start_date} to {end_date}\n")
 
-    all_symbols = list(keys_dict.keys()) + list(etf_dict.keys()) + list(reits_dict.keys())
-
-    for symbol in all_symbols:
+    for symbol in SYMBOLS:
         print(symbol)
-        download_data(symbol, start_date, end_date, dirname=args.dest)
+        download_data(symbol, start_date, end_date, dirname=DEST or args.dest)

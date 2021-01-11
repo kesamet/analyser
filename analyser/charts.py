@@ -19,7 +19,6 @@ from analyser.utils_charts import (
     rebase,
     pct_change,
 )
-
 try:
     from config import DIRNAME, EQ_DICT
 except ModuleNotFoundError:
