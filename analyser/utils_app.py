@@ -124,3 +124,9 @@ def adjust_container_width(width=1000):
         """,
         unsafe_allow_html=True,
     )
+
+
+def colour_text(notes, color="red"):
+    st.markdown(
+        f"<span style='color: {color}'>{notes}</span>",
+        unsafe_allow_html=True)
