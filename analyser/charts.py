@@ -13,18 +13,21 @@ from streamlit.elements import altair
 
 from analyser.utils_charts import (
     get_ie_data,
-    get_data_xlsx,
     get_data,
     get_data_ohlcv,
+    get_data_xlsx,
+    get_data_xlsx_ohlcv,
     rebase,
     pct_change,
 )
 try:
     from pm.config import DIRNAME, EQ_DICT
-    # EQ_DICT.update({
-    #     "IWDA": "IWDA",
-    #     "EIMI": "EIMI", 
-    # })
+    _dct = {
+        "IWDA": "IWDA",
+        "EIMI": "EIMI", 
+    }
+    _dct.update(EQ_DICT)
+    EQ_DICT = _dct
 except ModuleNotFoundError:
     DIRNAME = "samples"
     EQ_DICT = {
@@ -184,9 +187,12 @@ def page_charts(today_date=date.today() - timedelta(days=1)):
 
 
 @st.cache(allow_output_mutation=True)
-def load_ohlcv_data(symbol, dates, base_symbol="ES3.SI"):
+def load_ohlcv_data(symbol, dates):
     # Load ohlc data
-    df = get_data_ohlcv(symbol, dates, base_symbol=base_symbol, dirname=DIRNAME)
+    if symbol in ["IWDA", "EIMI"]:
+        df = get_data_xlsx_ohlcv(symbol, dates, base_symbol="USDSGD", dirname=DIRNAME)
+    else:
+        df = get_data_ohlcv(symbol, dates, base_symbol="ES3.SI", dirname=DIRNAME)
 
     # Apply technical analysis
     df = ta.add_volatility_ta(df, "high", "low", "close", fillna=False, colprefix="ta_")
