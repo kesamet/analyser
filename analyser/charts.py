@@ -20,17 +20,21 @@ from analyser.utils_charts import (
     pct_change,
 )
 try:
-    from config import DIRNAME, EQ_DICT
+    from pm.config import DIRNAME, EQ_DICT
+    # EQ_DICT.update({
+    #     "IWDA": "IWDA",
+    #     "EIMI": "EIMI", 
+    # })
 except ModuleNotFoundError:
     DIRNAME = "samples"
     EQ_DICT = {
-        'MSCI ACWI': 'ACWI',
-        'MSCI World': 'URTH', 
+        "MSCI ACWI": "ACWI",
+        "MSCI World": "URTH", 
     }
 
 
 def get_start_date(today_date, start_date="2015-01-01",
-                   options=("YTD", "1M", "6M", "1Y", "2Y", "3Y", "All time")):
+                   options=("YTD", "3M", "6M", "1Y", "2Y", "3Y", "All time")):
     select_range = st.selectbox("Select time range", options)
     if select_range[-1] == "Y":
         _yr = today_date.year - int(select_range[:-1])
@@ -66,101 +70,121 @@ def page_charts(today_date=date.today() - timedelta(days=1)):
     st.subheader("Shiller charts")
     df0 = load_ie_data()
     c1 = altair.generate_chart("line", df0[["Real_Price", "10xReal_Earnings"]]).properties(
-        title="Index Plot"
+        title="Index Plot",
+        height=200,
+        width=260,
     )
     c2 = altair.generate_chart("line", df0[["CAPE", "10xLong_IR"]]).properties(
-        title="PE (CAPE) Plot"
+        title="PE (CAPE) Plot",
+        height=200,
+        width=260,
     )
     st.altair_chart(alt.concat(c1, c2, columns=2), use_container_width=True)
 
     st.subheader("Stock charts")
-    start_date = get_start_date(today_date, options=("3Y", "2Y", "1Y", "6M", "3M", "YTD"))
+    start_date = get_start_date(today_date, options=("3Y", "2Y", "1Y"))
     dates = pd.date_range(today_date - timedelta(days=365 * 2), today_date)
 
     # MSCI
-    symbols = ['URTH', 'EEM', 'SPY', 'ES3.SI']
-    colnames = ['MSCI World', 'MSCI EM', 'S&P500', 'ES3']
+    symbols = ["URTH", "EEM", "SPY", "ES3.SI"]
+    colnames = ["MSCI World", "MSCI EM", "S&P500", "ES3"]
     df1 = load_data(dates, symbols, "SPY")
     df1.columns = colnames
     rebased_df1 = rebase(df1[df1.index >= start_date])
     chart1 = altair.generate_chart("line", rebased_df1).properties(
-        title="MSCI"
+        title="MSCI",
+        height=200,
+        width=260,
     )
 
     # VIX
-    symbols = ['^VIX']
-    colnames = ['VIX']
+    symbols = ["^VIX"]
+    colnames = ["VIX"]
     df2 = load_data(dates, symbols)[symbols]
     df2.columns = colnames
     chart2 = altair.generate_chart("line", df2[df2.index >= start_date]).properties(
-        title="VIX"
+        title="VIX",
+        height=200,
+        width=260,
     )
 
     st.altair_chart(alt.concat(chart1, chart2, columns=2), use_container_width=True)
 
     # etfs
-    symbols = ['IWDA', 'EIMI']
-    colnames = ['World', 'EM']
+    symbols = ["IWDA", "EIMI"]
+    colnames = ["World", "EM"]
     df3a = load_data(dates, symbols)
     df3a.columns = colnames
     rebased_df3a = rebase(df3a[df3a.index >= start_date])
     chart3a = altair.generate_chart("line", rebased_df3a).properties(
-        title="ETF"
+        title="ETF",
+        height=200,
+        width=260,
     )
-    symbols = ['O87.SI', 'ES3.SI', 'CLR.SI']
-    colnames = ['GLD', 'ES3', 'Lion-Phillip']
+    symbols = ["O87.SI", "ES3.SI", "CLR.SI"]
+    colnames = ["GLD", "ES3", "Lion-Phillip"]
     df3b = load_data(dates, symbols)
     df3b.columns = colnames
     rebased_df3b = rebase(df3b[df3b.index >= start_date])
     chart3b = altair.generate_chart("line", rebased_df3b).properties(
-        title="ETF SGX"
+        title="ETF SGX",
+        height=200,
+        width=260,
     )
     st.altair_chart(alt.concat(chart3a, chart3b, columns=2), use_container_width=True)
 
     # industrial
-    symbols = ['ES3.SI', 'O5RU.SI', 'A17U.SI', 'J91U.SI', 'BUOU.SI', 'ME8U.SI', 'M44U.SI']
-    colnames = ['ES3', 'AA', 'Ascendas', 'ESR', 'FLCT', 'MIT', 'MLT']
+    symbols = ["ES3.SI", "O5RU.SI", "A17U.SI", "J91U.SI", "BUOU.SI", "ME8U.SI", "M44U.SI"]
+    colnames = ["ES3", "AA", "Ascendas", "ESR", "FLCT", "MIT", "MLT"]
     df4 = load_data(dates, symbols)
     df4.columns = colnames
     rebased_df4 = rebase(df4[df4.index >= start_date])
     chart4a = altair.generate_chart(
         "line",
-        rebased_df4[['ES3', 'Ascendas', 'FLCT', 'MIT', 'MLT']],
+        rebased_df4[["ES3", "Ascendas", "FLCT", "MIT", "MLT"]],
     ).properties(
-        title="Industrial 1"
+        title="Industrial 1",
+        height=200,
+        width=260,
     )
     chart4b = altair.generate_chart(
         "line",
-        rebased_df4[['ES3', 'AA', 'ESR']],
+        rebased_df4[["ES3", "AA", "ESR"]],
     ).properties(
-        title="Industrial 2"
+        title="Industrial 2",
+        height=200,
+        width=260,
     )
     st.altair_chart(alt.concat(chart4a, chart4b, columns=2), use_container_width=True)
 
     # retail
-    symbols = ['ES3.SI', 'C38U.SI', 'J69U.SI', 'N2IU.SI']
-    colnames = ['ES3', 'CICT', 'FCT', 'MCT']
+    symbols = ["ES3.SI", "C38U.SI", "J69U.SI", "N2IU.SI"]
+    colnames = ["ES3", "CICT", "FCT", "MCT"]
     df5 = load_data(dates, symbols)
     df5.columns = colnames
     rebased_df5 = rebase(df5[df5.index >= start_date])
     chart5 = altair.generate_chart("line", rebased_df5).properties(
-        title="Retail & Commercial"
+        title="Retail & Commercial",
+        height=200,
+        width=250,
     )
 
     # banks
-    symbols = ['ES3.SI', 'D05.SI', 'O39.SI', 'U11.SI']
-    colnames = ['ES3', 'DBS', 'OCBC', 'UOB']
+    symbols = ["ES3.SI", "D05.SI", "O39.SI", "U11.SI"]
+    colnames = ["ES3", "DBS", "OCBC", "UOB"]
     df6 = load_data(dates, symbols)
     df6.columns = colnames
     rebased_df6 = rebase(df6[df6.index >= start_date])
     chart6 = altair.generate_chart("line", rebased_df6).properties(
-        title="Banks"
+        title="Banks",
+        height=200,
+        width=250,
     )
     st.altair_chart(alt.concat(chart5, chart6, columns=2), use_container_width=True)
 
 
 @st.cache(allow_output_mutation=True)
-def load_ohlcv_data(symbol, dates, base_symbol='ES3.SI'):
+def load_ohlcv_data(symbol, dates, base_symbol="ES3.SI"):
     # Load ohlc data
     df = get_data_ohlcv(symbol, dates, base_symbol=base_symbol, dirname=DIRNAME)
 
@@ -174,18 +198,18 @@ def load_ohlcv_data(symbol, dates, base_symbol='ES3.SI'):
 def add_custom_trend(df, close, fillna, colprefix):
     # MACD
     indicator_macd = ta.trend.MACD(close=df[close], window_slow=26, window_fast=12, window_sign=9, fillna=fillna)
-    df[f'{colprefix}trend_macd'] = indicator_macd.macd()
-    df[f'{colprefix}trend_macd_signal'] = indicator_macd.macd_signal()
-    df[f'{colprefix}trend_macd_diff'] = indicator_macd.macd_diff()
+    df[f"{colprefix}trend_macd"] = indicator_macd.macd()
+    df[f"{colprefix}trend_macd_signal"] = indicator_macd.macd_signal()
+    df[f"{colprefix}trend_macd_diff"] = indicator_macd.macd_diff()
 
     # SMAs
-    df[f'{colprefix}trend_sma_fast'] = ta.trend.SMAIndicator(
+    df[f"{colprefix}trend_sma_fast"] = ta.trend.SMAIndicator(
         close=df[close], window=50, fillna=fillna).sma_indicator()
-    df[f'{colprefix}trend_sma_slow'] = ta.trend.SMAIndicator(
+    df[f"{colprefix}trend_sma_slow"] = ta.trend.SMAIndicator(
         close=df[close], window=200, fillna=fillna).sma_indicator()
-    df[f'{colprefix}trend_sma_10'] = ta.trend.SMAIndicator(
+    df[f"{colprefix}trend_sma_10"] = ta.trend.SMAIndicator(
         close=df[close], window=10, fillna=fillna).sma_indicator()
-    df[f'{colprefix}trend_sma_25'] = ta.trend.SMAIndicator(
+    df[f"{colprefix}trend_sma_25"] = ta.trend.SMAIndicator(
         close=df[close], window=25, fillna=fillna).sma_indicator()
     return df
 
@@ -193,7 +217,7 @@ def add_custom_trend(df, close, fillna, colprefix):
 def chart_candlestick(df, last):
     source = df.iloc[-last:]
     base = alt.Chart(source).encode(
-        alt.X('date:T'),
+        alt.X("date:T"),
         color=alt.condition(
             "datum.open <= datum.close",
             alt.value("#06982d"),
@@ -201,12 +225,12 @@ def chart_candlestick(df, last):
         ),
     )
     rule = base.mark_rule().encode(
-        alt.Y('low:Q', title='Price', scale=alt.Scale(zero=False)),
-        alt.Y2('high:Q')
+        alt.Y("low:Q", title="Price", scale=alt.Scale(zero=False)),
+        alt.Y2("high:Q")
     )
     bar = base.mark_bar().encode(
-        alt.Y('open:Q'),
-        alt.Y2('close:Q')
+        alt.Y("open:Q"),
+        alt.Y2("close:Q")
     )
     return rule + bar
 
@@ -218,7 +242,7 @@ def page_ta(today_date=date.today() - timedelta(days=1)):
     dates = pd.date_range(today_date - timedelta(days=365 * 5), today_date)
     df = load_ohlcv_data(EQ_DICT[select_eq], dates)
 
-    st.subheader('Price')
+    st.subheader("Price")
     st.altair_chart(chart_candlestick(df.reset_index(), 126), use_container_width=True)
 
     select_ta = st.selectbox("Select TA type", ["Bollinger", "SMA", "MACD", "RSI", "Momentum"])
@@ -250,7 +274,7 @@ def page_ta(today_date=date.today() - timedelta(days=1)):
 
     # Prepare target: X Periods Return
     select_periods = st.slider("Select periods", 1, 14, 7)
-    df['y'] = pct_change(df["close"], select_periods) * 100
+    df["y"] = pct_change(df["close"], select_periods) * 100
 
     st.subheader(f"{select_periods}-day Returns")
     df1 = df[["y"]].copy().dropna()

@@ -40,7 +40,7 @@ def save_html(htmltext, page_num, output_dir="outputs/"):
 
 def save_json(data, filepath):
     """Save as json."""
-    with open(filepath, 'w') as fp:
+    with open(filepath, "w") as fp:
         json.dump(data, fp, indent=2)
 
 
@@ -259,7 +259,7 @@ def or_search_for_keyword(doc, keywords, page_nums=None):
 
 def extract_numeric(line):
     """Extract numerics from a string."""
-    # nums = re.findall(r'\d+', line.replace(',', ''))
+    # nums = re.findall(r"\d+", line.replace(",", ""))
     for s in [",", "%", "$", "¢"]:
         line = line.replace(s, "")
     nums = []

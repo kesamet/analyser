@@ -1,8 +1,8 @@
 """
 Script containing commonly used functions.
 """
-import datetime
 import os
+from datetime import datetime, timedelta
 
 import numpy as np
 import pandas as pd
@@ -197,10 +197,10 @@ def diff_change(df, periods=1, freq=1):
 
 def last_bdate(df, date):
     """Get value for the most recent business date."""
-    date = datetime.datetime.strptime(date, '%Y-%m-%d')
+    date = datetime.strptime(date, '%Y-%m-%d')
     v = df.loc[df.index == date]
     while date.weekday() > 4 or np.isnan(v.item()):
-        date = date - datetime.timedelta(days=1)
+        date = date - timedelta(days=1)
         v = df.loc[df.index == date]
     return date.strftime('%Y-%m-%d'), v.item()
 

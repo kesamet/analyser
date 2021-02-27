@@ -26,7 +26,7 @@ def add_header(path):
 
 
 def get_pdf_display(pdfbytes):
-    base64_pdf = base64.b64encode(pdfbytes).decode('utf-8')
+    base64_pdf = base64.b64encode(pdfbytes).decode("utf-8")
     pdf_display = f'<embed src="data:application/pdf;base64,{base64_pdf}" width="700" height="1025" type="application/pdf">'
     return pdf_display
 

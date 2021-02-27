@@ -135,6 +135,5 @@ dmypy.json
 # others
 ML4T/
 data/
+pm/
 app.py
-config.py
-utils_pm.py
