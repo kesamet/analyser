@@ -6,7 +6,7 @@ import datetime
 
 from analyser.utils_charts import download_data
 try:
-    from config import SYMBOLS
+    from pm.config import SYMBOLS
     DEST = None
 except ModuleNotFoundError:
     SYMBOLS = ['ACWI', 'URTH']

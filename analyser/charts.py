@@ -11,6 +11,7 @@ import altair as alt
 import streamlit as st
 from streamlit.elements import altair
 
+from analyser.constants import str2days
 from analyser.utils_charts import (
     get_ie_data,
     get_data,
@@ -220,8 +221,8 @@ def add_custom_trend(df, close, fillna, colprefix):
     return df
 
 
-def chart_candlestick(df, last):
-    source = df.iloc[-last:]
+def chart_candlestick(source, cols=[]):
+    """Candlestick chart."""
     base = alt.Chart(source).encode(
         alt.X("date:T"),
         color=alt.condition(
@@ -238,20 +239,19 @@ def chart_candlestick(df, last):
         alt.Y("open:Q"),
         alt.Y2("close:Q")
     )
-    return rule + bar
+    chart = rule + bar
+    for col in cols:
+        line = alt.Chart(source).mark_line(color="gray").encode(
+            alt.X("date:T"),
+            alt.Y(col),
+            tooltip=["date", col],
+        )
+        chart += line
+    return chart
 
 
 def page_ta(today_date=date.today() - timedelta(days=1)):
     """Technical analysis page."""
-    select_eq = st.selectbox("Select equity", list(EQ_DICT.keys()))
-
-    dates = pd.date_range(today_date - timedelta(days=365 * 5), today_date)
-    df = load_ohlcv_data(EQ_DICT[select_eq], dates)
-
-    st.subheader("Price")
-    st.altair_chart(chart_candlestick(df.reset_index(), 126), use_container_width=True)
-
-    select_ta = st.selectbox("Select TA type", ["Bollinger", "SMA", "MACD", "RSI", "Momentum"])
     ta_type = {
         "Bollinger": {
             "price": ["ta_volatility_bbm", "ta_volatility_bbh", "ta_volatility_bbl"],
@@ -273,13 +273,29 @@ def page_ta(today_date=date.today() - timedelta(days=1)):
             "ind": ["ta_momentum_tsi", "ta_momentum_rsi", "ta_momentum_stoch"],
         },
     }
-    last = 365 * 2
-    st.line_chart(df[["close"] + ta_type[select_ta]["price"]].iloc[-last:])
-    if ta_type[select_ta].get("ind") is not None:
-        st.line_chart(df[ta_type[select_ta]["ind"]].iloc[-last:])
+
+    select_eq = st.selectbox("Select equity", list(EQ_DICT.keys()))
+    dates = pd.date_range(today_date - timedelta(days=800), today_date)
+    df = load_ohlcv_data(EQ_DICT[select_eq], dates)
+
+    col0, col1 = st.beta_columns(2)
+    select_days = col0.selectbox("Select lookback days", ["1M", "2M", "3M", "6M"], 2)
+    select_days = str2days[select_days]
+    select_ta = col1.selectbox("Select TA type", ["Bollinger", "SMA", "MACD", "RSI", "Momentum"])
+
+    source = df.iloc[-select_days:].reset_index()
+    st.altair_chart(chart_candlestick(source, cols=ta_type[select_ta]["price"]), use_container_width=True)
+
+    col2, col3 = st.beta_columns(2)
+    select_days2 = col2.selectbox("Select period", ["6M", "9M", "1Y", "2Y"], 2)
+    select_days2 = str2days[select_days2]
+    select_ta2 = col3.selectbox("Select TA", ["Bollinger", "SMA", "MACD", "RSI", "Momentum"])
+    st.line_chart(df[["close"] + ta_type[select_ta2]["price"]].iloc[-select_days2:])
+    if ta_type[select_ta2].get("ind") is not None:
+        st.line_chart(df[ta_type[select_ta2]["ind"]].iloc[-select_days2:])
 
     # Prepare target: X Periods Return
-    select_periods = st.slider("Select periods", 1, 14, 7)
+    select_periods = st.slider("Select periods", 7, 28, 14)
     df["y"] = pct_change(df["close"], select_periods) * 100
 
     st.subheader(f"{select_periods}-day Returns")
