@@ -29,14 +29,12 @@ def download_data(symbol, start_date, end_date, time_interval="daily", dirname="
         print(f"... Data not found for {symbol}")
 
 
-def get_data(symbols, dates, base_symbol="D05.SI", col="adjclose", dirname="data"):
+def get_data(symbols, dates, base_symbol="ES3.SI", col="adjclose", dirname="data"):
     """Load stock data for given symbols from CSV files."""
     df = pd.DataFrame(index=dates)
     df.index.name = "date"
     if base_symbol not in symbols:
         symbols = [base_symbol] + symbols
-    if "ES3.SI" not in symbols:
-        symbols.append("ES3.SI")
 
     for symbol in symbols:
         if symbol == "SB.SI":
@@ -50,9 +48,30 @@ def get_data(symbols, dates, base_symbol="D05.SI", col="adjclose", dirname="data
             df_temp = df_temp.rename(columns={col: symbol})
             df = df.join(df_temp)
 
-        if symbol == base_symbol:  # drop dates index did not trade
+        if symbol == base_symbol:  # drop dates that base_symbol did not trade
             df = df.dropna(subset=[base_symbol])
 
+    df = df.replace([0], [np.nan])
+    fill_missing_values(df)
+    return df
+
+
+def get_data_xlsx(symbols, dates, base_symbol="USDSGD", col="Close", dirname="data"):
+    """Load stock data for given symbols from xlsx file."""
+    df = pd.DataFrame(index=dates)
+    df.index.name = "Date"
+    if base_symbol not in symbols:
+        symbols = [base_symbol] + symbols
+
+    for symbol in symbols:
+        df_temp = pd.read_excel(
+            os.path.join(dirname, XLSX_FILE), index_col="Date",
+            parse_dates=True, sheet_name=symbol, usecols=["Date", col])
+        df_temp.index = df_temp.index.date
+        df_temp = df_temp.rename(columns={col: symbol})
+        df = df.join(df_temp)
+        if symbol == base_symbol:  # drop dates that base_symbol did not trade
+            df = df.dropna(subset=[base_symbol])
     df = df.replace([0], [np.nan])
     fill_missing_values(df)
     return df
@@ -78,27 +97,6 @@ def get_data_ohlcv(symbol, dates, base_symbol="ES3.SI", dirname="data"):
     df = df.join(df_temp)
     df = df.replace([0], [np.nan])
     df = df.drop_duplicates()
-    fill_missing_values(df)
-    return df
-
-
-def get_data_xlsx(symbols, dates, base_symbol="USDSGD", col="Close", dirname="data"):
-    """Load stock data for given symbols from xlsx file."""
-    df = pd.DataFrame(index=dates)
-    df.index.name = "Date"
-    if base_symbol not in symbols:
-        symbols = [base_symbol] + symbols
-
-    for symbol in symbols:
-        df_temp = pd.read_excel(
-            os.path.join(dirname, XLSX_FILE), index_col="Date",
-            parse_dates=True, sheet_name=symbol, usecols=["Date", col])
-        df_temp.index = df_temp.index.date
-        df_temp = df_temp.rename(columns={col: symbol})
-        df = df.join(df_temp)
-        if symbol == base_symbol:  # drop dates index did not trade
-            df = df.dropna(subset=[base_symbol])
-    df = df.replace([0], [np.nan])
     fill_missing_values(df)
     return df
 
@@ -130,6 +128,13 @@ def get_data_xlsx_ohlcv(symbol, dates, base_symbol="USDSGD", dirname="data"):
     df = df.drop_duplicates()
     fill_missing_values(df)
     return df
+
+
+def load_data_ohlcv(symbol, dates, dirname="data"):
+    """Load ohlcv data from csv or xlsx."""
+    if symbol in ["IWDA", "EIMI"]:
+        return get_data_xlsx_ohlcv(symbol, dates, base_symbol="USDSGD", dirname=dirname)
+    return get_data_ohlcv(symbol, dates, base_symbol="ES3.SI", dirname=dirname)
 
 
 def fill_missing_values(df):

@@ -15,9 +15,8 @@ from analyser.constants import str2days
 from analyser.utils_charts import (
     get_ie_data,
     get_data,
-    get_data_ohlcv,
     get_data_xlsx,
-    get_data_xlsx_ohlcv,
+    load_data_ohlcv,
     rebase,
     pct_change,
 )
@@ -64,10 +63,8 @@ def load_ie_data():
 @st.cache
 def load_data(dates, symbols, base_symbol="ES3.SI"):
     if "IWDA" not in symbols and "EIMI" not in symbols:
-        df = get_data(symbols, dates, base_symbol=base_symbol, dirname=DIRNAME)
-    else:
-        df = get_data_xlsx(symbols, dates, base_symbol="IWDA", dirname=DIRNAME)
-    return df
+        return get_data(symbols, dates, base_symbol=base_symbol, dirname=DIRNAME)
+    return get_data_xlsx(symbols, dates, base_symbol="IWDA", dirname=DIRNAME)
 
 
 def page_charts(today_date=date.today() - timedelta(days=1)):
@@ -190,10 +187,7 @@ def page_charts(today_date=date.today() - timedelta(days=1)):
 @st.cache(allow_output_mutation=True)
 def load_ohlcv_data(symbol, dates):
     # Load ohlc data
-    if symbol in ["IWDA", "EIMI"]:
-        df = get_data_xlsx_ohlcv(symbol, dates, base_symbol="USDSGD", dirname=DIRNAME)
-    else:
-        df = get_data_ohlcv(symbol, dates, base_symbol="ES3.SI", dirname=DIRNAME)
+    df = load_data_ohlcv(symbol, dates, dirname=DIRNAME)
 
     # Apply technical analysis
     df = ta.add_volatility_ta(df, "high", "low", "close", fillna=False, colprefix="ta_")
@@ -260,13 +254,13 @@ def page_ta(today_date=date.today() - timedelta(days=1)):
         "SMA": {
             "price": ["ta_trend_sma_fast", "ta_trend_sma_slow"],
         },
-        "MACD": {
-            "price": [],
-            "ind": ["ta_trend_macd", "ta_trend_macd_signal", "ta_trend_macd_diff"],
-        },
         "RSI": {
             "price": ["ta_trend_sma_10", "ta_trend_sma_25"],
             "ind": ["ta_momentum_rsi"],
+        },
+        "MACD": {
+            "price": [],
+            "ind": ["ta_trend_macd", "ta_trend_macd_signal", "ta_trend_macd_diff"],
         },
         "Momentum": {
             "price": [],
@@ -279,9 +273,9 @@ def page_ta(today_date=date.today() - timedelta(days=1)):
     df = load_ohlcv_data(EQ_DICT[select_eq], dates)
 
     col0, col1 = st.beta_columns(2)
-    select_days = col0.selectbox("Select lookback days", ["1M", "2M", "3M", "6M"], 2)
+    select_days = col0.selectbox("Lookback period", ["1M", "2M", "3M", "6M"], 2)
     select_days = str2days[select_days]
-    select_ta = col1.selectbox("Select TA type", ["Bollinger", "SMA", "MACD", "RSI", "Momentum"])
+    select_ta = col1.selectbox("Add TA", ["Bollinger", "SMA", "RSI"])
 
     source = df.iloc[-select_days:].reset_index()
     st.altair_chart(chart_candlestick(source, cols=ta_type[select_ta]["price"]), use_container_width=True)
@@ -289,7 +283,7 @@ def page_ta(today_date=date.today() - timedelta(days=1)):
     col2, col3 = st.beta_columns(2)
     select_days2 = col2.selectbox("Select period", ["6M", "9M", "1Y", "2Y"], 2)
     select_days2 = str2days[select_days2]
-    select_ta2 = col3.selectbox("Select TA", ["Bollinger", "SMA", "MACD", "RSI", "Momentum"])
+    select_ta2 = col3.selectbox("Select TA", ["Bollinger", "SMA", "RSI", "MACD", "Momentum"])
     st.line_chart(df[["close"] + ta_type[select_ta2]["price"]].iloc[-select_days2:])
     if ta_type[select_ta2].get("ind") is not None:
         st.line_chart(df[ta_type[select_ta2]["ind"]].iloc[-select_days2:])
