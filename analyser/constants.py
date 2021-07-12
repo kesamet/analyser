@@ -48,12 +48,3 @@ dct = {
         },
     },
 }
-
-# CRCT
-# "Statements of total return", "Net property income"
-# "Distribution statements", "Distribution per unit"
-# "Statements of financial position", "Total assets"
-# "Units in issue", "Number of units"
-#
-# "Unit price performance", "closing", "highest", "lowest"
-# "Key financial indicators", "Aggregate leverage", "Interest coverage", "Average term to maturity", "Cost of debt"

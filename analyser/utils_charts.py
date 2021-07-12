@@ -7,7 +7,10 @@ from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
 
-XLSX_FILE = "summary/prices.xlsx"
+try:
+    from pm.config import XLSX_FILE
+except ModuleNotFoundError:
+    pass
 
 
 def download_data(symbol, start_date, end_date, time_interval="daily", dirname="data"):
@@ -56,7 +59,7 @@ def get_data(symbols, dates, base_symbol="ES3.SI", col="adjclose", dirname="data
     return df
 
 
-def get_data_xlsx(symbols, dates, base_symbol="USDSGD", col="Close", dirname="data"):
+def get_data_xlsx(symbols, dates, base_symbol="USDSGD", col="Close"):
     """Load stock data for given symbols from xlsx file."""
     df = pd.DataFrame(index=dates)
     df.index.name = "Date"
@@ -65,7 +68,7 @@ def get_data_xlsx(symbols, dates, base_symbol="USDSGD", col="Close", dirname="da
 
     for symbol in symbols:
         df_temp = pd.read_excel(
-            os.path.join(dirname, XLSX_FILE), index_col="Date",
+            XLSX_FILE, index_col="Date",
             parse_dates=True, sheet_name=symbol, usecols=["Date", col])
         df_temp.index = df_temp.index.date
         df_temp = df_temp.rename(columns={col: symbol})
@@ -104,7 +107,7 @@ def get_data_ohlcv(symbol, dates, base_symbol="ES3.SI", dirname="data"):
 def get_data_xlsx_ohlcv(symbol, dates, base_symbol="USDSGD", dirname="data"):
     """Load stock ohlcv data for given symbol from xlsx files."""
     df_base = pd.read_excel(
-        os.path.join(dirname, XLSX_FILE), index_col="Date",
+        XLSX_FILE, index_col="Date",
         parse_dates=True, sheet_name=symbol, usecols=["Date", "Close"])
     df_base.columns = [base_symbol]
     df_base.index = df_base.index.date
@@ -116,8 +119,7 @@ def get_data_xlsx_ohlcv(symbol, dates, base_symbol="USDSGD", dirname="data"):
     df = df.dropna(subset=[base_symbol])
 
     df_temp = pd.read_excel(
-        os.path.join(dirname, XLSX_FILE),
-        parse_dates=True, sheet_name=symbol, index_col="Date",
+        XLSX_FILE, parse_dates=True, sheet_name=symbol, index_col="Date",
         usecols=["Date", "Open", "High", "Low", "Close", "Volume"])
     df_temp.columns = ["open", "high", "low", "close", "volume"]
     df_temp.index = df_temp.index.date

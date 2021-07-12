@@ -20,52 +20,34 @@ from analyser.utils_app import get_pdf_display, download_button
 
 def search_highlight():
     st.write("**To search for terms in the uploaded PDF, extract the pages containing these terms, and highlight the terms in the pages.**")
-    search_words = [
-        "Net property income",
-        "Distribution per unit", "DPU",
-        "Investment properties",
-        "Total assets",
-        "Total liabilities",
-        "Perpetual securities",
-        "Total debts",
-        "Units", "Units in issue",
-        "Net asset value", "NAV",
-        "Aggregate leverage", "Gearing",
-        "Cost of debt",
-        "Interest cover",
-        "Average term to maturity",
-        "WALE", "Weighted average",
-        "Unit price performance",
-        "Total return",
-        "Distribution",
-        "Financial position",
-    ]
-
-    search_wordsets = [
-        "Total return,Net property income",
-        "Distribution statement,Distribution per unit",
-        "Financial position,Total assets,Total liabilities,Investment properties",
-        "Aggregate leverage,Cost of debt,Interest cover,Average term to maturity",
-        "Unit price performance,Closing,Highest,Lowest",
-    ]
+    search_words = {
+        "Aggregate leverage, Gearing": "or",
+        "Cost of debt": "or",
+        "Interest cover": "or",
+        "Average term to maturity": "or",
+        "WALE,Weighted average lease expiry": "or",
+        "Unit price performance, Closing, Highest, Lowest": "and",
+        "Net property income": "or",
+        "Distribution per unit,DPU": "or",
+        "Financial position, Total assets, Total liabilities, Investment properties": "and",
+        "Total debts": "or",
+        "Units in issue": "or",
+        "Net asset value, NAV": "or",
+    }
 
     uploaded_file = st.file_uploader("Upload a PDF.")
-    option = st.selectbox("Mode", ["Predefined", "Enter your own search"])
-    is_single = st.radio("Single or multiple terms?", ["Single", "Multiple"]) == "Single"
+    option = st.radio("Mode", ["Predefined", "Enter your own search"])
     if option == "Predefined":
-        if is_single:
-            input_txt = st.selectbox("Options", search_words)
-        else:
-            input_txt = st.selectbox("Options", search_wordsets)
-            input_txt = input_txt.split(",")
+        input_txt = st.selectbox("Predefined options", list(search_words.keys()))
+        mode = search_words[input_txt]
     else:
-        input_txt = st.text_input("Search for (For multiple terms, use comma to separate)")
-        if not is_single:
-            input_txt = input_txt.split(",")
-
+        input_txt = st.text_input("Enter search terms (For multiple terms, use comma to separate)")
+        mode = "or"
+        
     if uploaded_file is not None and input_txt != "":
+        input_txt = [x.strip() for x in input_txt.split(",")]
         extracted_doc, page_nums = perform(
-            uploaded_file.read(), lambda x: extract_pages_keyword(x, input_txt))
+            uploaded_file.read(), lambda x: extract_pages_keyword(x, input_txt, mode=mode))
 
         st.header("Output")
         if extracted_doc is not None:
@@ -162,7 +144,7 @@ def extract_tables(uploaded_file, key):
 
 
 def search_extract_v2():
-    from .constants import dct
+    from analyser.constants import dct
 
     key = st.selectbox("Select report.", list(dct.keys()))
     uploaded_file = st.file_uploader("Upload a PDF.")
