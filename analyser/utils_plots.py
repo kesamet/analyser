@@ -1,10 +1,5 @@
-"""
-Helpers for XAI
-"""
 import altair as alt
-import numpy as np
 import pandas as pd
-import streamlit as st
 
 
 def make_source_waterfall(shap_exp, max_display=10):
@@ -56,7 +51,7 @@ def waterfall_chart(source, decimal=3):
     source.loc[source["feature_value"] == "nan", "feature_value"] = ""
 
     bars = alt.Chart(source).mark_bar().encode(
-        alt.Y("feature:O", sort=source["feature"].tolist(), title=""), #axis=alt.Axis(labelLimit=120)),
+        alt.Y("feature:O", sort=source["feature"].tolist(), title=""),
         alt.X("open:Q", scale=alt.Scale(zero=False), title=""),
         alt.X2("close:Q"),
         alt.Tooltip(["feature", "feature_value", "shap_value"]),

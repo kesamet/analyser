@@ -580,7 +580,7 @@ def extract_tables_report(doc, dct):
     
     
 def extract_all_tables_report(filename, key):
-    from .constants import dct
+    from analyser.constants import dct
 
     doc = fitz.Document(filename)
     results = extract_tables_report(doc, dct[key])
