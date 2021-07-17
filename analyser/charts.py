@@ -1,8 +1,8 @@
 """
 Charting
 """
-from os import getenv
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
+from typing import List
 
 import numpy as np
 import pandas as pd
@@ -15,13 +15,13 @@ from analyser.constants import str2days
 from analyser.utils_charts import (
     get_ie_data,
     get_data,
-    get_data_xlsx,
-    load_data_ohlcv,
+    get_xlsx,
+    get_ohlcv,
     rebase,
     pct_change,
 )
 try:
-    from pm.config import DIRNAME, EQ_DICT
+    from pm.config import DIRNAME, EQ_DICT, XLSX_FILE
     _dct = {
         "IWDA": "IWDA",
         "EIMI": "EIMI", 
@@ -36,8 +36,11 @@ except ModuleNotFoundError:
     }
 
 
-def get_start_date(today_date, start_date="2015-01-01",
-                   options=("YTD", "3M", "6M", "1Y", "2Y", "3Y", "All time")):
+def get_start_date(
+    today_date: datetime,
+    start_date="2015-01-01",
+    options=("YTD", "1M", "6M", "1Y", "2Y", "3Y", "All time"),
+) -> str:
     select_range = st.selectbox("Select time range", options)
     if select_range[-1] == "Y":
         _yr = today_date.year - int(select_range[:-1])
@@ -53,7 +56,7 @@ def get_start_date(today_date, start_date="2015-01-01",
 
 
 @st.cache
-def load_ie_data():
+def load_ie_data() -> pd.DataFrame:
     df = get_ie_data(start_date="1990-01-01", dirname=DIRNAME)
     df["10xReal_Earnings"] = 10 * df["Real_Earnings"]
     df["10xLong_IR"] = 10 * df["Long_IR"]
@@ -61,13 +64,13 @@ def load_ie_data():
 
 
 @st.cache
-def load_data(dates, symbols, base_symbol="ES3.SI"):
+def load_data(dates: pd.DatetimeIndex, symbols: List[str], base_symbol="ES3.SI") -> pd.DataFrame:
     if "IWDA" not in symbols and "EIMI" not in symbols:
         return get_data(symbols, dates, base_symbol=base_symbol, dirname=DIRNAME)
-    return get_data_xlsx(symbols, dates, base_symbol="IWDA", dirname=DIRNAME)
+    return get_xlsx(symbols, dates, base_symbol="IWDA", xlsx=XLSX_FILE)
 
 
-def page_charts(today_date=date.today() - timedelta(days=1)):
+def page_charts(today_date: datetime = date.today() - timedelta(days=1)) -> None:
     st.subheader("Shiller charts")
     df0 = load_ie_data()
     c1 = altair.generate_chart("line", df0[["Real_Price", "10xReal_Earnings"]]).properties(
@@ -185,9 +188,9 @@ def page_charts(today_date=date.today() - timedelta(days=1)):
 
 
 @st.cache(allow_output_mutation=True)
-def load_ohlcv_data(symbol, dates):
+def load_ohlcv_data(symbol: str, dates: pd.DatetimeIndex) -> pd.DataFrame:
     # Load ohlc data
-    df = load_data_ohlcv(symbol, dates, dirname=DIRNAME)
+    df = get_ohlcv(symbol, dates, dirname=DIRNAME, xlsx=XLSX_FILE)
 
     # Apply technical analysis
     df = ta.add_volatility_ta(df, "high", "low", "close", fillna=False, colprefix="ta_")
@@ -196,7 +199,7 @@ def load_ohlcv_data(symbol, dates):
     return df
 
 
-def add_custom_trend(df, close, fillna, colprefix):
+def add_custom_trend(df: pd.DataFrame, close: str, fillna: bool, colprefix: str) -> pd.DataFrame:
     # MACD
     indicator_macd = ta.trend.MACD(close=df[close], window_slow=26, window_fast=12, window_sign=9, fillna=fillna)
     df[f"{colprefix}trend_macd"] = indicator_macd.macd()
@@ -215,7 +218,7 @@ def add_custom_trend(df, close, fillna, colprefix):
     return df
 
 
-def chart_candlestick(source, cols=[]):
+def chart_candlestick(source: pd.DataFrame, cols: List = []) -> None:
     """Candlestick chart."""
     base = alt.Chart(source).encode(
         alt.X("date:T"),
@@ -244,7 +247,7 @@ def chart_candlestick(source, cols=[]):
     return chart
 
 
-def page_ta(today_date=date.today() - timedelta(days=1)):
+def page_ta(today_date: datetime = date.today() - timedelta(days=1)) -> None:
     """Technical analysis page."""
     ta_type = {
         "Bollinger": {

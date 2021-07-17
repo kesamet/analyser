@@ -13,35 +13,35 @@ from analyser.utils_parser import (
     extract_all_lines_report,
     extract_most_plausible,
     page_parse_table,
-    extract_all_tables_report,
 )
 from analyser.utils_app import get_pdf_display, download_button
 
 
 def search_highlight():
     st.write("**To search for terms in the uploaded PDF, extract the pages containing these terms, and highlight the terms in the pages.**")
+    st.sidebar.markdown("---")
+    uploaded_file = st.sidebar.file_uploader("Upload a PDF.")
+
     search_words = {
         "Aggregate leverage, Gearing": "or",
         "Cost of debt": "or",
         "Interest cover": "or",
         "Average term to maturity": "or",
-        "WALE,Weighted average lease expiry": "or",
+        "WALE, Weighted average lease expiry": "or",
         "Unit price performance, Closing, Highest, Lowest": "and",
         "Net property income": "or",
-        "Distribution per unit,DPU": "or",
+        "Distribution per unit, DPU": "or",
         "Financial position, Total assets, Total liabilities, Investment properties": "and",
         "Total debts": "or",
         "Units in issue": "or",
         "Net asset value, NAV": "or",
     }
-
-    uploaded_file = st.file_uploader("Upload a PDF.")
-    option = st.radio("Mode", ["Predefined", "Enter your own search"])
+    option = st.sidebar.radio("", ["Predefined", "Enter your own search"])
     if option == "Predefined":
-        input_txt = st.selectbox("Predefined options", list(search_words.keys()))
+        input_txt = st.sidebar.selectbox("Predefined options", list(search_words.keys()))
         mode = search_words[input_txt]
     else:
-        input_txt = st.text_input("Enter search terms (For multiple terms, use comma to separate)")
+        input_txt = st.sidebar.text_input("Enter search terms (For multiple terms, use comma to separate)")
         mode = "or"
         
     if uploaded_file is not None and input_txt != "":
@@ -82,11 +82,12 @@ def read_table_custom(uploaded_file, page_num, heading, ending):
 
 def table_ocr():
     st.write("**To extract table from a PDF page into a csv.**")
-    uploaded_file = st.file_uploader("Upload a PDF.")       
-    page_num = st.text_input("Page to extract from.") 
-    heading = st.text_input("Enter table heading.", "Group")
-    ending = st.text_input("Enter table ending.", "Page")
-    run_ocr = st.button("Run")
+    st.sidebar.markdown("---")
+    uploaded_file = st.sidebar.file_uploader("Upload a PDF.")
+    page_num = st.sidebar.number_input("Page to extract from.", min_value=1)
+    heading = st.sidebar.text_input("Enter table heading.", "Group")
+    ending = st.sidebar.text_input("Enter table ending.", "Page")
+    run_ocr = st.sidebar.button("Extract")
 
     if run_ocr:
         assert page_num.isdigit()
@@ -96,33 +97,30 @@ def table_ocr():
         button = download_button(df, "download.csv", "Export as CSV")
         st.markdown(button, unsafe_allow_html=True)
         st.dataframe(df, height=800)
-        
-#         st.header("Uploaded PDF")
-#         pdf_display = get_pdf_display(uploaded_file.read())
-#         st.markdown(pdf_display, unsafe_allow_html=True)
 
 
 @st.cache
 def extract_lines(uploaded_file, mode):
     if mode == "slides":
         return perform(uploaded_file.read(), extract_all_lines_slides)
-    elif mode == "financials":
-        return perform(uploaded_file.read(), extract_all_lines_report)
+    return perform(uploaded_file.read(), extract_all_lines_report)
 
 
 def search_extract():
     st.write("**To search for predefined terms in the uploaded PDF, and extract plausible lines containing the information.**")
-    mode = st.radio("Select PDF type.", ["slides", "financials"])
-    uploaded_file = st.file_uploader("Upload a PDF.")
+    st.sidebar.markdown("---")
+    uploaded_file = st.sidebar.file_uploader("Upload a PDF.")
+    select_doctype = st.sidebar.radio("", ["slides", "financials"])
 
     if uploaded_file is not None:
-        results = extract_lines(uploaded_file, mode)
+        results = extract_lines(uploaded_file, select_doctype)
 
         st.header("Output")
-        st.dataframe(extract_most_plausible(results), height=400)
+        c0, _ = st.beta_columns(2)
+        c0.table(extract_most_plausible(results).set_index("key"))
 
-        select_keyword = st.selectbox("Select a keyword.", list(results.keys()))
-        tmp = results[select_keyword]
+        select_keyphase = st.selectbox("Select a keyphase.", list(results.keys()))
+        tmp = results[select_keyphase]
 
         st.subheader("Possible values")
         if not tmp:
@@ -134,29 +132,4 @@ def search_extract():
                 st.text(v["line"])
                 st.write("with title")
                 st.text(v["first_line"])
-                # st.text(json.dumps(v, indent=2))
-                st.write("=" * 73)
-
-
-@st.cache
-def extract_tables(uploaded_file, key):
-    return perform(uploaded_file.read(), lambda x: extract_all_tables_report(x, key))
-
-
-def search_extract_v2():
-    from analyser.constants import dct
-
-    key = st.selectbox("Select report.", list(dct.keys()))
-    uploaded_file = st.file_uploader("Upload a PDF.")
-    run_extract = st.button("Run")
-
-    if run_extract and uploaded_file is not None:
-        results = extract_tables(uploaded_file, key)
-
-        st.header("Output")
-        for k, v in results.items():
-            st.write(f"**{k}**")
-            if v:
-                st.dataframe(v[0])
-            else:
-                st.write("`None found.`")
+                st.markdown("---")

@@ -3,17 +3,19 @@ Script containing commonly used functions.
 """
 import os
 from datetime import datetime, timedelta
+from typing import List, Union
 
 import numpy as np
 import pandas as pd
 
-try:
-    from pm.config import XLSX_FILE
-except ModuleNotFoundError:
-    pass
 
-
-def download_data(symbol, start_date, end_date, time_interval="daily", dirname="data"):
+def download_data(
+    symbol: str,
+    start_date: str,
+    end_date: str,
+    time_interval: str = "daily",
+    dirname: str = "data",
+) -> Union[pd.DataFrame, None]:
     """Download data given ticker symbols."""
     try:
         from yahoofinancials import YahooFinancials as yf
@@ -32,7 +34,13 @@ def download_data(symbol, start_date, end_date, time_interval="daily", dirname="
         print(f"... Data not found for {symbol}")
 
 
-def get_data(symbols, dates, base_symbol="ES3.SI", col="adjclose", dirname="data"):
+def get_data(
+    symbols: List[str],
+    dates: pd.DatetimeIndex,
+    base_symbol="ES3.SI",
+    col: str ="adjclose",
+    dirname: str = "data",
+) -> pd.DataFrame:
     """Load stock data for given symbols from CSV files."""
     df = pd.DataFrame(index=dates)
     df.index.name = "date"
@@ -59,7 +67,13 @@ def get_data(symbols, dates, base_symbol="ES3.SI", col="adjclose", dirname="data
     return df
 
 
-def get_data_xlsx(symbols, dates, base_symbol="USDSGD", col="Close"):
+def get_xlsx(
+    symbols: List[str],
+    dates: pd.DatetimeIndex,
+    base_symbol: str ="USDSGD",
+    col: str = "Close",
+    xlsx: str = "data.xlsx",
+) -> pd.DataFrame:
     """Load stock data for given symbols from xlsx file."""
     df = pd.DataFrame(index=dates)
     df.index.name = "Date"
@@ -68,8 +82,8 @@ def get_data_xlsx(symbols, dates, base_symbol="USDSGD", col="Close"):
 
     for symbol in symbols:
         df_temp = pd.read_excel(
-            XLSX_FILE, index_col="Date",
-            parse_dates=True, sheet_name=symbol, usecols=["Date", col])
+            xlsx, index_col="Date", parse_dates=True,
+            sheet_name=symbol, usecols=["Date", col])
         df_temp.index = df_temp.index.date
         df_temp = df_temp.rename(columns={col: symbol})
         df = df.join(df_temp)
@@ -80,7 +94,12 @@ def get_data_xlsx(symbols, dates, base_symbol="USDSGD", col="Close"):
     return df
 
 
-def get_data_ohlcv(symbol, dates, base_symbol="ES3.SI", dirname="data"):
+def get_data_ohlcv(
+    symbol: str,
+    dates: pd.DatetimeIndex,
+    base_symbol: str ="ES3.SI",
+    dirname: str = "data",
+) -> pd.DataFrame:
     """Load stock ohlcv data for given symbol from CSV files."""
     df_base = pd.read_csv(
         os.path.join(dirname, f"{base_symbol}.csv"), index_col="date",
@@ -104,11 +123,16 @@ def get_data_ohlcv(symbol, dates, base_symbol="ES3.SI", dirname="data"):
     return df
 
 
-def get_data_xlsx_ohlcv(symbol, dates, base_symbol="USDSGD", dirname="data"):
+def get_xlsx_ohlcv(
+    symbol: str,
+    dates: pd.DatetimeIndex,
+    base_symbol: str = "USDSGD",
+    xlsx: str = "data.xlsx",
+) -> pd.DataFrame:
     """Load stock ohlcv data for given symbol from xlsx files."""
     df_base = pd.read_excel(
-        XLSX_FILE, index_col="Date",
-        parse_dates=True, sheet_name=symbol, usecols=["Date", "Close"])
+        xlsx, index_col="Date", parse_dates=True,
+        sheet_name=symbol, usecols=["Date", "Close"])
     df_base.columns = [base_symbol]
     df_base.index = df_base.index.date
     df_base.index.name = "date"
@@ -119,7 +143,7 @@ def get_data_xlsx_ohlcv(symbol, dates, base_symbol="USDSGD", dirname="data"):
     df = df.dropna(subset=[base_symbol])
 
     df_temp = pd.read_excel(
-        XLSX_FILE, parse_dates=True, sheet_name=symbol, index_col="Date",
+        xlsx, parse_dates=True, sheet_name=symbol, index_col="Date",
         usecols=["Date", "Open", "High", "Low", "Close", "Volume"])
     df_temp.columns = ["open", "high", "low", "close", "volume"]
     df_temp.index = df_temp.index.date
@@ -132,20 +156,25 @@ def get_data_xlsx_ohlcv(symbol, dates, base_symbol="USDSGD", dirname="data"):
     return df
 
 
-def load_data_ohlcv(symbol, dates, dirname="data"):
+def get_ohlcv(
+    symbol: str,
+    dates: pd.DatetimeIndex,
+    dirname: str = "data",
+    xlsx: str = "data.xlsx",
+) -> pd.DataFrame:
     """Load ohlcv data from csv or xlsx."""
     if symbol in ["IWDA", "EIMI"]:
-        return get_data_xlsx_ohlcv(symbol, dates, base_symbol="USDSGD", dirname=dirname)
+        return get_xlsx_ohlcv(symbol, dates, base_symbol="USDSGD", xlsx=xlsx)
     return get_data_ohlcv(symbol, dates, base_symbol="ES3.SI", dirname=dirname)
 
 
-def fill_missing_values(df):
+def fill_missing_values(df: pd.DataFrame) -> None:
     """Fill missing values in dataframe."""
     df.fillna(method="ffill", inplace=True)
     df.fillna(method="bfill", inplace=True)
 
 
-def get_ie_data(start_date="1871-01-01", dirname="data"):
+def get_ie_data(start_date: str = "1871-01-01", dirname: str = "data") -> pd.DataFrame:
     """Load Shiller data."""
     df = pd.read_excel(os.path.join(dirname, "summary/ie_data.xls"), sheet_name="Data", skiprows=7)
     df.drop(["Fraction", "Unnamed: 13", "Unnamed: 15"], axis=1, inplace=True)
@@ -162,7 +191,7 @@ def get_ie_data(start_date="1871-01-01", dirname="data"):
 
 
 # Plot functions
-def plot_data(df, title="", xlabel="Date", ylabel="Price", ax=None):
+def plot_data(df: pd.DataFrame, title: str = "", xlabel: str = "Date", ylabel: str = "Price", ax=None):
     """Plot stock prices."""
     ax = df.plot(title=title, fontsize=12, ax=ax)
     ax.set_xlabel(xlabel)
@@ -170,7 +199,13 @@ def plot_data(df, title="", xlabel="Date", ylabel="Price", ax=None):
     return ax
 
 
-def plot_normalized_data(df, title="", xlabel="Date", ylabel="Normalized", ax=None):
+def plot_normalized_data(
+    df: pd.DataFrame,
+    title: str = "",
+    xlabel: str = "Date",
+    ylabel: str = "Normalized",
+    ax=None,
+):
     """Plot normalized stock prices."""
     normdf = rebase(df)
     ax = plot_data(normdf, title=title, xlabel=xlabel, ylabel=ylabel, ax=ax)
@@ -178,7 +213,7 @@ def plot_normalized_data(df, title="", xlabel="Date", ylabel="Normalized", ax=No
     return ax
 
 
-def plot_bollinger(df, title=None, ax=None):
+def plot_bollinger(df: pd.DataFrame, title: str = "", ax=None):
     """Plot bollinger bands and SMA."""
     df2 = df[["close"]].copy()
     _, df2["upper"], df2["lower"] = compute_bbands(df["close"])
@@ -189,7 +224,13 @@ def plot_bollinger(df, title=None, ax=None):
     return df2, ax
 
 
-def plot_with_two_scales(df1, df2, xlabel="Date", ylabel1="Normalized", ylabel2=None):
+def plot_with_two_scales(
+    df1: pd.DataFrame,
+    df2: pd.DataFrame,
+    xlabel: str = "Date",
+    ylabel1: str = "Normalized",
+    ylabel2=None,
+):
     """Plot two graphs together."""
     import matplotlib.pyplot as plt
 
@@ -271,7 +312,7 @@ def compute_macd(ts, nfast=12, nslow=26):
     """Compute moving average convergence/divergence."""
     ema_fast = compute_ema(ts, window=nfast)
     ema_slow = compute_ema(ts, window=nslow)
-    return ema_fast-ema_slow
+    return ema_fast - ema_slow
 
 
 def compute_bbands(ts, window=20, nbdevup=2, nbdevdn=2):

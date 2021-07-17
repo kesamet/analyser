@@ -14,7 +14,6 @@ def main():
         "Technical Analysis": page_ta,
         "Search and Highlight": search_highlight,
         "Search and Extract": search_extract,
-        # "Search and Extract (custom)": search_extract_v2,
         "Table OCR": table_ocr,
     }
 

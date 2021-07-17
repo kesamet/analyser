@@ -90,14 +90,14 @@ def ysearch(page, heading, ending):
     search1 = page.searchFor(heading, hit_max=1)
     if not search1:
         raise ValueError("table top delimiter not found")
-    ymin = search1[0].y1  # table starts below this value
+    ymin = search1[0].y0 - 3  # table starts below this value
 
     search2 = page.searchFor(ending, hit_max=1)
     if not search2:
         print("warning: table bottom delimiter not found - using end of page")
         ymax = 99999
     else:
-        ymax = search2[0].y0  # table ends above this value
+        ymax = search2[0].y1 + 3  # table ends above this value
 
     if not ymin < ymax:  # something was wrong with the search strings
         raise ValueError("table bottom delimiter higher than top")
@@ -151,8 +151,13 @@ def extract_image(src, spage, rx, save=None):
             os.remove(temp_filename)
 
 
-def extract_all_images(filename, output_dir="outputs/", heading="Figure", ending="Source",
-                       double_col=False):
+def extract_all_images(
+    filename,
+    output_dir="outputs/",
+    heading="Figure",
+    ending="Source",
+    double_col=False,
+):
     """Extract images from PDF."""
     src = fitz.Document(filename)
     for i, spage in enumerate(src.pages()):
