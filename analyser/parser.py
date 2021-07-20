@@ -6,6 +6,7 @@ import tempfile
 
 import streamlit as st
 
+from analyser.constants import PHRASES_SEARCH, KEYWORDS_EXTRACT_SLIDES, KEYWORDS_EXTRACT_REPORT
 from analyser.utils_parser import (
     perform,
     extract_pages_keyword,
@@ -22,32 +23,19 @@ def search_highlight():
     st.sidebar.markdown("---")
     uploaded_file = st.sidebar.file_uploader("Upload a PDF.")
 
-    search_words = {
-        "Aggregate leverage, Gearing": "or",
-        "Cost of debt": "or",
-        "Interest cover": "or",
-        "Average term to maturity": "or",
-        "WALE, Weighted average lease expiry": "or",
-        "Unit price performance, Closing, Highest, Lowest": "and",
-        "Net property income": "or",
-        "Distribution per unit, DPU": "or",
-        "Financial position, Total assets, Total liabilities, Investment properties": "and",
-        "Total debts": "or",
-        "Units in issue": "or",
-        "Net asset value, NAV": "or",
-    }
     option = st.sidebar.radio("", ["Predefined", "Enter your own search"])
     if option == "Predefined":
-        input_txt = st.sidebar.selectbox("Predefined options", list(search_words.keys()))
-        mode = search_words[input_txt]
+        input_txt = st.sidebar.selectbox("Predefined options", list(PHRASES_SEARCH.keys()))
+        mode = PHRASES_SEARCH[input_txt]
     else:
         input_txt = st.sidebar.text_input("Enter search terms (For multiple terms, use comma to separate)")
         mode = "or"
         
     if uploaded_file is not None and input_txt != "":
-        input_txt = [x.strip() for x in input_txt.split(",")]
         extracted_doc, page_nums = perform(
-            uploaded_file.read(), lambda x: extract_pages_keyword(x, input_txt, mode=mode))
+            lambda x: extract_pages_keyword(x, [x.strip() for x in input_txt.split(",")], mode=mode),
+            uploaded_file.read(),
+        )
 
         st.header("Output")
         if extracted_doc is not None:
@@ -62,48 +50,17 @@ def search_highlight():
                 os.remove(temp_filename)
 
             page_nums = ", ".join(str(n + 1) for n in page_nums)
-            st.write(f"Pages: `{page_nums}`")
+            st.write(f"`{input_txt}` found on pages: `{page_nums}`")
             st.markdown(pdf_display, unsafe_allow_html=True)
         else:
             st.write("`None found.`")
 
 
-# @st.cache
-# def read_table_tabula(uploaded_file, page_num):
-#     return perform(uploaded_file.read(),
-#                    lambda x: tabula.read_pdf(x, pages=[int(page_num)]))
-
-
-@st.cache
-def read_table_custom(uploaded_file, page_num, heading, ending):
-    return perform(uploaded_file.read(),
-                   lambda x: page_parse_table(x, int(page_num) - 1, heading, ending))
-
-
-def table_ocr():
-    st.write("**To extract table from a PDF page into a csv.**")
-    st.sidebar.markdown("---")
-    uploaded_file = st.sidebar.file_uploader("Upload a PDF.")
-    page_num = st.sidebar.number_input("Page to extract from.", min_value=1)
-    heading = st.sidebar.text_input("Enter table heading.", "Group")
-    ending = st.sidebar.text_input("Enter table ending.", "Page")
-    run_ocr = st.sidebar.button("Extract")
-
-    if run_ocr:
-        assert page_num.isdigit()
-        df = read_table_custom(uploaded_file, page_num, heading, ending)
-
-        st.header("Output")
-        button = download_button(df, "download.csv", "Export as CSV")
-        st.markdown(button, unsafe_allow_html=True)
-        st.dataframe(df, height=800)
-
-
 @st.cache
 def extract_lines(uploaded_file, mode):
     if mode == "slides":
-        return perform(uploaded_file.read(), extract_all_lines_slides)
-    return perform(uploaded_file.read(), extract_all_lines_report)
+        return perform(extract_all_lines_slides, uploaded_file.read(), dict_keywords=KEYWORDS_EXTRACT_SLIDES)
+    return perform(extract_all_lines_report, uploaded_file.read(), dict_keywords=KEYWORDS_EXTRACT_REPORT)
 
 
 def search_extract():
@@ -113,23 +70,47 @@ def search_extract():
     select_doctype = st.sidebar.radio("", ["slides", "financials"])
 
     if uploaded_file is not None:
-        results = extract_lines(uploaded_file, select_doctype)
+        all_results = extract_lines(uploaded_file, select_doctype)
 
         st.header("Output")
         c0, _ = st.beta_columns(2)
-        c0.table(extract_most_plausible(results).set_index("key"))
+        c0.table(extract_most_plausible(all_results))
 
-        select_keyphase = st.selectbox("Select a keyphase.", list(results.keys()))
-        tmp = results[select_keyphase]
+        select_keyphase = st.selectbox("Select a keyphase.", list(all_results.keys()))
+        results = all_results[select_keyphase]
 
         st.subheader("Possible values")
-        if not tmp:
+        if not results:
             st.write("`None found.`")
         else:
-            for k, v in tmp.items():
-                st.text(k)
-                st.write("Found on page `{}` in line".format(v["page_num"]))
-                st.text(v["line"])
-                st.write("with title")
-                st.text(v["first_line"])
+            for dct in results:
+                st.text(dct["value"])
+                st.write("Found on page `{}` in line".format(dct["page_num"]))
+                st.text(dct["line"])
                 st.markdown("---")
+
+
+@st.cache
+def read_table_custom(uploaded_file, page_num, heading, ending):
+    return perform(
+        lambda x: page_parse_table(x, int(page_num) - 1, heading, ending),
+        uploaded_file.read(),
+    )
+
+
+def table_ocr():
+    st.write("**To extract table from a PDF page into a csv.**")
+    st.sidebar.markdown("---")
+    uploaded_file = st.sidebar.file_uploader("Upload a PDF.")
+    page_num = int(st.sidebar.number_input("Page to extract from.", min_value=1))
+    heading = st.sidebar.text_input("Enter table heading.", "Group")
+    ending = st.sidebar.text_input("Enter table ending.", "Page")
+    run_ocr = st.sidebar.button("Extract")
+
+    if run_ocr:
+        df = read_table_custom(uploaded_file, page_num, heading, ending)
+
+        st.header("Output")
+        button = download_button(df, "download.csv", "Export as CSV")
+        st.markdown(button, unsafe_allow_html=True)
+        st.dataframe(df, height=800)
