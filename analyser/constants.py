@@ -30,18 +30,42 @@ PHRASES_SEARCH = {
     }
 
 KEYWORDS_EXTRACT_SLIDES = {
-    "Net property income": ["Net property income"],
-    "Distribution per unit": ["Distribution per unit", "DPU"],
-    "Total assets": ["Total assets"],
-    "Total liabilities": ["Total liabilities"],
-    "Total debt": ["Total debt"],
-    "Units in issue": ["Units in issue"],
-    "Net asset value": ["Net asset value", "NAV"],
-    "Aggregate leverage": ["Aggregate leverage", "Gearing"],
-    "Cost of debt": ["Cost of debt"],
-    "Interest cover": ["Interest cover"],
-    "Average term to maturity": ["Average term to maturity"],
-    "WALE": ["WALE", "Weighted average lease expiry"],
+    "Net property income": {
+        "keywords": ["Net property income"],
+    },
+    "Distribution per unit": {
+        "keywords": ["Distribution per unit", "DPU"],
+    },
+    "Total assets": {
+        "keywords": ["Total assets"],
+    },
+    "Total liabilities": {
+        "keywords": ["Total liabilities"],
+    },
+    "Total debt": {
+        "keywords": ["Total debt"],
+    },
+    "Units in issue": {
+        "keywords": ["Units in issue"],
+    },
+    "Net asset value": {
+        "keywords": ["Net asset value", "NAV"],
+    },
+    "Aggregate leverage": {
+        "keywords": ["Aggregate leverage", "Gearing"],
+    },
+    "Cost of debt": {
+        "keywords": ["Cost of debt"],
+    },
+    "Interest cover": {
+        "keywords": ["Interest cover"],
+    },
+    "Average term to maturity": {
+        "keywords": ["Average term to maturity", "Average debt maturity"],
+    },
+    "WALE": {
+        "keywords": ["WALE", "Weighted average lease expiry"],
+    },
 }
 
 KEYWORDS_EXTRACT_REPORT = {

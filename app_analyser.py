@@ -17,7 +17,7 @@ def main():
         "Table OCR": table_ocr,
     }
 
-    select_page = st.sidebar.radio("Pages", list(dict_pages.keys()))
+    select_page = st.sidebar.radio("", list(dict_pages.keys()))
     st.title(select_page)
     dict_pages[select_page]()
 

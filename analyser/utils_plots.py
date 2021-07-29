@@ -1,3 +1,6 @@
+"""
+Utility functions for plots.
+"""
 import altair as alt
 import pandas as pd
 

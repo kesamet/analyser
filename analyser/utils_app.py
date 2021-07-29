@@ -1,5 +1,5 @@
 """
-General utility functions for Streamlit app.
+Utility functions for Streamlit app.
 """
 import base64
 import json
@@ -121,6 +121,18 @@ def adjust_container_width(width=1000):
         .reportview-container .main .block-container{{
             max-width: {width}px;
         }}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def remove_menu():
+    st.markdown(
+        """
+        <style>
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
         </style>
         """,
         unsafe_allow_html=True,

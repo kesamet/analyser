@@ -1,5 +1,5 @@
 """
-Script containing utility functions for parsing.
+Utility functions for parsing.
 """
 import os
 import tempfile
@@ -49,7 +49,7 @@ def and_search_for_keywords(
     keywords: List[str],
     page_nums: list = None,
 ) -> List[fitz.Rect]:
-    """Search for keywords in a doc. All keywords must present in a single page."""
+    """Search for keywords in a doc. All keywords must present on a single page."""
     all_instances = search_for_keywords(doc, keywords[0], page_nums=page_nums)
     for keyword in keywords:
         tmp = all_instances.copy()
@@ -108,34 +108,35 @@ def compute_iom(box_a: list, box_b: list) -> float:
     return inter_area / min(box_a_area, box_b_area)
 
 
-def get_line(words_in_line: List[str], bb: List[float], thres: float = 0.8) -> str:
+def get_line(blocks: list, rect: fitz.Rect, thres: float = 0.8) -> str:
     """Get the line with the given bounding box."""
-    for line in words_in_line:
-        if compute_iom(line[:4], bb) > thres:
-            return line[4]
+    for block in blocks:
+        if "<image: " != block[4][:8] and compute_iom(block[:4], list(rect)) > thres:
+            return block[4]
 
 
-def get_closest(words_in_line: List[str], bb: List[float], thres: float = 0.8) -> str:
+def get_closest(blocks: list, rect: fitz.Rect, thres: float = 0.8) -> str:
     """Get the line that is closest to the given bounding box."""
+    bb = list(rect)
     candidate = None
     min_dist = 1e6
-    for line in words_in_line:
-        if compute_iom(line[:4], bb) > thres:
+    for block in blocks:
+        if compute_iom(block[:4], bb) > thres:
             continue
 
-        dist = np.abs(np.array(bb[:2]) - np.array(line[:2])).sum()
+        dist = np.abs(np.array(bb[:2]) - np.array(block[:2])).sum()
         if dist < min_dist:
             min_dist = dist
-            candidate = line[4]
+            candidate = block[4]
     return candidate
 
 
-def get_lines(blocks: list, rect: List[float], xbuf: float = 0., ybuf: float = 0.) -> List[str]:
+def get_lines(blocks: list, rect: fitz.Rect, xbuf: float = 0., ybuf: float = 0.) -> List[str]:
     """Get lines that intersect with the given bounding box."""
     new_rect = rect + [-xbuf, -ybuf, xbuf, ybuf]
     lines = list()
     for block in blocks:
-        if new_rect.intersects(fitz.Rect(block[:4])):
+        if "<image: " != block[4][:8] and new_rect.intersects(fitz.Rect(block[:4])):
             lines.append(block[4])
     return lines
 
@@ -143,9 +144,10 @@ def get_lines(blocks: list, rect: List[float], xbuf: float = 0., ybuf: float = 0
 def extract_numeric(line: str) -> List[float]:
     """Extract numerics from a string."""
     # nums = re.findall(r"\d+", line.replace(",", ""))
-    for s in [",", "%", "$", "¢"]:
-        line = line.replace(s, "")
-    nums = []
+    for s in ["%", "$", "¢"]:
+        line = line.replace(s, " ")
+    line = line.replace(",", "")
+    nums = list()
     for t in line.split():
         try:
             nums.append(float(t))
@@ -163,7 +165,7 @@ def extract_line_slides(doc: fitz.Document, keyword: str) -> List[dict]:
         blocks = page.getText("blocks")
 
         for rect in rects:
-            exact = get_line(blocks, list(rect))
+            exact = get_line(blocks, rect)
             if exact.lower() != keyword.lower():
                 nums = extract_numeric(exact)
                 if nums:
@@ -172,7 +174,7 @@ def extract_line_slides(doc: fitz.Document, keyword: str) -> List[dict]:
                         "line": exact,
                         "page_num": page_num + 1,
                     })
-            closest = get_closest(blocks, list(rect))
+            closest = get_closest(blocks, rect)
             if closest is not None:
                 nums = extract_numeric(closest)
                 if nums:
@@ -187,9 +189,9 @@ def extract_line_slides(doc: fitz.Document, keyword: str) -> List[dict]:
 def extract_all_lines_slides(filename: str, dict_keywords: dict) -> dict:
     doc = fitz.Document(filename)
     all_results = dict()
-    for key, keywords in dict_keywords.items():
+    for key, val in dict_keywords.items():
         results = list()
-        for keyword in keywords:
+        for keyword in val["keywords"]:
             extracted = extract_line_slides(doc, keyword)
             if extracted:
                 results.extend(extracted)
@@ -233,12 +235,10 @@ def extract_all_lines_report(filename: str, dict_keywords: dict) -> dict:
 
 
 def extract_most_plausible(all_results: dict) -> pd.DataFrame:
-    lst = list()
-    for key, results in all_results.items():
-        val = None
-        if results:
-            val = results[0]["value"]
-        lst.append([key, val])
+    lst = [
+        [key, results[0]["value"] if results else None]
+        for key, results in all_results.items()
+    ]
     return pd.DataFrame(lst, columns=["key", "Value"]).set_index("key")
 
 

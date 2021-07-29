@@ -1,5 +1,5 @@
 """
-Script containing commonly used functions.
+Utility functions for charting.
 """
 import os
 from datetime import datetime, timedelta
