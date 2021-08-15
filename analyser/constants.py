@@ -13,9 +13,9 @@ str2days = {
 
 PHRASES_SEARCH = {
         "Aggregate leverage, Gearing": "or",
-        "Cost of debt": "or",
+        "Cost of debt, Cost of borrowing": "or",
         "Interest cover": "or",
-        "Average term to maturity": "or",
+        "Average term to maturity, Average weighted debt maturity": "or",
         "WALE, Weighted average lease expiry": "or",
         "Net property income": "or",
         "Distribution per unit, DPU": "or",
@@ -55,13 +55,13 @@ KEYWORDS_EXTRACT_SLIDES = {
         "keywords": ["Aggregate leverage", "Gearing"],
     },
     "Cost of debt": {
-        "keywords": ["Cost of debt"],
+        "keywords": ["Cost of debt", "Cost of borrowing"],
     },
     "Interest cover": {
         "keywords": ["Interest cover"],
     },
     "Average term to maturity": {
-        "keywords": ["Average term to maturity", "Average debt maturity"],
+        "keywords": ["Average term to maturity", "Average debt maturity", "Average weighted debt maturity"],
     },
     "WALE": {
         "keywords": ["WALE", "Weighted average lease expiry"],

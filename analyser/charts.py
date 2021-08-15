@@ -9,7 +9,7 @@ import pandas as pd
 import ta
 import altair as alt
 import streamlit as st
-from streamlit.elements import altair
+from streamlit.elements import legacy_altair as altair
 
 from analyser.constants import str2days
 from analyser.utils_charts import (
@@ -125,8 +125,8 @@ def page_charts(today_date: datetime = date.today() - timedelta(days=1)) -> None
         height=200,
         width=260,
     )
-    symbols = ["O87.SI", "ES3.SI", "CLR.SI"]
-    colnames = ["GLD", "ES3", "Lion-Phillip"]
+    symbols = ["D05.SI", "ES3.SI", "CLR.SI"]
+    colnames = ["DBS", "ES3", "Lion-Phillip"]
     df3b = load_data(dates, symbols)
     df3b.columns = colnames
     rebased_df3b = rebase(df3b[df3b.index >= start_date])
