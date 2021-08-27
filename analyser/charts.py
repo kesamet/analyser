@@ -275,7 +275,7 @@ def page_ta(today_date: datetime = date.today() - timedelta(days=1)) -> None:
     dates = pd.date_range(today_date - timedelta(days=800), today_date)
     df = load_ohlcv_data(EQ_DICT[select_eq], dates)
 
-    col0, col1 = st.beta_columns(2)
+    col0, col1 = st.columns(2)
     select_days = col0.selectbox("Lookback period", ["1M", "2M", "3M", "6M"], 2)
     select_days = str2days[select_days]
     select_ta = col1.selectbox("Add TA", ["Bollinger", "SMA", "RSI"])
@@ -283,7 +283,7 @@ def page_ta(today_date: datetime = date.today() - timedelta(days=1)) -> None:
     source = df.iloc[-select_days:].reset_index()
     st.altair_chart(chart_candlestick(source, cols=ta_type[select_ta]["price"]), use_container_width=True)
 
-    col2, col3 = st.beta_columns(2)
+    col2, col3 = st.columns(2)
     select_days2 = col2.selectbox("Select period", ["6M", "9M", "1Y", "2Y"], 2)
     select_days2 = str2days[select_days2]
     select_ta2 = col3.selectbox("Select TA", ["Bollinger", "SMA", "RSI", "MACD", "Momentum"])

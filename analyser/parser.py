@@ -73,7 +73,7 @@ def search_extract():
         all_results = extract_lines(uploaded_file, select_doctype)
 
         st.header("Output")
-        c0, _ = st.beta_columns(2)
+        c0, _ = st.columns(2)
         c0.table(extract_most_plausible(all_results))
 
         select_keyphase = st.selectbox("Select a keyphase.", list(all_results.keys()))
