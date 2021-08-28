@@ -37,8 +37,8 @@ def download_data(
 def get_data(
     symbols: List[str],
     dates: pd.DatetimeIndex,
-    base_symbol="ES3.SI",
-    col: str ="adjclose",
+    base_symbol: str = "ES3.SI",
+    col: str = "adjclose",
     dirname: str = "data",
 ) -> pd.DataFrame:
     """Load stock data for given symbols from CSV files."""
@@ -70,7 +70,7 @@ def get_data(
 def get_xlsx(
     symbols: List[str],
     dates: pd.DatetimeIndex,
-    base_symbol: str ="USDSGD",
+    base_symbol: str = "USDSGD",
     col: str = "Close",
     xlsx: str = "data.xlsx",
 ) -> pd.DataFrame:
@@ -97,7 +97,7 @@ def get_xlsx(
 def get_data_ohlcv(
     symbol: str,
     dates: pd.DatetimeIndex,
-    base_symbol: str ="ES3.SI",
+    base_symbol: str = "ES3.SI",
     dirname: str = "data",
 ) -> pd.DataFrame:
     """Load stock ohlcv data for given symbol from CSV files."""

@@ -79,7 +79,7 @@ def extract_pages_keyword(
         return extract_pages_highlighted(filename, all_instances), page_nums
     return None, None
 
-    
+
 def extract_pages_highlighted(filename: str, all_instances: List[fitz.Rect]) -> fitz.Document:
     """Extract pages by page numbers with highlighted text."""
     doc = fitz.Document(filename)
@@ -326,7 +326,7 @@ def parse_table(page: fitz.Page, heading: str, ending: str) -> tuple:
                 if f"{rn}-{cn}" in alltxt:
                     alltxt[f"{rn}-{cn}"].append((ir.y0, ir.x0, w[4]))
                 else:
-                    alltxt[f"{rn}-{cn}"]= [(ir.y0, ir.x0, w[4])]
+                    alltxt[f"{rn}-{cn}"] = [(ir.y0, ir.x0, w[4])]
                 found = True
                 break
         if not found:

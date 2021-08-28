@@ -2,7 +2,7 @@
 Script to compute efficient frontier using Modern Portfolio Theory.
 """
 import numpy as np
-import pandas as pd  
+import pandas as pd
 import scipy.optimize as sco
 import matplotlib.pyplot as plt
 from IPython.display import display
@@ -44,7 +44,7 @@ def max_sharpe(avg_rets, cov_mat, rfr):
     """Maximize Sharpe ratio."""
     def neg_sharpe(weights, avg_rets, cov_mat, rfr):
         return -sharpe(weights, avg_rets, cov_mat, rfr)
-    
+
     num_assets = len(avg_rets)
     return sco.minimize(
         neg_sharpe,
@@ -87,7 +87,7 @@ def eff_ret(avg_rets, cov_mat, target):
     """Compute efficient return given target volatility."""
     def pvol(weights):
         return portfolio_vol(weights, cov_mat)
-    
+
     def neg_pret(weights, avg_rets):
         return -portfolio_ret(weights, avg_rets)
 
@@ -144,7 +144,7 @@ def display_ef(avg_rets, cov_mat, rfr, bm_vol):
     min_vol_val = min_vol(cov_mat)["x"]
     min_vol_ret, min_vol_vol, min_vol_sharpe, min_vol_m2 = portfolio_perf(
         min_vol_val, avg_rets, cov_mat, rfr, bm_vol)
-    
+
     ann_vol = np.sqrt(np.diag(cov_mat)) * np.sqrt(252)
     ann_ret = avg_rets * 252
 
@@ -155,7 +155,7 @@ def display_ef(avg_rets, cov_mat, rfr, bm_vol):
     print("Annualised Return: {:.2f}".format(max_sharpe_ret))
     print("Annualised Volatility: {:.2f}\n".format(max_sharpe_vol))
     display(allocations(max_sharpe_val, colnames))
-    
+
     print("-"*80)
     print("Minimum Volatility Portfolio Allocation\n")
     print("M2: {:.2f}".format(min_vol_m2))
@@ -163,25 +163,25 @@ def display_ef(avg_rets, cov_mat, rfr, bm_vol):
     print("Annualised Return: {:.2f}".format(min_vol_ret))
     print("Annualised Volatility: {:.2f}\n".format(min_vol_vol))
     display(allocations(min_vol_val, colnames))
-    
+
     print("-"*80)
     print("Individual Stock Returns and Volatility\n")
     for i, txt in enumerate(colnames):
         print("{}: return {:.2f}, volatility: {:.2f}"
               .format(txt, ann_ret[i], ann_vol[i]))
-    
+
     print("-"*80)
     fig, ax = plt.subplots(figsize=(10, 7))
     ax.scatter(ann_vol, ann_ret, marker="o", s=100)
 
     for i, txt in enumerate(colnames):
-        ax.annotate(txt, (ann_vol[i], ann_ret[i]), xytext=(10,0),
+        ax.annotate(txt, (ann_vol[i], ann_ret[i]), xytext=(10, 0),
                     textcoords="offset points")
     ax.scatter(max_sharpe_vol, max_sharpe_ret, marker="*", color="r", s=200,
                label="Max Sharpe ratio")
-    ax.scatter(min_vol_vol, min_vol_ret, marker="*", color="g",s=200,
+    ax.scatter(min_vol_vol, min_vol_ret, marker="*", color="g", s=200,
                label="Min volatility")
-    
+
     targets = np.linspace(min_vol_ret, min_vol_ret*6, 20)
     eff_ports = efrontier_vol(avg_rets, cov_mat, targets)
     ax.plot(eff_ports["vol"], eff_ports["ret"], linestyle="-.", color="k",

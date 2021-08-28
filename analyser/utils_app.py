@@ -12,109 +12,126 @@ import pandas as pd
 import streamlit as st
 
 
-def uri_encode_path(path, mime="image/png"):
+def uri_encode_path(path: str, mime: str = "image/png") -> str:
     raw = Path(path).read_bytes()
     b64 = base64.b64encode(raw).decode()
     return f"data:{mime};base64,{b64}"
 
 
-def add_header(path):
+def add_header(path: str) -> None:
     st.markdown(
         "<img src='{}' class='img-fluid'>".format(uri_encode_path(path)),
         unsafe_allow_html=True,
     )
 
 
-def get_pdf_display(pdfbytes):
+def get_pdf_display(pdfbytes: bytes) -> str:
     base64_pdf = base64.b64encode(pdfbytes).decode("utf-8")
-    # pdf_display = f'<embed src="data:application/pdf;base64,{base64_pdf}" width="700" height="1025" type="application/pdf">'
-    pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="700" height="1025" type="application/pdf"></iframe>'
-    return pdf_display
+    return (
+        f"""
+        <iframe src="data:application/pdf;base64,{base64_pdf}" 
+        width="100%" height="970" type="application/pdf"></iframe>
+        """
+    )
 
 
-def download_button(object_to_download, download_filename, button_text, pickle_it=False):
+def download_button(
+    data,
+    filename: str,
+    button_text: str,
+    pickle_it: bool = False,
+) -> str:
     """
-    Generates a link to download the given object_to_download.
+    Generates a link to download the given data.
 
     Args:
-        object_to_download: The object to be downloaded.
-        download_filename (str): filename and extension of file. e.g. mydata.csv,
-            some_txt_output.txt download_link_text (str): Text to display for download link.
-        button_text (str): Text to display on download button (e.g. 'click here to download file')
+        data: The object to be downloaded.
+        filename (str): filename and extension of file to be downloaded
+        button_text (str): Text to display on download button
         pickle_it (bool): If True, pickle file.
 
     Returns
-        (str): the anchor tag to download object_to_download
+        (str): the anchor tag to download data
     """
     if pickle_it:
         try:
-            object_to_download = pickle.dumps(object_to_download)
+            data = pickle.dumps(data)
         except pickle.PicklingError as e:
             st.write(e)
             return None
 
     else:
-        if isinstance(object_to_download, bytes):
+        if isinstance(data, bytes):
             pass
 
-        elif isinstance(object_to_download, pd.DataFrame):
-            object_to_download = object_to_download.to_csv(index=False)
+        elif isinstance(data, pd.DataFrame):
+            data = data.to_csv(index=False)
 
         # Try JSON encode for everything else
         else:
-            object_to_download = json.dumps(object_to_download)
+            data = json.dumps(data)
 
     try:
         # some strings <-> bytes conversions necessary here
-        b64 = base64.b64encode(object_to_download.encode()).decode()
+        b64 = base64.b64encode(data.encode()).decode()
 
-    except AttributeError as e:
-        b64 = base64.b64encode(object_to_download).decode()
+    except AttributeError:
+        b64 = base64.b64encode(data).decode()
 
-    custom_css, button_id = custom_button_style()
-    dl_link = custom_css + f'<a download="{download_filename}" id="{button_id}" href="data:file/txt;base64,{b64}">{button_text}</a><br></br>'
-    return dl_link
-
-
-def logout_button(auth_domain):
-    custom_css, button_id = custom_button_style()
-    lo_link = custom_css + f'<a id="{button_id}" href="https://{auth_domain}/_oauth/logout" target="_self">Logout</a><br></br>'
-    return lo_link
+    custom_css, button_id = _custom_button_style()
+    return (
+        custom_css + f"""
+        <a download="{filename}" id="{button_id}"
+        href="data:file/txt;base64,{b64}">{button_text}</a><br></br>
+        """
+    )
 
 
-def custom_button_style():
+def logout_button(auth_domain: str) -> str:
+    custom_css, button_id = _custom_button_style()
+    return (
+        custom_css + f"""
+        <a id="{button_id}" href="https://{auth_domain}/_oauth/logout" 
+        target="_self">Logout</a><br></br>
+        """
+    )
+
+
+def _custom_button_style():
     button_uuid = str(uuid.uuid4()).replace('-', '')
     button_id = re.sub('\d+', '', button_uuid)
 
-    custom_css = f""" 
+    custom_css = (
+        f"""
             <style>
-                #{button_id} {{
-                    background-color: rgb(255, 255, 255);
-                    color: rgb(38, 39, 48);
-                    padding: 0.25em 0.38em;
-                    position: relative;
-                    text-decoration: none;
-                    border-radius: 4px;
-                    border-width: 1px;
-                    border-style: solid;
-                    border-color: rgb(230, 234, 241);
-                    border-image: initial;
-
-                }} 
-                #{button_id}:hover {{
-                    border-color: rgb(246, 51, 102);
-                    color: rgb(246, 51, 102);
-                }}
-                #{button_id}:active {{
-                    box-shadow: none;
-                    background-color: rgb(246, 51, 102);
-                    color: white;
-                    }}
-            </style> """
+            #{button_id} {{
+                background-color: #FFFFFF;
+                color: #262730;
+                padding: 0.4em 0.74em;
+                position: relative;
+                text-decoration: none;
+                border-radius: 4px;
+                border-width: 1px;
+                border-style: solid;
+                border-color: #DDDDDD;
+                border-image: initial;
+            }}
+            #{button_id}:hover {{
+                border-color: #F63366;
+                color: #F63366;
+            }}
+            #{button_id}:active {{
+                box-shadow: none;
+                background-color: #F63366;
+                color: white;
+            }}
+            </style>
+        """
+    )
     return custom_css, button_id
 
 
-def adjust_container_width(width=1000):
+def adjust_container_width(width: int = 1000) -> None:
     st.markdown(
         f"""
         <style>
@@ -127,7 +144,7 @@ def adjust_container_width(width=1000):
     )
 
 
-def remove_menu():
+def remove_menu() -> None:
     st.markdown(
         """
         <style>
@@ -139,7 +156,7 @@ def remove_menu():
     )
 
 
-def colour_text(notes, color="red"):
+def colour_text(notes: str, color: str = "red") -> None:
     st.markdown(
         f"<span style='color: {color}'>{notes}</span>",
         unsafe_allow_html=True)

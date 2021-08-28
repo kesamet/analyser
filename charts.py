@@ -38,13 +38,13 @@ def plot_linechart(
         if crange:
             cargs["scale"] = alt.Scale(range=crange)
         line = line.encode(color=alt.Color("variable:N", **cargs))
-    
+
     if cutoff is not None:
         areas = alt.Chart(cutoff).mark_rect(color="black", opacity=0.2).encode(
             x='start',
             x2='stop',
-#             y=alt.value(0),  # pixels from top
-#             y2=alt.value(300),  # pixels from top
+            # y=alt.value(0),  # pixels from top
+            # y2=alt.value(300),  # pixels from top
         )
     return line + areas
 

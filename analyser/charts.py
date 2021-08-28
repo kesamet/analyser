@@ -24,7 +24,7 @@ try:
     from pm.config import DIRNAME, EQ_DICT, XLSX_FILE
     _dct = {
         "IWDA": "IWDA",
-        "EIMI": "EIMI", 
+        "EIMI": "EIMI",
     }
     _dct.update(EQ_DICT)
     EQ_DICT = _dct
@@ -32,7 +32,7 @@ except ModuleNotFoundError:
     DIRNAME = "samples"
     EQ_DICT = {
         "MSCI ACWI": "ACWI",
-        "MSCI World": "URTH", 
+        "MSCI World": "URTH",
     }
 
 

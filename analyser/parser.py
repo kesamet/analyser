@@ -30,7 +30,7 @@ def search_highlight():
     else:
         input_txt = st.sidebar.text_input("Enter search terms (For multiple terms, use comma to separate)")
         mode = "or"
-        
+
     if uploaded_file is not None and input_txt != "":
         extracted_doc, page_nums = perform(
             lambda x: extract_pages_keyword(x, [x.strip() for x in input_txt.split(",")], mode=mode),
