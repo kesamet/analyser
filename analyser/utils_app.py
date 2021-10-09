@@ -38,52 +38,44 @@ def get_pdf_display(pdfbytes: bytes) -> str:
 def download_button(
     data,
     filename: str,
-    button_text: str,
+    label: str,
     pickle_it: bool = False,
-) -> str:
-    """
-    Generates a link to download the given data.
-
-    Args:
-        data: The object to be downloaded.
-        filename (str): filename and extension of file to be downloaded
-        button_text (str): Text to display on download button
-        pickle_it (bool): If True, pickle file.
-
-    Returns
-        (str): the anchor tag to download data
-    """
+    *args,
+    **kwargs,
+) -> None:
+    mime = None
     if pickle_it:
         try:
             data = pickle.dumps(data)
         except pickle.PicklingError as e:
-            st.write(e)
-            return None
-
+            st.error(e)
+            return
     else:
         if isinstance(data, bytes):
             pass
-
         elif isinstance(data, pd.DataFrame):
             data = data.to_csv(index=False)
-
-        # Try JSON encode for everything else
+            mime = "text/csv"
         else:
-            data = json.dumps(data)
+            # Try JSON encode for everything else
+            data = json.dumps(data, indent=2)
 
     try:
         # some strings <-> bytes conversions necessary here
-        b64 = base64.b64encode(data.encode()).decode()
-
+        data = data.encode()
     except AttributeError:
-        b64 = base64.b64encode(data).decode()
+        pass
 
-    custom_css, button_id = _custom_button_style()
-    return (
-        custom_css + f"""
-        <a download="{filename}" id="{button_id}"
-        href="data:file/txt;base64,{b64}">{button_text}</a><br></br>
-        """
+    st.download_button(
+        label=label,
+        data=data,
+        file_name=filename,
+        mime=mime,
+        key=kwargs.get("key"),
+        help=kwargs.get("help"),
+        on_click=kwargs.get("on_click"),
+        args=args,
+        kwargs=kwargs,
     )
 
 
@@ -159,4 +151,13 @@ def remove_menu() -> None:
 def colour_text(notes: str, color: str = "red") -> None:
     st.markdown(
         f"<span style='color: {color}'>{notes}</span>",
-        unsafe_allow_html=True)
+        unsafe_allow_html=True,
+    )
+
+
+def local_css(filename: str) -> None:
+    with open(filename, "r") as f:
+        st.markdown(
+            "<style>{}</style>".format(f.read()),
+            unsafe_allow_html=True,
+        )

@@ -57,6 +57,7 @@ def get_data(
                 os.path.join(dirname, f"{symbol}.csv"), index_col="date",
                 parse_dates=True, na_values=["nan"], usecols=["date", col])
             df_temp = df_temp.rename(columns={col: symbol})
+            fill_missing_values(df_temp)
             df = df.join(df_temp)
 
         if symbol == base_symbol:  # drop dates that base_symbol did not trade
@@ -105,6 +106,7 @@ def get_data_ohlcv(
         os.path.join(dirname, f"{base_symbol}.csv"), index_col="date",
         parse_dates=True, na_values=["nan"], usecols=["date", "close"])
     df_base = df_base.rename(columns={"close": base_symbol})
+    fill_missing_values(df_base)
 
     df = pd.DataFrame(index=dates)
     df.index.name = "date"
