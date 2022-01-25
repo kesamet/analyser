@@ -241,7 +241,7 @@ def chart_candlestick(source: pd.DataFrame, cols: List = []) -> None:
         line = alt.Chart(source).mark_line(color="gray").encode(
             alt.X("date:T"),
             alt.Y(col),
-            tooltip=["date", col],
+            tooltip=["date", alt.Tooltip(col, format=".4f")],
         )
         chart += line
     return chart
