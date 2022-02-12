@@ -3,8 +3,10 @@ numpy
 openpyxl
 pandas
 Pillow
+plotly
 PyMuPDF
 scipy
 streamlit
 ta
 xlrd
+yahoofinancials
