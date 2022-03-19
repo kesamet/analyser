@@ -26,10 +26,10 @@ def download_data(
         df = pd.DataFrame.from_dict(data[symbol]["prices"])
         df["date"] = pd.to_datetime(df["formatted_date"])
         df = df[["date", "adjclose", "close", "high", "low", "open", "volume"]]
-        if dirname is not None:
-            df.to_csv(os.path.join(dirname, f"{symbol}.csv"), index=False)
-        else:
+        df = df.drop_duplicates()
+        if dirname is None:
             return df
+        df.to_csv(os.path.join(dirname, f"{symbol}.csv"), index=False)
     except KeyError:
         print(f"... Data not found for {symbol}")
 
@@ -55,8 +55,11 @@ def get_data(
         else:
             df_temp = pd.read_csv(
                 os.path.join(dirname, f"{symbol}.csv"), index_col="date",
-                parse_dates=True, na_values=["nan"], usecols=["date", col])
-            df_temp = df_temp.rename(columns={col: symbol})
+                parse_dates=True,
+                na_values=["nan"],
+                usecols=["date", col],
+            )
+            df_temp.rename(columns={col: symbol}, inplace=True)
             fill_missing_values(df_temp)
             df = df.join(df_temp)
 
@@ -104,8 +107,11 @@ def get_data_ohlcv(
     """Load stock ohlcv data for given symbol from CSV files."""
     df_base = pd.read_csv(
         os.path.join(dirname, f"{base_symbol}.csv"), index_col="date",
-        parse_dates=True, na_values=["nan"], usecols=["date", "close"])
-    df_base = df_base.rename(columns={"close": base_symbol})
+        parse_dates=True,
+        na_values=["nan"],
+        usecols=["date", "close"],
+    )
+    df_base.rename(columns={"close": base_symbol}, inplace=True)
     fill_missing_values(df_base)
 
     df = pd.DataFrame(index=dates)
@@ -115,9 +121,10 @@ def get_data_ohlcv(
 
     df_temp = pd.read_csv(
         os.path.join(dirname, f"{symbol}.csv"), index_col="date",
-        parse_dates=True, na_values=["nan"],
-        usecols=["date", "open", "high", "low", "close", "volume"])
-
+        parse_dates=True,
+        na_values=["nan"],
+        usecols=["date", "open", "high", "low", "close", "volume"],
+    )
     df = df.join(df_temp)
     df = df.replace([0], [np.nan])
     df = df.drop_duplicates()
@@ -180,11 +187,13 @@ def get_ie_data(start_date: str = "1871-01-01", dirname: str = "data") -> pd.Dat
     """Load Shiller data."""
     df = pd.read_excel(os.path.join(dirname, "summary/ie_data.xls"), sheet_name="Data", skiprows=7)
     df.drop(["Fraction", "Unnamed: 13", "Unnamed: 15"], axis=1, inplace=True)
-    df.columns = ["Date", "S&P500", "Dividend", "Earnings", "CPI", "Long_IR",
-                  "Real_Price", "Real_Dividend", "Real_TR_Price",
-                  "Real_Earnings", "Real_TR_Scaled_Earnings", "CAPE", "TRCAPE",
-                  "Excess_CAPE_Yield", "Mth_Bond_TR", "Bond_RTR",
-                  "10Y_Stock_RR", "10Y_Bond_RR", "10Y_Excess_RR"]
+    df.columns = [
+        "Date", "S&P500", "Dividend", "Earnings", "CPI", "Long_IR",
+        "Real_Price", "Real_Dividend", "Real_TR_Price",
+        "Real_Earnings", "Real_TR_Scaled_Earnings", "CAPE", "TRCAPE",
+        "Excess_CAPE_Yield", "Mth_Bond_TR", "Bond_RTR",
+        "10Y_Stock_RR", "10Y_Bond_RR", "10Y_Excess_RR",
+    ]
     df["Date"] = pd.to_datetime(df["Date"].astype(str))
     df.set_index("Date", inplace=True)
     df = df.iloc[:-1]
@@ -328,7 +337,11 @@ def compute_bbands(ts: pd.Series, window: int = 20, nbdevup: int = 2, nbdevdn: i
 
 def compute_dietz_ret(df: pd.DataFrame) -> float:
     """Compute modified Dietz return."""
-    cf = df["Cost"].diff().dropna().to_numpy()
+    cf = (
+        df["Cost"].diff().dropna().to_numpy()
+        - df["Realised_Gain"].iloc[1:].to_numpy()
+        - df["Div"].iloc[1:].to_numpy()
+    )
     t = np.linspace(1, 0, len(cf) + 1)[1:]
     r = (
         (df["Portfolio"].iloc[-1] - df["Portfolio"].iloc[0] - cf.sum()) /
