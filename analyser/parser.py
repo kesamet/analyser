@@ -6,7 +6,11 @@ import tempfile
 
 import streamlit as st
 
-from analyser.constants import PHRASES_SEARCH, KEYWORDS_EXTRACT_SLIDES, KEYWORDS_EXTRACT_REPORT
+from analyser.constants import (
+    PHRASES_SEARCH,
+    KEYWORDS_EXTRACT_SLIDES,
+    KEYWORDS_EXTRACT_REPORT,
+)
 from analyser.utils_parser import (
     perform,
     extract_pages_keyword,
@@ -19,21 +23,29 @@ from analyser.utils_app import get_pdf_display, download_button
 
 
 def search_highlight():
-    st.write("**To search for terms in the uploaded PDF, extract the pages containing these terms, and highlight the terms in the pages.**")
+    st.write(
+        "**To search for terms in the uploaded PDF, extract the pages containing these terms, and highlight the terms in the pages.**"
+    )
     st.sidebar.markdown("---")
     uploaded_file = st.sidebar.file_uploader("Upload a PDF.")
 
     option = st.sidebar.radio("", ["Predefined", "Enter your own search"])
     if option == "Predefined":
-        input_txt = st.sidebar.selectbox("Predefined options", list(PHRASES_SEARCH.keys()))
+        input_txt = st.sidebar.selectbox(
+            "Predefined options", list(PHRASES_SEARCH.keys())
+        )
         mode = PHRASES_SEARCH[input_txt]
     else:
-        input_txt = st.sidebar.text_input("Enter search terms (For multiple terms, use comma to separate)")
+        input_txt = st.sidebar.text_input(
+            "Enter search terms (For multiple terms, use comma to separate)"
+        )
         mode = "or"
 
     if uploaded_file is not None and input_txt != "":
         extracted_doc, page_nums = perform(
-            lambda x: extract_pages_keyword(x, [x.strip() for x in input_txt.split(",")], mode=mode),
+            lambda x: extract_pages_keyword(
+                x, [x.strip() for x in input_txt.split(",")], mode=mode
+            ),
             uploaded_file.read(),
         )
 
@@ -59,12 +71,22 @@ def search_highlight():
 @st.cache
 def extract_lines(uploaded_file, mode):
     if mode == "slides":
-        return perform(extract_all_lines_slides, uploaded_file.read(), dict_keywords=KEYWORDS_EXTRACT_SLIDES)
-    return perform(extract_all_lines_report, uploaded_file.read(), dict_keywords=KEYWORDS_EXTRACT_REPORT)
+        return perform(
+            extract_all_lines_slides,
+            uploaded_file.read(),
+            dict_keywords=KEYWORDS_EXTRACT_SLIDES,
+        )
+    return perform(
+        extract_all_lines_report,
+        uploaded_file.read(),
+        dict_keywords=KEYWORDS_EXTRACT_REPORT,
+    )
 
 
 def search_extract():
-    st.write("**To search for predefined terms in the uploaded PDF, and extract plausible lines containing the information.**")
+    st.write(
+        "**To search for predefined terms in the uploaded PDF, and extract plausible lines containing the information.**"
+    )
     st.sidebar.markdown("---")
     uploaded_file = st.sidebar.file_uploader("Upload a PDF.")
     select_doctype = st.sidebar.radio("", ["slides", "financials"])

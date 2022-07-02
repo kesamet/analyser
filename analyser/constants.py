@@ -12,22 +12,22 @@ str2days = {
 }
 
 PHRASES_SEARCH = {
-        "Aggregate leverage, Gearing": "or",
-        "Cost of debt, Cost of borrowing": "or",
-        "Interest cover": "or",
-        "Average term to maturity, Average weighted debt maturity": "or",
-        "WALE, Weighted average lease expiry": "or",
-        "Net property income": "or",
-        "Distribution per unit, DPU": "or",
-        "Total debt": "or",
-        "Total assets": "or",
-        "Total liabilities": "or",
-        "Investment properties": "or",
-        "Units in issue": "or",
-        "Net asset value, NAV": "or",
-        "Unit price performance, Closing, Highest, Lowest": "and",
-        "Financial position, Total assets, Total liabilities, Investment properties": "and",
-    }
+    "Aggregate leverage, Gearing": "or",
+    "Cost of debt, Cost of borrowing": "or",
+    "Interest cover": "or",
+    "Average term to maturity, Average weighted debt maturity": "or",
+    "WALE, Weighted average lease expiry": "or",
+    "Net property income": "or",
+    "Distribution per unit, DPU": "or",
+    "Total debt": "or",
+    "Total assets": "or",
+    "Total liabilities": "or",
+    "Investment properties": "or",
+    "Units in issue": "or",
+    "Net asset value, NAV": "or",
+    "Unit price performance, Closing, Highest, Lowest": "and",
+    "Financial position, Total assets, Total liabilities, Investment properties": "and",
+}
 
 KEYWORDS_EXTRACT_SLIDES = {
     "Net property income": {
@@ -61,7 +61,11 @@ KEYWORDS_EXTRACT_SLIDES = {
         "keywords": ["Interest cover"],
     },
     "Average term to maturity": {
-        "keywords": ["Average term to maturity", "Average debt maturity", "Average weighted debt maturity"],
+        "keywords": [
+            "Average term to maturity",
+            "Average debt maturity",
+            "Average weighted debt maturity",
+        ],
     },
     "WALE": {
         "keywords": ["WALE", "Weighted average lease expiry"],

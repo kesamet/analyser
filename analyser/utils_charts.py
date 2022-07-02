@@ -22,7 +22,8 @@ def download_data(
 
         tick = yf(symbol)
         data = tick.get_historical_price_data(
-            start_date=start_date, end_date=end_date, time_interval=time_interval)
+            start_date=start_date, end_date=end_date, time_interval=time_interval
+        )
         df = pd.DataFrame.from_dict(data[symbol]["prices"])
         df["date"] = pd.to_datetime(df["formatted_date"])
         df = df[["date", "adjclose", "close", "high", "low", "open", "volume"]]
@@ -54,7 +55,8 @@ def get_data(
             df[symbol] = 1
         else:
             df_temp = pd.read_csv(
-                os.path.join(dirname, f"{symbol}.csv"), index_col="date",
+                os.path.join(dirname, f"{symbol}.csv"),
+                index_col="date",
                 parse_dates=True,
                 na_values=["nan"],
                 usecols=["date", col],
@@ -86,8 +88,12 @@ def get_xlsx(
 
     for symbol in symbols:
         df_temp = pd.read_excel(
-            xlsx, index_col="Date", parse_dates=True,
-            sheet_name=symbol, usecols=["Date", col])
+            xlsx,
+            index_col="Date",
+            parse_dates=True,
+            sheet_name=symbol,
+            usecols=["Date", col],
+        )
         df_temp.index = df_temp.index.date
         df_temp = df_temp.rename(columns={col: symbol})
         df = df.join(df_temp)
@@ -106,7 +112,8 @@ def get_data_ohlcv(
 ) -> pd.DataFrame:
     """Load stock ohlcv data for given symbol from CSV files."""
     df_base = pd.read_csv(
-        os.path.join(dirname, f"{base_symbol}.csv"), index_col="date",
+        os.path.join(dirname, f"{base_symbol}.csv"),
+        index_col="date",
         parse_dates=True,
         na_values=["nan"],
         usecols=["date", "close"],
@@ -120,7 +127,8 @@ def get_data_ohlcv(
     df = df.dropna(subset=[base_symbol])
 
     df_temp = pd.read_csv(
-        os.path.join(dirname, f"{symbol}.csv"), index_col="date",
+        os.path.join(dirname, f"{symbol}.csv"),
+        index_col="date",
         parse_dates=True,
         na_values=["nan"],
         usecols=["date", "open", "high", "low", "close", "volume"],
@@ -140,8 +148,12 @@ def get_xlsx_ohlcv(
 ) -> pd.DataFrame:
     """Load stock ohlcv data for given symbol from xlsx files."""
     df_base = pd.read_excel(
-        xlsx, index_col="Date", parse_dates=True,
-        sheet_name=symbol, usecols=["Date", "Close"])
+        xlsx,
+        index_col="Date",
+        parse_dates=True,
+        sheet_name=symbol,
+        usecols=["Date", "Close"],
+    )
     df_base.columns = [base_symbol]
     df_base.index = df_base.index.date
     df_base.index.name = "date"
@@ -152,8 +164,12 @@ def get_xlsx_ohlcv(
     df = df.dropna(subset=[base_symbol])
 
     df_temp = pd.read_excel(
-        xlsx, parse_dates=True, sheet_name=symbol, index_col="Date",
-        usecols=["Date", "Open", "High", "Low", "Close", "Volume"])
+        xlsx,
+        parse_dates=True,
+        sheet_name=symbol,
+        index_col="Date",
+        usecols=["Date", "Open", "High", "Low", "Close", "Volume"],
+    )
     df_temp.columns = ["open", "high", "low", "close", "volume"]
     df_temp.index = df_temp.index.date
     df_temp.index.name = "date"
@@ -185,14 +201,30 @@ def fill_missing_values(df: pd.DataFrame) -> None:
 
 def get_ie_data(start_date: str = "1871-01-01", dirname: str = "data") -> pd.DataFrame:
     """Load Shiller data."""
-    df = pd.read_excel(os.path.join(dirname, "summary/ie_data.xls"), sheet_name="Data", skiprows=7)
+    df = pd.read_excel(
+        os.path.join(dirname, "summary/ie_data.xls"), sheet_name="Data", skiprows=7
+    )
     df.drop(["Fraction", "Unnamed: 13", "Unnamed: 15"], axis=1, inplace=True)
     df.columns = [
-        "Date", "S&P500", "Dividend", "Earnings", "CPI", "Long_IR",
-        "Real_Price", "Real_Dividend", "Real_TR_Price",
-        "Real_Earnings", "Real_TR_Scaled_Earnings", "CAPE", "TRCAPE",
-        "Excess_CAPE_Yield", "Mth_Bond_TR", "Bond_RTR",
-        "10Y_Stock_RR", "10Y_Bond_RR", "10Y_Excess_RR",
+        "Date",
+        "S&P500",
+        "Dividend",
+        "Earnings",
+        "CPI",
+        "Long_IR",
+        "Real_Price",
+        "Real_Dividend",
+        "Real_TR_Price",
+        "Real_Earnings",
+        "Real_TR_Scaled_Earnings",
+        "CAPE",
+        "TRCAPE",
+        "Excess_CAPE_Yield",
+        "Mth_Bond_TR",
+        "Bond_RTR",
+        "10Y_Stock_RR",
+        "10Y_Bond_RR",
+        "10Y_Excess_RR",
     ]
     df["Date"] = pd.to_datetime(df["Date"].astype(str))
     df.set_index("Date", inplace=True)
@@ -202,7 +234,13 @@ def get_ie_data(start_date: str = "1871-01-01", dirname: str = "data") -> pd.Dat
 
 
 # Plot functions
-def plot_data(df: pd.DataFrame, title: str = "", xlabel: str = "Date", ylabel: str = "Price", ax=None):
+def plot_data(
+    df: pd.DataFrame,
+    title: str = "",
+    xlabel: str = "Date",
+    ylabel: str = "Price",
+    ax=None,
+):
     """Plot stock prices."""
     ax = df.plot(title=title, fontsize=12, ax=ax)
     ax.set_xlabel(xlabel)
@@ -310,7 +348,7 @@ def compute_sma(ts: pd.Series, window: int) -> pd.Series:
 
 def compute_ema(ts: pd.Series, window: int = 20) -> pd.Series:
     """Compute exponential moving average."""
-    return ts.ewm(com=(window-1)/2).mean()
+    return ts.ewm(com=(window - 1) / 2).mean()
 
 
 def compute_cci(ts: pd.Series, window: int = 20) -> pd.Series:
@@ -326,7 +364,9 @@ def compute_macd(ts: pd.Series, nfast: int = 12, nslow: int = 26) -> pd.Series:
     return ema_fast - ema_slow
 
 
-def compute_bbands(ts: pd.Series, window: int = 20, nbdevup: int = 2, nbdevdn: int = 2) -> pd.Series:
+def compute_bbands(
+    ts: pd.Series, window: int = 20, nbdevup: int = 2, nbdevdn: int = 2
+) -> pd.Series:
     """Compute upper and lower Bollinger Bands."""
     sma = compute_sma(ts, window=window)
     rstd = ts.rolling(window=window, center=False).std()
@@ -343,8 +383,7 @@ def compute_dietz_ret(df: pd.DataFrame) -> float:
         - df["Div"].iloc[1:].to_numpy()
     )
     t = np.linspace(1, 0, len(cf) + 1)[1:]
-    r = (
-        (df["Portfolio"].iloc[-1] - df["Portfolio"].iloc[0] - cf.sum()) /
-        (df["Portfolio"].iloc[0] + t.dot(cf))
+    r = (df["Portfolio"].iloc[-1] - df["Portfolio"].iloc[0] - cf.sum()) / (
+        df["Portfolio"].iloc[0] + t.dot(cf)
     )
     return r

@@ -5,8 +5,10 @@ import argparse
 import datetime
 
 from analyser.utils_charts import download_data
+
 try:
     from pm.config import SYMBOLS
+
     DEST = None
 except ModuleNotFoundError:
     SYMBOLS = ["ACWI", "URTH"]

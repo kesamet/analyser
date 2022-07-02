@@ -80,7 +80,9 @@ def extract_pages_keyword(
     return None, None
 
 
-def extract_pages_highlighted(filename: str, all_instances: List[fitz.Rect]) -> fitz.Document:
+def extract_pages_highlighted(
+    filename: str, all_instances: List[fitz.Rect]
+) -> fitz.Document:
     """Extract pages by page numbers with highlighted text."""
     doc = fitz.Document(filename)
     for page_num, rects in all_instances.items():
@@ -131,7 +133,9 @@ def get_closest(blocks: list, rect: fitz.Rect, thres: float = 0.8) -> str:
     return candidate
 
 
-def get_lines(blocks: list, rect: fitz.Rect, xbuf: float = 0., ybuf: float = 0.) -> List[str]:
+def get_lines(
+    blocks: list, rect: fitz.Rect, xbuf: float = 0.0, ybuf: float = 0.0
+) -> List[str]:
     """Get lines that intersect with the given bounding box."""
     new_rect = rect + [-xbuf, -ybuf, xbuf, ybuf]
     lines = list()
@@ -169,20 +173,24 @@ def extract_line_slides(doc: fitz.Document, keyword: str) -> List[dict]:
             if exact.lower() != keyword.lower():
                 nums = extract_numeric(exact)
                 if nums:
-                    results.append({
-                        "value": nums[0],
-                        "line": exact,
-                        "page_num": page_num + 1,
-                    })
+                    results.append(
+                        {
+                            "value": nums[0],
+                            "line": exact,
+                            "page_num": page_num + 1,
+                        }
+                    )
             closest = get_closest(blocks, rect)
             if closest is not None:
                 nums = extract_numeric(closest)
                 if nums:
-                    results.append({
-                        "value": nums[0],
-                        "line": closest,
-                        "page_num": page_num + 1,
-                    })
+                    results.append(
+                        {
+                            "value": nums[0],
+                            "line": closest,
+                            "page_num": page_num + 1,
+                        }
+                    )
     return results
 
 
@@ -212,11 +220,13 @@ def extract_line_report(doc: fitz.Document, keyword: str, aux_kw: str) -> List[d
             for line in get_lines(blocks, rect):
                 nums = extract_numeric(line)
                 if nums:
-                    results.append({
-                        "value": nums[0],
-                        "line": line,
-                        "page_num": page_num + 1,
-                    })
+                    results.append(
+                        {
+                            "value": nums[0],
+                            "line": line,
+                            "page_num": page_num + 1,
+                        }
+                    )
     return results
 
 
@@ -263,6 +273,7 @@ def ysearch(page: fitz.Page, heading: str, ending: str) -> Tuple[float, float]:
 
 def parse_table(page: fitz.Page, heading: str, ending: str) -> tuple:
     """Parse table from a page."""
+
     def filter_page(page, ymin, ymax):
         words = list()
         xs = list()
@@ -348,7 +359,9 @@ def parse_table(page: fitz.Page, heading: str, ending: str) -> tuple:
     return pd.DataFrame(tab, columns=[str(i) for i in range(len(tab[0]))])
 
 
-def page_parse_table(filename: str, page_num: int, heading: str, ending: str) -> pd.DataFrame:
+def page_parse_table(
+    filename: str, page_num: int, heading: str, ending: str
+) -> pd.DataFrame:
     """Parse table from a PDF given page number."""
     doc = fitz.Document(filename)
     page = doc.loadPage(page_num)

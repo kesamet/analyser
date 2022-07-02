@@ -27,12 +27,10 @@ def add_header(path: str) -> None:
 
 def get_pdf_display(pdfbytes: bytes) -> str:
     base64_pdf = base64.b64encode(pdfbytes).decode("utf-8")
-    return (
-        f"""
+    return f"""
         <iframe src="data:application/pdf;base64,{base64_pdf}" 
         width="100%" height="970" type="application/pdf"></iframe>
         """
-    )
 
 
 def download_button(
@@ -82,7 +80,8 @@ def download_button(
 def logout_button(auth_domain: str) -> str:
     custom_css, button_id = _custom_button_style()
     return (
-        custom_css + f"""
+        custom_css
+        + f"""
         <a id="{button_id}" href="https://{auth_domain}/_oauth/logout" 
         target="_self">Logout</a><br></br>
         """
@@ -90,11 +89,10 @@ def logout_button(auth_domain: str) -> str:
 
 
 def _custom_button_style():
-    button_uuid = str(uuid.uuid4()).replace('-', '')
-    button_id = re.sub('\d+', '', button_uuid)
+    button_uuid = str(uuid.uuid4()).replace("-", "")
+    button_id = re.sub("\d+", "", button_uuid)
 
-    custom_css = (
-        f"""
+    custom_css = f"""
             <style>
             #{button_id} {{
                 background-color: #FFFFFF;
@@ -119,7 +117,6 @@ def _custom_button_style():
             }}
             </style>
         """
-    )
     return custom_css, button_id
 
 
