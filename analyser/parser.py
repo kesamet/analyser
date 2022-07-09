@@ -24,7 +24,7 @@ from analyser.utils_app import get_pdf_display, download_button
 
 def search_highlight():
     st.write(
-        "**To search for terms in the uploaded PDF, extract the pages containing these terms, and highlight the terms in the pages.**"
+        "**Extract pages containing the searched terms, and highlight the terms in the pages.**"
     )
     st.sidebar.markdown("---")
     uploaded_file = st.sidebar.file_uploader("Upload a PDF.")
@@ -84,9 +84,7 @@ def extract_lines(uploaded_file, mode):
 
 
 def search_extract():
-    st.write(
-        "**To search for predefined terms in the uploaded PDF, and extract plausible lines containing the information.**"
-    )
+    st.write("**Extract plausible lines containing predefined terms.**")
     st.sidebar.markdown("---")
     uploaded_file = st.sidebar.file_uploader("Upload a PDF.")
     select_doctype = st.sidebar.radio("", ["slides", "financials"])
