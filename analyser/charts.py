@@ -74,6 +74,19 @@ def load_data(
     return get_xlsx(symbols, dates, base_symbol="IWDA", xlsx=XLSX_FILE)
 
 
+def _get_chart(start_date, dates, symbols, symbol_names=None, title="", **kwargs):
+    df = load_data(dates, symbols, **kwargs)[symbols]
+    df1 = rebase(df[df.index >= start_date].copy())
+    if symbol_names is not None:
+        df1.columns = symbol_names
+    chart = altair.generate_chart("line", df1).properties(
+        title=title,
+        height=200,
+        width=260,
+    )
+    return chart
+
+
 def page_charts(today_date: datetime = date.today() - timedelta(days=1)) -> None:
     st.subheader("Shiller charts")
     df0 = load_ie_data()
@@ -96,108 +109,63 @@ def page_charts(today_date: datetime = date.today() - timedelta(days=1)) -> None
     dates = pd.date_range(today_date - timedelta(days=365 * 2), today_date)
 
     # MSCI
-    symbols = ["URTH", "EEM", "SPY", "ES3.SI"]
-    colnames = ["MSCI World", "MSCI EM", "S&P500", "ES3"]
-    df1 = load_data(dates, symbols, "SPY")
-    df1.columns = colnames
-    rebased_df1 = rebase(df1[df1.index >= start_date])
-    chart1 = altair.generate_chart("line", rebased_df1).properties(
+    chart1 = _get_chart(
+        start_date,
+        dates,
+        ["URTH", "EEM", "SPY", "ES3.SI"],
+        symbol_names=["MSCI World", "MSCI EM", "S&P500", "ES3"],
         title="MSCI",
-        height=200,
-        width=260,
+        base_symbol="SPY",
     )
 
     # VIX
-    symbols = ["^VIX"]
-    colnames = ["VIX"]
-    df2 = load_data(dates, symbols)[symbols]
-    df2.columns = colnames
-    chart2 = altair.generate_chart("line", df2[df2.index >= start_date]).properties(
+    chart2 = _get_chart(
+        start_date,
+        dates,
+        ["^VIX"],
+        symbol_names=["VIX"],
         title="VIX",
-        height=200,
-        width=260,
     )
 
     st.altair_chart(alt.concat(chart1, chart2, columns=2), use_container_width=True)
 
-    # etfs
-    symbols = ["IWDA", "EIMI"]
-    colnames = ["World", "EM"]
-    df3a = load_data(dates, symbols)
-    df3a.columns = colnames
-    rebased_df3a = rebase(df3a[df3a.index >= start_date])
-    chart3a = altair.generate_chart("line", rebased_df3a).properties(
+    # ETFs
+    chart3 = _get_chart(
+        start_date,
+        dates,
+        ["IWDA", "EIMI"],
         title="ETF",
-        height=200,
-        width=260,
-    )
-    symbols = ["D05.SI", "ES3.SI", "CLR.SI"]
-    colnames = ["DBS", "ES3", "Lion-Phillip"]
-    df3b = load_data(dates, symbols)
-    df3b.columns = colnames
-    rebased_df3b = rebase(df3b[df3b.index >= start_date])
-    chart3b = altair.generate_chart("line", rebased_df3b).properties(
-        title="ETF SGX",
-        height=200,
-        width=260,
-    )
-    st.altair_chart(alt.concat(chart3a, chart3b, columns=2), use_container_width=True)
-
-    # industrial
-    symbols = [
-        "ES3.SI",
-        "O5RU.SI",
-        "A17U.SI",
-        "J91U.SI",
-        "BUOU.SI",
-        "ME8U.SI",
-        "M44U.SI",
-    ]
-    colnames = ["ES3", "AA", "Ascendas", "ESR-Logos", "FLCT", "MIT", "MLT"]
-    df4 = load_data(dates, symbols)
-    df4.columns = colnames
-    rebased_df4 = rebase(df4[df4.index >= start_date])
-    chart4a = altair.generate_chart(
-        "line",
-        rebased_df4[["ES3", "Ascendas", "FLCT", "MIT", "MLT"]],
-    ).properties(
-        title="Industrial 1",
-        height=200,
-        width=260,
-    )
-    chart4b = altair.generate_chart(
-        "line",
-        rebased_df4[["ES3", "AA", "ESR-Logos"]],
-    ).properties(
-        title="Industrial 2",
-        height=200,
-        width=260,
-    )
-    st.altair_chart(alt.concat(chart4a, chart4b, columns=2), use_container_width=True)
-
-    # retail
-    symbols = ["ES3.SI", "C38U.SI", "J69U.SI", "N2IU.SI"]
-    colnames = ["ES3", "CICT", "FCT", "MCT"]
-    df5 = load_data(dates, symbols)
-    df5.columns = colnames
-    rebased_df5 = rebase(df5[df5.index >= start_date])
-    chart5 = altair.generate_chart("line", rebased_df5).properties(
-        title="Retail & Commercial",
-        height=200,
-        width=250,
     )
 
     # banks
-    symbols = ["ES3.SI", "D05.SI", "O39.SI", "U11.SI"]
-    colnames = ["ES3", "DBS", "OCBC", "UOB"]
-    df6 = load_data(dates, symbols)
-    df6.columns = colnames
-    rebased_df6 = rebase(df6[df6.index >= start_date])
-    chart6 = altair.generate_chart("line", rebased_df6).properties(
+    chart4 = _get_chart(
+        start_date,
+        dates,
+        ["ES3.SI", "D05.SI", "O39.SI", "U11.SI"],
+        symbol_names=["ES3", "DBS", "OCBC", "UOB"],
         title="Banks",
-        height=200,
-        width=250,
     )
+
+    st.altair_chart(alt.concat(chart3, chart4, columns=2), use_container_width=True)
+
+    # industrial
+    chart5 = _get_chart(
+        start_date,
+        dates,
+        ["ES3.SI", "O5RU.SI", "A17U.SI", "BUOU.SI", "ME8U.SI", "M44U.SI"],
+        symbol_names=["ES3", "AA", "Ascendas", "FLCT", "MIT", "MLT"],
+        title="Industrial",
+    )
+
+    # retail
+    chart6 = _get_chart(
+        start_date,
+        dates,
+        ["ES3.SI", "C38U.SI", "J69U.SI", "N2IU.SI"],
+        symbol_names=["ES3", "CICT", "FCT", "MPACT"],
+        title="Retail/Commercial",
+    )
+
     st.altair_chart(alt.concat(chart5, chart6, columns=2), use_container_width=True)
 
 
