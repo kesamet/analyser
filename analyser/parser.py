@@ -29,7 +29,7 @@ def search_highlight():
     st.sidebar.markdown("---")
     uploaded_file = st.sidebar.file_uploader("Upload a PDF.")
 
-    option = st.sidebar.radio("", ["Predefined", "Enter your own search"])
+    option = st.sidebar.radio("options", ["Predefined", "Enter your own search"], label_visibility="collapsed")
     if option == "Predefined":
         input_txt = st.sidebar.selectbox(
             "Predefined options", list(PHRASES_SEARCH.keys())
@@ -87,7 +87,7 @@ def search_extract():
     st.write("**Extract plausible lines containing predefined terms.**")
     st.sidebar.markdown("---")
     uploaded_file = st.sidebar.file_uploader("Upload a PDF.")
-    select_doctype = st.sidebar.radio("", ["slides", "financials"])
+    select_doctype = st.sidebar.radio("options", ["slides", "financials"], label_visibility="collapsed")
 
     if uploaded_file is not None:
         all_results = extract_lines(uploaded_file, select_doctype)
