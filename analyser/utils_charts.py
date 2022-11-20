@@ -50,7 +50,7 @@ def get_data(
 
     for symbol in symbols:
         if symbol == "SB.SI":
-            df[symbol] = 1000
+            df[symbol] = 100
         elif symbol == "UT.SI":
             df[symbol] = 1
         else:
