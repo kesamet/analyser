@@ -15,7 +15,6 @@ from analyser.constants import str2days
 from analyser.utils_charts import (
     get_ie_data,
     get_data,
-    get_xlsx,
     get_ohlcv,
     rebase,
     pct_change,
@@ -23,13 +22,6 @@ from analyser.utils_charts import (
 
 try:
     from pm.config import DIRNAME, EQ_DICT, XLSX_FILE
-
-    _dct = {
-        "IWDA": "IWDA",
-        "EIMI": "EIMI",
-    }
-    _dct.update(EQ_DICT)
-    EQ_DICT = _dct
 except ModuleNotFoundError:
     DIRNAME = "samples"
     EQ_DICT = {
@@ -65,17 +57,9 @@ def load_ie_data() -> pd.DataFrame:
     return df[["Real_Price", "10xReal_Earnings", "CAPE", "10xLong_IR"]]
 
 
-@st.cache
-def load_data(
-    dates: pd.DatetimeIndex, symbols: List[str], base_symbol="ES3.SI"
-) -> pd.DataFrame:
-    if "IWDA" not in symbols and "EIMI" not in symbols:
-        return get_data(symbols, dates, base_symbol=base_symbol, dirname=DIRNAME)
-    return get_xlsx(symbols, dates, base_symbol="IWDA", xlsx=XLSX_FILE)
 
-
-def _get_chart(start_date, dates, symbols, symbol_names=None, title="", **kwargs):
-    df = load_data(dates, symbols, **kwargs)[symbols]
+def _get_chart(start_date, dates, symbols, symbol_names=None, base_symbol="ES3.SI", title=""):
+    df = get_data(symbols, dates, base_symbol=base_symbol, dirname=DIRNAME)[symbols]
     df1 = rebase(df[df.index >= start_date].copy())
     if symbol_names is not None:
         df1.columns = symbol_names
@@ -113,9 +97,9 @@ def page_charts(today_date: datetime = date.today() - timedelta(days=1)) -> None
         start_date,
         dates,
         ["URTH", "EEM", "SPY", "ES3.SI"],
-        symbol_names=["MSCI World", "MSCI EM", "S&P500", "ES3"],
-        title="MSCI",
+        symbol_names=["MSCI World", "MSCI EM", "S&P500", "ES3.SI"],
         base_symbol="SPY",
+        title="MSCI",
     )
 
     # VIX
@@ -124,6 +108,7 @@ def page_charts(today_date: datetime = date.today() - timedelta(days=1)) -> None
         dates,
         ["^VIX"],
         symbol_names=["VIX"],
+        base_symbol="^VIX",
         title="VIX",
     )
 
@@ -133,7 +118,8 @@ def page_charts(today_date: datetime = date.today() - timedelta(days=1)) -> None
     chart3 = _get_chart(
         start_date,
         dates,
-        ["IWDA", "EIMI"],
+        ["IWDA.L", "EIMI.L"],
+        base_symbol="IWDA.L",
         title="ETF",
     )
 

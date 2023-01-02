@@ -95,7 +95,7 @@ def get_xlsx(
             usecols=["Date", col],
         )
         df_temp.index = df_temp.index.date
-        df_temp = df_temp.rename(columns={col: symbol})
+        df_temp.rename(columns={col: symbol}, inplace=True)
         df = df.join(df_temp)
         if symbol == base_symbol:  # drop dates that base_symbol did not trade
             df = df.dropna(subset=[base_symbol])
