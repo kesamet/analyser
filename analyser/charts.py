@@ -57,7 +57,6 @@ def load_ie_data() -> pd.DataFrame:
     return df[["Real_Price", "10xReal_Earnings", "CAPE", "10xLong_IR"]]
 
 
-
 def _get_chart(start_date, dates, symbols, symbol_names=None, base_symbol="ES3.SI", title=""):
     df = get_data(symbols, dates, base_symbol=base_symbol, dirname=DIRNAME)[symbols]
     df1 = rebase(df[df.index >= start_date].copy())
