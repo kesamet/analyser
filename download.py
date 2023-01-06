@@ -6,13 +6,8 @@ import datetime
 
 from analyser.utils_charts import download_data
 
-try:
-    from pm.config import SYMBOLS, DIRNAME
-
-    DEST = DIRNAME
-except ModuleNotFoundError:
-    SYMBOLS = ["ACWI", "URTH"]
-    DEST = "samples"
+SYMBOLS = ["ACWI", "URTH"]
+DEST = "samples"
 
 
 if __name__ == "__main__":
@@ -21,13 +16,9 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--dest", type=str)
     args = parser.parse_args()
 
-    if args.dest is not None:
-        dest = args.dest
-    else:
-        dest = DEST
-
     start_date = args.start_date
     end_date = datetime.date.today().strftime("%Y-%m-%d")
+    dest = args.dest or DEST
     print(f"\nDownloading to {dest}/")
     print(f"Period: {start_date} to {end_date}\n")
 
