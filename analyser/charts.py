@@ -13,23 +13,16 @@ from streamlit.elements import legacy_altair as altair
 
 from analyser.constants import str2days
 from analyser.utils_charts import (
-    get_ie_data,
     get_data,
-    get_xlsx,
-    get_ohlcv,
-    rebase,
+    get_data_ohlcv,
+    get_ie_data,
+    get_pe_data,
     pct_change,
+    rebase,
 )
 
 try:
-    from pm.config import DIRNAME, EQ_DICT, XLSX_FILE
-
-    _dct = {
-        "IWDA": "IWDA",
-        "EIMI": "EIMI",
-    }
-    _dct.update(EQ_DICT)
-    EQ_DICT = _dct
+    from pm.config import DIRNAME, EQ_DICT
 except ModuleNotFoundError:
     DIRNAME = "samples"
     EQ_DICT = {
@@ -58,24 +51,22 @@ def get_start_date(
 
 
 @st.cache
-def load_ie_data() -> pd.DataFrame:
-    df = get_ie_data(start_date="1990-01-01", dirname=DIRNAME)
+def load_pe_data(start_date="1990-01-01") -> pd.DataFrame:
+    """Shiller monthly PE data downloaded from quandl."""
+    return get_pe_data(f"{DIRNAME}/summary/pe_data.csv", start_date)
+
+
+@st.cache
+def load_ie_data(start_date="1871-01-01") -> pd.DataFrame:
+    """Data downloaded from http://www.econ.yale.edu/~shiller/data.htm."""
+    df = get_ie_data(f"{DIRNAME}/summary/ie_data.xls", start_date)
     df["10xReal_Earnings"] = 10 * df["Real_Earnings"]
     df["10xLong_IR"] = 10 * df["Long_IR"]
     return df[["Real_Price", "10xReal_Earnings", "CAPE", "10xLong_IR"]]
 
 
-@st.cache
-def load_data(
-    dates: pd.DatetimeIndex, symbols: List[str], base_symbol="ES3.SI"
-) -> pd.DataFrame:
-    if "IWDA" not in symbols and "EIMI" not in symbols:
-        return get_data(symbols, dates, base_symbol=base_symbol, dirname=DIRNAME)
-    return get_xlsx(symbols, dates, base_symbol="IWDA", xlsx=XLSX_FILE)
-
-
-def _get_chart(start_date, dates, symbols, symbol_names=None, title="", **kwargs):
-    df = load_data(dates, symbols, **kwargs)[symbols]
+def _get_chart(start_date, dates, symbols, symbol_names=None, base_symbol="ES3.SI", title=""):
+    df = get_data(symbols, dates, base_symbol=base_symbol, dirname=DIRNAME)[symbols]
     df1 = rebase(df[df.index >= start_date].copy())
     if symbol_names is not None:
         df1.columns = symbol_names
@@ -88,54 +79,62 @@ def _get_chart(start_date, dates, symbols, symbol_names=None, title="", **kwargs
 
 
 def page_charts(today_date: datetime = date.today() - timedelta(days=1)) -> None:
-    st.subheader("Shiller charts")
-    df0 = load_ie_data()
-    c1 = altair.generate_chart(
-        "line", df0[["Real_Price", "10xReal_Earnings"]]
-    ).properties(
-        title="Index Plot",
-        height=200,
-        width=260,
-    )
-    c2 = altair.generate_chart("line", df0[["CAPE", "10xLong_IR"]]).properties(
-        title="PE (CAPE) Plot",
-        height=200,
-        width=260,
-    )
-    st.altair_chart(alt.concat(c1, c2, columns=2), use_container_width=True)
-
-    st.subheader("Stock charts")
     start_date = get_start_date(today_date, options=("3Y", "2Y", "1Y"))
     dates = pd.date_range(today_date - timedelta(days=365 * 2), today_date)
 
-    # MSCI
-    chart1 = _get_chart(
-        start_date,
-        dates,
-        ["URTH", "EEM", "SPY", "ES3.SI"],
-        symbol_names=["MSCI World", "MSCI EM", "S&P500", "ES3"],
-        title="MSCI",
-        base_symbol="SPY",
+    df0 = load_pe_data()
+    chart0 = altair.generate_chart("line", df0[["CAPE"]]).properties(
+        title="Shiller PE (CAPE) Plot",
+        height=200,
+        width=260,
     )
+    st.altair_chart(chart0, use_container_width=True)
 
-    # VIX
+    # df0 = load_ie_data()
+    # c1 = altair.generate_chart(
+    #     "line", df0[["Real_Price", "10xReal_Earnings"]]
+    # ).properties(
+    #     title="Index Plot",
+    #     height=200,
+    #     width=260,
+    # )
+    # c2 = altair.generate_chart("line", df0[["CAPE", "10xLong_IR"]]).properties(
+    #     title="PE (CAPE) Plot",
+    #     height=200,
+    #     width=260,
+    # )
+    # st.altair_chart(alt.concat(c1, c2, columns=2), use_container_width=True)
+
+    df1 = get_data(["^VIX"], dates, base_symbol="^VIX", dirname=DIRNAME)["^VIX"]
+    df1.columns = ["VIX"]
+    chart1 = altair.generate_chart("line", df1).properties(
+        title="VIX",
+        height=200,
+        width=260,
+    )
+    st.altair_chart(chart1, use_container_width=True)
+
+    st.subheader("Stock charts")
+    # MSCI
     chart2 = _get_chart(
         start_date,
         dates,
-        ["^VIX"],
-        symbol_names=["VIX"],
-        title="VIX",
+        ["URTH", "EEM", "SPY", "ES3.SI"],
+        symbol_names=["MSCI World", "MSCI EM", "S&P500", "ES3.SI"],
+        base_symbol="SPY",
+        title="MSCI",
     )
-
-    st.altair_chart(alt.concat(chart1, chart2, columns=2), use_container_width=True)
+    st.altair_chart(chart2, use_container_width=True)
 
     # ETFs
     chart3 = _get_chart(
         start_date,
         dates,
-        ["IWDA", "EIMI"],
+        ["IWDA.L", "EIMI.L"],
+        base_symbol="IWDA.L",
         title="ETF",
     )
+    st.altair_chart(chart3, use_container_width=True)
 
     # banks
     chart4 = _get_chart(
@@ -145,8 +144,7 @@ def page_charts(today_date: datetime = date.today() - timedelta(days=1)) -> None
         symbol_names=["ES3", "DBS", "OCBC", "UOB"],
         title="Banks",
     )
-
-    st.altair_chart(alt.concat(chart3, chart4, columns=2), use_container_width=True)
+    st.altair_chart(chart4, use_container_width=True)
 
     # industrial
     chart5 = _get_chart(
@@ -156,6 +154,7 @@ def page_charts(today_date: datetime = date.today() - timedelta(days=1)) -> None
         symbol_names=["ES3", "AA", "Ascendas", "FLCT", "MIT", "MLT"],
         title="Industrial",
     )
+    st.altair_chart(chart5, use_container_width=True)
 
     # retail
     chart6 = _get_chart(
@@ -165,14 +164,17 @@ def page_charts(today_date: datetime = date.today() - timedelta(days=1)) -> None
         symbol_names=["ES3", "CICT", "FCT", "MPACT"],
         title="Retail/Commercial",
     )
-
-    st.altair_chart(alt.concat(chart5, chart6, columns=2), use_container_width=True)
+    st.altair_chart(chart6, use_container_width=True)
 
 
 @st.cache(allow_output_mutation=True)
 def load_ohlcv_data(symbol: str, dates: pd.DatetimeIndex) -> pd.DataFrame:
     # Load ohlc data
-    df = get_ohlcv(symbol, dates, dirname=DIRNAME, xlsx=XLSX_FILE)
+    if symbol in ["IWDA.L", "EIMI.L"]:
+        base_symbol = "IWDA.L"
+    else:
+        base_symbol = "ES3.SI"
+    df = get_data_ohlcv(symbol, dates, base_symbol=base_symbol, dirname=DIRNAME)
 
     # Apply technical analysis
     df = ta.add_volatility_ta(df, "high", "low", "close", fillna=False, colprefix="ta_")
