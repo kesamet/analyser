@@ -16,6 +16,7 @@ from analyser.utils_charts import (
     get_data,
     get_data_ohlcv,
     get_ie_data,
+    get_pe_data,
     pct_change,
     rebase,
 )
@@ -50,12 +51,18 @@ def get_start_date(
 
 
 @st.cache
-def load_ie_data(start_date="1990-01-01") -> pd.DataFrame:
-    df = get_ie_data(start_date, dirname=DIRNAME)
-    return df
-    # df["10xReal_Earnings"] = 10 * df["Real_Earnings"]
-    # df["10xLong_IR"] = 10 * df["Long_IR"]
-    # return df[["Real_Price", "10xReal_Earnings", "CAPE", "10xLong_IR"]]
+def load_pe_data(start_date="1990-01-01") -> pd.DataFrame:
+    """Shiller monthly PE data downloaded from quandl."""
+    return get_pe_data(f"{DIRNAME}/summary/pe_data.csv", start_date)
+
+
+@st.cache
+def load_ie_data(start_date="1871-01-01") -> pd.DataFrame:
+    """Data downloaded from http://www.econ.yale.edu/~shiller/data.htm."""
+    df = get_ie_data(f"{DIRNAME}/summary/ie_data.xls", start_date)
+    df["10xReal_Earnings"] = 10 * df["Real_Earnings"]
+    df["10xLong_IR"] = 10 * df["Long_IR"]
+    return df[["Real_Price", "10xReal_Earnings", "CAPE", "10xLong_IR"]]
 
 
 def _get_chart(start_date, dates, symbols, symbol_names=None, base_symbol="ES3.SI", title=""):
@@ -75,13 +82,15 @@ def page_charts(today_date: datetime = date.today() - timedelta(days=1)) -> None
     start_date = get_start_date(today_date, options=("3Y", "2Y", "1Y"))
     dates = pd.date_range(today_date - timedelta(days=365 * 2), today_date)
 
-    df0 = load_ie_data()
+    df0 = load_pe_data()
     chart0 = altair.generate_chart("line", df0[["CAPE"]]).properties(
         title="Shiller PE (CAPE) Plot",
         height=200,
         width=260,
     )
     st.altair_chart(chart0, use_container_width=True)
+
+    # df0 = load_ie_data()
     # c1 = altair.generate_chart(
     #     "line", df0[["Real_Price", "10xReal_Earnings"]]
     # ).properties(

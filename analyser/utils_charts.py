@@ -3,7 +3,7 @@ Utility functions for charting.
 """
 import os
 from datetime import datetime, timedelta
-from typing import List, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -187,44 +187,47 @@ def fill_missing_values(df: pd.DataFrame) -> None:
     df.fillna(method="bfill", inplace=True)
 
 
-def get_ie_data(start_date: str = "1871-01-01", dirname: str = "data") -> pd.DataFrame:
-    """Load Shiller data."""
-    df = pd.read_csv(f"{dirname}/summary/ie_data.csv")
+def get_pe_data(filename: str, start_date: Optional[str] = None) -> pd.DataFrame:
+    """Shiller monthly PE data downloaded from quandl."""
+    df = pd.read_csv(filename)
     df["Date"] = pd.to_datetime(df["Date"].astype(str))
     df.set_index("Date", inplace=True)
-    df = df[df.index >= start_date]
+    if start_date is not None:
+        df = df[df.index >= start_date]
     return df
 
-#     df = pd.read_excel(
-#         os.path.join(dirname, "summary/ie_data.xls"), sheet_name="Data", skiprows=7
-#     )
-#     df.drop(["Fraction", "Unnamed: 13", "Unnamed: 15"], axis=1, inplace=True)
-#     df.columns = [
-#         "Date",
-#         "S&P500",
-#         "Dividend",
-#         "Earnings",
-#         "CPI",
-#         "Long_IR",
-#         "Real_Price",
-#         "Real_Dividend",
-#         "Real_TR_Price",
-#         "Real_Earnings",
-#         "Real_TR_Scaled_Earnings",
-#         "CAPE",
-#         "TRCAPE",
-#         "Excess_CAPE_Yield",
-#         "Mth_Bond_TR",
-#         "Bond_RTR",
-#         "10Y_Stock_RR",
-#         "10Y_Bond_RR",
-#         "10Y_Excess_RR",
-#     ]
-#     df["Date"] = pd.to_datetime(df["Date"].astype(str))
-#     df.set_index("Date", inplace=True)
-#     df = df.iloc[:-1]
-#     df = df[df.index >= start_date]
-#     return df
+
+def get_ie_data(filename: str, start_date: Optional[str] = None) -> pd.DataFrame:
+    """Data downloaded from http://www.econ.yale.edu/~shiller/data.htm."""
+    df = pd.read_excel(filename, sheet_name="Data", skiprows=7)
+    df.drop(["Fraction", "Unnamed: 13", "Unnamed: 15"], axis=1, inplace=True)
+    df.columns = [
+        "Date",
+        "S&P500",
+        "Dividend",
+        "Earnings",
+        "CPI",
+        "Long_IR",
+        "Real_Price",
+        "Real_Dividend",
+        "Real_TR_Price",
+        "Real_Earnings",
+        "Real_TR_Scaled_Earnings",
+        "CAPE",
+        "TRCAPE",
+        "Excess_CAPE_Yield",
+        "Mth_Bond_TR",
+        "Bond_RTR",
+        "10Y_Stock_RR",
+        "10Y_Bond_RR",
+        "10Y_Excess_RR",
+    ]
+    df["Date"] = pd.to_datetime(df["Date"].astype(str))
+    df.set_index("Date", inplace=True)
+    df = df.iloc[:-1]
+    if start_date is not None:
+        df = df[df.index >= start_date]
+    return df
 
 
 # Plot functions
