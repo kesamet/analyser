@@ -6,11 +6,15 @@ pip install -r requirements.txt
 ```
 
 ### Download data
+Data is download from Yahoo Finance. The stocks of interest are added to the file `symbols.py`.
+
+To download data,
 ```python
-python -m analyser.download
+python -m download
 ```
 
-### To run Streamlit app
+### Run app
+To run Streamlit app,
 ```python
 streamlit run app_analyser.py
 ```

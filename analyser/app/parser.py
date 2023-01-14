@@ -22,7 +22,7 @@ from analyser.parse import (
 from analyser.app.utils import get_pdf_display, download_button
 
 
-def search_highlight():
+def search_highlight(**kwargs):
     st.write(
         "**Extract pages containing the searched terms, and highlight the terms in the pages.**"
     )
@@ -85,7 +85,7 @@ def extract_lines(uploaded_file, mode):
     )
 
 
-def search_extract():
+def search_extract(**kwargs):
     st.write("**Extract plausible lines containing predefined terms.**")
     st.sidebar.markdown("---")
     uploaded_file = st.sidebar.file_uploader("Upload a PDF.")
@@ -122,7 +122,7 @@ def read_table_custom(uploaded_file, page_num, heading, ending):
     )
 
 
-def table_ocr():
+def table_ocr(**kwargs):
     st.write("**To extract table from a PDF page into a csv.**")
     st.sidebar.markdown("---")
     uploaded_file = st.sidebar.file_uploader("Upload a PDF.")
