@@ -1,91 +1,146 @@
 """
 Plots.
 """
+from typing import Optional
+
 import altair as alt
+import matplotlib.lines as mlines
+import matplotlib.pyplot as plt
 import pandas as pd
+import plotly.graph_objects as go
+
+from analyser.data import compute_bbands, compute_sma, rebase
 
 
-def make_source_waterfall(shap_exp, max_display=10):
-    """Prepare dataframe for waterfall chart."""
-    base_value = shap_exp.base_values
-    df = pd.DataFrame(
-        {
-            "feature": shap_exp.feature_names,
-            "feature_value": shap_exp.data,
-            "shap_value": shap_exp.values,
-        }
-    )
-
-    df["abs_val"] = df["shap_value"].abs()
-    df = df.sort_values("abs_val", ascending=True)
-
-    df["val_"] = df["shap_value"].values
-    remaining = df["shap_value"].iloc[:-max_display].sum()
-    output_value = df["shap_value"].sum() + base_value
-
-    df0 = pd.DataFrame(
-        {
-            "feature": ["Average Model Output"],
-            "shap_value": [base_value],
-            "val_": [base_value],
-        }
-    )
-    df2 = pd.DataFrame(
-        {
-            "feature": [f"{len(df) - max_display} other features"],
-            "shap_value": [remaining],
-            "val_": [remaining],
-        }
-    )
-    df1 = df.iloc[-max_display:]
-    df4 = pd.DataFrame(
-        {
-            "feature": ["Individual Observation"],
-            "shap_value": [output_value],
-            "val_": [0],
-        }
-    )
-    source = pd.concat([df0, df2, df1, df4], axis=0, ignore_index=True)
-
-    source["close"] = source["val_"].cumsum()
-    source["open"] = source["close"].shift(1)
-    source.loc[len(source) - 1, "open"] = 0
-    source["open"].fillna(0, inplace=True)
-    return source.iloc[::-1]
+def plot_data(
+    df: pd.DataFrame,
+    title: str = "",
+    xlabel: str = "Date",
+    ylabel: str = "Price",
+    ax=None,
+):
+    """Plot stock prices."""
+    ax = df.plot(title=title, fontsize=12, ax=ax)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    return ax
 
 
-def waterfall_chart(source, decimal=3):
-    """Waterfall chart."""
-    source = source.iloc[1:-1].copy()
-    for c in ["feature_value", "shap_value"]:
-        source[c] = source[c].round(decimal).astype(str)
-    source.loc[source["feature_value"] == "nan", "feature_value"] = ""
+def plot_normalized_data(
+    df: pd.DataFrame,
+    title: str = "",
+    xlabel: str = "Date",
+    ylabel: str = "Normalized",
+    ax=None,
+):
+    """Plot normalized stock prices."""
+    normdf = rebase(df)
+    ax = plot_data(normdf, title=title, xlabel=xlabel, ylabel=ylabel, ax=ax)
+    ax.axhline(y=1, linestyle="--", color="k")
+    return ax
 
-    bars = (
-        alt.Chart(source)
+
+def plot_bollinger(df: pd.DataFrame, title: str = "", ax=None):
+    """Plot bollinger bands and SMA."""
+    df2 = df[["close"]].copy()
+    _, df2["upper"], df2["lower"] = compute_bbands(df["close"])
+    df2["sma200"] = compute_sma(df["close"], 200)
+    df2["sma50"] = compute_sma(df["close"], 50)
+
+    ax = plot_data(df2, title=title, ax=ax)
+    return df2, ax
+
+
+def plot_with_two_scales(
+    df1: pd.DataFrame,
+    df2: pd.DataFrame,
+    xlabel: str = "Date",
+    ylabel1: str = "Normalized",
+    ylabel2: Optional[str] = None,
+):
+    """Plot two graphs together."""
+    import matplotlib.pyplot as plt
+
+    fig, ax1 = plt.subplots(figsize=(9, 6.5))
+
+    color = "tab:blue"
+    df1.plot(ax=ax1)
+    ax1.set_xlabel(xlabel)
+    ax1.set_ylabel(ylabel1, color=color)
+    ax1.tick_params(axis="y", labelcolor=color)
+
+    ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+
+    color = "tab:red"
+    df2.plot(ax=ax2, color=color, legend=None)
+    ax2.set_ylabel(ylabel2, color=color)
+    ax2.tick_params(axis="y", labelcolor=color)
+
+    fig.tight_layout()  # otherwise the right y-label is slightly clipped
+    plt.show()
+
+
+def barchart(source: pd.DataFrame, title: str = "", timeunits: str = "yearmonth"):
+    """
+    Plot barchart. source must be a Dataframe with only 1 column
+    and Date:T as index.
+    """
+    source = source.reset_index()
+    source.columns = ["Date", "Value"]
+    return (
+        alt.Chart(source, title=title)
         .mark_bar()
         .encode(
-            alt.Y("feature:O", sort=source["feature"].tolist(), title=""),
-            alt.X("open:Q", scale=alt.Scale(zero=False), title=""),
-            alt.X2("close:Q"),
-            alt.Tooltip(["feature", "feature_value", "shap_value"]),
+            x=alt.X(f"{timeunits}(Date):O", title="Date"),
+            y="Value:Q",
+            tooltip=[
+                alt.Tooltip(f"{timeunits}(Date)", title="Date"),
+                alt.Tooltip("Value", title=title),
+            ],
         )
     )
-    color1 = bars.encode(
-        color=alt.condition(
-            "datum.open <= datum.close",
-            alt.value("#FF0D57"),
-            alt.value("#1E88E5"),
-        ),
+
+
+def py_ringchart(values: list, labels: list, colors: list, title: Optional[str] = None):
+    """Ring chart."""
+    fig, ax = plt.subplots()
+    fig.set_size_inches(4, 4)
+    ax.axis("equal")
+    width = 0.25
+
+    pie, _ = ax.pie(values[::-1], radius=1, colors=colors[::-1], startangle=90)
+    plt.setp(pie, width=width, edgecolor="white")
+
+    # setting up the legend
+    bars = list()
+    for label, color in zip(labels, colors):
+        bars.append(
+            mlines.Line2D(
+                [],
+                [],
+                color=color,
+                marker="s",
+                linestyle="None",
+                markersize=10,
+                label=label,
+            )
+        )
+
+    ax.legend(handles=bars, prop={"size": 8}, loc="center", frameon=False)
+
+    if title is not None:
+        ax.set_title(title)
+    return fig
+
+
+def plotly_ringchart(values: list, labels: list, title: str = ""):
+    """Plotly ring chart."""
+    # Use `hole` to create a donut-like pie chart
+    fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=0.5)])
+    fig.update_layout(
+        title=title,
     )
-    color2 = bars.encode(
-        color=alt.condition(
-            "datum.feature == 'Average Model Output' || datum.feature == 'Individual Observation'",
-            alt.value("#F7E0B6"),
-            alt.value(""),
-        ),
-    )
-    return bars + color1 + color2
+    return fig
 
 
 def histogram_chart(source):
