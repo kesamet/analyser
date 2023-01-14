@@ -1,5 +1,5 @@
 """
-Utility functions for parsing.
+Parse reports.
 """
 import os
 import tempfile

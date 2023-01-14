@@ -3,8 +3,8 @@ Streamlit app
 """
 import streamlit as st
 
-from analyser.charts import page_ta
-from analyser.parser import search_highlight, table_ocr, search_extract
+from analyser.app.charts import page_ta
+from analyser.app.parser import search_highlight, table_ocr, search_extract
 
 
 def main():

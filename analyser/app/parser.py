@@ -6,12 +6,12 @@ import tempfile
 
 import streamlit as st
 
-from analyser.constants import (
+from analyser.app.constants import (
     PHRASES_SEARCH,
     KEYWORDS_EXTRACT_SLIDES,
     KEYWORDS_EXTRACT_REPORT,
 )
-from analyser.utils_parser import (
+from analyser.parse import (
     perform,
     extract_pages_keyword,
     extract_all_lines_slides,
@@ -19,7 +19,7 @@ from analyser.utils_parser import (
     extract_most_plausible,
     page_parse_table,
 )
-from analyser.utils_app import get_pdf_display, download_button
+from analyser.app.utils import get_pdf_display, download_button
 
 
 def search_highlight():
@@ -29,7 +29,9 @@ def search_highlight():
     st.sidebar.markdown("---")
     uploaded_file = st.sidebar.file_uploader("Upload a PDF.")
 
-    option = st.sidebar.radio("options", ["Predefined", "Enter your own search"], label_visibility="collapsed")
+    option = st.sidebar.radio(
+        "options", ["Predefined", "Enter your own search"], label_visibility="collapsed"
+    )
     if option == "Predefined":
         input_txt = st.sidebar.selectbox(
             "Predefined options", list(PHRASES_SEARCH.keys())
@@ -87,7 +89,9 @@ def search_extract():
     st.write("**Extract plausible lines containing predefined terms.**")
     st.sidebar.markdown("---")
     uploaded_file = st.sidebar.file_uploader("Upload a PDF.")
-    select_doctype = st.sidebar.radio("options", ["slides", "financials"], label_visibility="collapsed")
+    select_doctype = st.sidebar.radio(
+        "options", ["slides", "financials"], label_visibility="collapsed"
+    )
 
     if uploaded_file is not None:
         all_results = extract_lines(uploaded_file, select_doctype)

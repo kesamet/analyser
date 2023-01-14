@@ -10,17 +10,13 @@ import ta
 import altair as alt
 import streamlit as st
 
-from analyser.constants import str2days
-from analyser.utils_charts import get_data_ohlcv, pct_change
+from analyser.app.constants import str2days
+from analyser.data import get_data_ohlcv, pct_change
 
 try:
-    from pm.config import DIRNAME, EQ_DICT
+    from pm.symbols import EQ_DICT
 except ModuleNotFoundError:
-    DIRNAME = "samples"
-    EQ_DICT = {
-        "MSCI ACWI": "ACWI",
-        "MSCI World": "URTH",
-    }
+    from analyser.symbols import EQ_DICT
 
 
 @st.cache(allow_output_mutation=True)
@@ -30,7 +26,7 @@ def load_ohlcv_data(symbol: str, dates: pd.DatetimeIndex) -> pd.DataFrame:
         base_symbol = "IWDA.L"
     else:
         base_symbol = "ES3.SI"
-    df = get_data_ohlcv(symbol, dates, base_symbol=base_symbol, dirname=DIRNAME)
+    df = get_data_ohlcv(symbol, dates, base_symbol=base_symbol)
 
     # Apply technical analysis
     df = ta.add_volatility_ta(df, "high", "low", "close", fillna=False, colprefix="ta_")

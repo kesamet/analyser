@@ -1,5 +1,5 @@
 """
-Utility functions for charting.
+Data.
 """
 import os
 from datetime import datetime, timedelta
