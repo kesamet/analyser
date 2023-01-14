@@ -230,76 +230,6 @@ def get_ie_data(filename: str, start_date: Optional[str] = None) -> pd.DataFrame
     return df
 
 
-# Plot functions
-def plot_data(
-    df: pd.DataFrame,
-    title: str = "",
-    xlabel: str = "Date",
-    ylabel: str = "Price",
-    ax=None,
-):
-    """Plot stock prices."""
-    ax = df.plot(title=title, fontsize=12, ax=ax)
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-    return ax
-
-
-def plot_normalized_data(
-    df: pd.DataFrame,
-    title: str = "",
-    xlabel: str = "Date",
-    ylabel: str = "Normalized",
-    ax=None,
-):
-    """Plot normalized stock prices."""
-    normdf = rebase(df)
-    ax = plot_data(normdf, title=title, xlabel=xlabel, ylabel=ylabel, ax=ax)
-    ax.axhline(y=1, linestyle="--", color="k")
-    return ax
-
-
-def plot_bollinger(df: pd.DataFrame, title: str = "", ax=None):
-    """Plot bollinger bands and SMA."""
-    df2 = df[["close"]].copy()
-    _, df2["upper"], df2["lower"] = compute_bbands(df["close"])
-    df2["sma200"] = compute_sma(df["close"], 200)
-    df2["sma50"] = compute_sma(df["close"], 50)
-
-    ax = plot_data(df2, title=title, ax=ax)
-    return df2, ax
-
-
-def plot_with_two_scales(
-    df1: pd.DataFrame,
-    df2: pd.DataFrame,
-    xlabel: str = "Date",
-    ylabel1: str = "Normalized",
-    ylabel2=None,
-):
-    """Plot two graphs together."""
-    import matplotlib.pyplot as plt
-
-    fig, ax1 = plt.subplots(figsize=(9, 6.5))
-
-    color = "tab:blue"
-    df1.plot(ax=ax1)
-    ax1.set_xlabel(xlabel)
-    ax1.set_ylabel(ylabel1, color=color)
-    ax1.tick_params(axis="y", labelcolor=color)
-
-    ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
-
-    color = "tab:red"
-    df2.plot(ax=ax2, color=color, legend=None)
-    ax2.set_ylabel(ylabel2, color=color)
-    ax2.tick_params(axis="y", labelcolor=color)
-
-    fig.tight_layout()  # otherwise the right y-label is slightly clipped
-    plt.show()
-
-
-# Common functions
 def rebase(df: pd.DataFrame, date: str = None) -> pd.DataFrame:
     """Rebase."""
     if date is not None:
@@ -337,7 +267,6 @@ def annualise(p: float, years: float) -> float:
     return (1 + p) ** (1 / years) - 1
 
 
-# Technical indicators
 def compute_sma(ts: pd.Series, window: int) -> pd.Series:
     """Compute simple moving average."""
     return ts.rolling(window=window, center=False).mean()
@@ -370,17 +299,3 @@ def compute_bbands(
     upper_band = sma + nbdevup * rstd
     lower_band = sma - nbdevdn * rstd
     return sma, upper_band, lower_band
-
-
-def compute_dietz_ret(df: pd.DataFrame) -> float:
-    """Compute modified Dietz return."""
-    cf = (
-        df["Cost"].diff().dropna().to_numpy()
-        - df["Realised_Gain"].iloc[1:].to_numpy()
-        - df["Div"].iloc[1:].to_numpy()
-    )
-    t = np.linspace(1, 0, len(cf) + 1)[1:]
-    r = (df["Portfolio"].iloc[-1] - df["Portfolio"].iloc[0] - cf.sum()) / (
-        df["Portfolio"].iloc[0] + t.dot(cf)
-    )
-    return r

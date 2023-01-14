@@ -5,7 +5,7 @@ import argparse
 import datetime
 
 from analyser.data import download_data
-from analyser.symbols import SYMBOLS
+from symbols import SYMBOLS
 
 
 if __name__ == "__main__":

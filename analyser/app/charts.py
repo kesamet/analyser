@@ -1,7 +1,7 @@
 """
 Charting
 """
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from typing import List
 
 import numpy as np
@@ -12,11 +12,6 @@ import streamlit as st
 
 from analyser.app.constants import str2days
 from analyser.data import get_data_ohlcv, pct_change
-
-try:
-    from pm.symbols import EQ_DICT
-except ModuleNotFoundError:
-    from analyser.symbols import EQ_DICT
 
 
 @st.cache(allow_output_mutation=True)
@@ -93,7 +88,7 @@ def chart_candlestick(source: pd.DataFrame, cols: List = []) -> None:
     return chart
 
 
-def page_ta(today_date: datetime = date.today() - timedelta(days=1)) -> None:
+def page_ta(last_date: datetime, eq_dict: dict, **kwargs) -> None:
     """Technical analysis page."""
     ta_type = {
         "Bollinger": {
@@ -117,9 +112,9 @@ def page_ta(today_date: datetime = date.today() - timedelta(days=1)) -> None:
         },
     }
 
-    select_eq = st.selectbox("Select equity", list(EQ_DICT.keys()))
-    dates = pd.date_range(today_date - timedelta(days=800), today_date)
-    df = load_ohlcv_data(EQ_DICT[select_eq], dates)
+    select_eq = st.selectbox("Select equity", list(eq_dict.keys()))
+    dates = pd.date_range(last_date - timedelta(days=800), last_date)
+    df = load_ohlcv_data(eq_dict[select_eq], dates)
 
     col0, col1 = st.columns(2)
     select_days = col0.selectbox("Lookback period", ["1M", "2M", "3M", "6M"], 2)
