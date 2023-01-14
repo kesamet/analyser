@@ -1,5 +1,5 @@
 """
-Script to compute efficient frontier using Modern Portfolio Theory.
+Compute efficient frontier using Modern Portfolio Theory.
 """
 import numpy as np
 import pandas as pd
