@@ -49,11 +49,7 @@ def get_data(
         symbols = [base_symbol] + symbols
 
     for symbol in symbols:
-        if symbol == "SB.SI":
-            df[symbol] = 100
-        elif symbol == "UT.SI":
-            df[symbol] = 1
-        else:
+        try:
             df_temp = pd.read_csv(
                 os.path.join(dirname, f"{symbol}.csv"),
                 index_col="date",
@@ -64,6 +60,11 @@ def get_data(
             df_temp.rename(columns={col: symbol}, inplace=True)
             fill_missing_values(df_temp)
             df = df.join(df_temp)
+        except FileNotFoundError:
+            if symbol == "SB.SI":
+                df[symbol] = 100
+            else:
+                df[symbol] = 1
 
         if symbol == base_symbol:  # drop dates that base_symbol did not trade
             df = df.dropna(subset=[base_symbol])
