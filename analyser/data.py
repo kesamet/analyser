@@ -61,7 +61,7 @@ def get_data(
             fill_missing_values(df_temp)
             df = df.join(df_temp)
         except FileNotFoundError:
-            if symbol == "SB.SI":
+            if symbol == "SB":
                 df[symbol] = 100
             else:
                 df[symbol] = 1
