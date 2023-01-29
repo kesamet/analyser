@@ -3,7 +3,7 @@ Data.
 """
 import os
 from datetime import datetime, timedelta
-from typing import List, Optional, Tuple, Union
+from typing import List, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -61,48 +61,15 @@ def get_data(
             fill_missing_values(df_temp)
             df = df.join(df_temp)
         except FileNotFoundError:
-            if symbol == "SB":
-                df[symbol] = 100
-            else:
-                df[symbol] = 1
+            df[symbol] = 1
 
-        if symbol == base_symbol:  # drop dates that base_symbol did not trade
+        # drop dates that base_symbol did not trade
+        if symbol == base_symbol:
             df = df.dropna(subset=[base_symbol])
 
     df = df.replace([0], [np.nan])
     fill_missing_values(df)
     return df
-
-
-# def get_xlsx(
-#     symbols: List[str],
-#     dates: pd.DatetimeIndex,
-#     base_symbol: str = "USDSGD",
-#     col: str = "Close",
-#     xlsx: str = "data.xlsx",
-# ) -> pd.DataFrame:
-#     """Load stock data for given symbols from xlsx file."""
-#     df = pd.DataFrame(index=dates)
-#     df.index.name = "Date"
-#     if base_symbol not in symbols:
-#         symbols = [base_symbol] + symbols
-
-#     for symbol in symbols:
-#         df_temp = pd.read_excel(
-#             xlsx,
-#             index_col="Date",
-#             parse_dates=True,
-#             sheet_name=symbol,
-#             usecols=["Date", col],
-#         )
-#         df_temp.index = df_temp.index.date
-#         df_temp.rename(columns={col: symbol}, inplace=True)
-#         df = df.join(df_temp)
-#         if symbol == base_symbol:  # drop dates that base_symbol did not trade
-#             df = df.dropna(subset=[base_symbol])
-#     df = df.replace([0], [np.nan])
-#     fill_missing_values(df)
-#     return df
 
 
 def get_data_ohlcv(
@@ -141,94 +108,10 @@ def get_data_ohlcv(
     return df
 
 
-# def get_xlsx_ohlcv(
-#     symbol: str,
-#     dates: pd.DatetimeIndex,
-#     base_symbol: str = "USDSGD",
-#     xlsx: str = "data.xlsx",
-# ) -> pd.DataFrame:
-#     """Load stock ohlcv data for given symbol from xlsx files."""
-#     df_base = pd.read_excel(
-#         xlsx,
-#         index_col="Date",
-#         parse_dates=True,
-#         sheet_name=symbol,
-#         usecols=["Date", "Close"],
-#     )
-#     df_base.columns = [base_symbol]
-#     df_base.index = df_base.index.date
-#     df_base.index.name = "date"
-
-#     df = pd.DataFrame(index=dates)
-#     df.index.name = "date"
-#     df = df.join(df_base)
-#     df = df.dropna(subset=[base_symbol])
-
-#     df_temp = pd.read_excel(
-#         xlsx,
-#         parse_dates=True,
-#         sheet_name=symbol,
-#         index_col="Date",
-#         usecols=["Date", "Open", "High", "Low", "Close", "Volume"],
-#     )
-#     df_temp.columns = ["open", "high", "low", "close", "volume"]
-#     df_temp.index = df_temp.index.date
-#     df_temp.index.name = "date"
-
-#     df = df.join(df_temp)
-#     df = df.replace([0], [np.nan])
-#     df = df.drop_duplicates()
-#     fill_missing_values(df)
-#     return df
-
-
 def fill_missing_values(df: pd.DataFrame) -> None:
     """Fill missing values in dataframe."""
     df.fillna(method="ffill", inplace=True)
     df.fillna(method="bfill", inplace=True)
-
-
-def get_pe_data(filename: str, start_date: Optional[str] = None) -> pd.DataFrame:
-    """Shiller monthly PE data downloaded from quandl."""
-    df = pd.read_csv(filename)
-    df["Date"] = pd.to_datetime(df["Date"].astype(str))
-    df.set_index("Date", inplace=True)
-    if start_date is not None:
-        df = df[df.index >= start_date]
-    return df
-
-
-def get_ie_data(filename: str, start_date: Optional[str] = None) -> pd.DataFrame:
-    """Data downloaded from http://www.econ.yale.edu/~shiller/data.htm."""
-    df = pd.read_excel(filename, sheet_name="Data", skiprows=7)
-    df.drop(["Fraction", "Unnamed: 13", "Unnamed: 15"], axis=1, inplace=True)
-    df.columns = [
-        "Date",
-        "S&P500",
-        "Dividend",
-        "Earnings",
-        "CPI",
-        "Long_IR",
-        "Real_Price",
-        "Real_Dividend",
-        "Real_TR_Price",
-        "Real_Earnings",
-        "Real_TR_Scaled_Earnings",
-        "CAPE",
-        "TRCAPE",
-        "Excess_CAPE_Yield",
-        "Mth_Bond_TR",
-        "Bond_RTR",
-        "10Y_Stock_RR",
-        "10Y_Bond_RR",
-        "10Y_Excess_RR",
-    ]
-    df["Date"] = pd.to_datetime(df["Date"].astype(str))
-    df.set_index("Date", inplace=True)
-    df = df.iloc[:-1]
-    if start_date is not None:
-        df = df[df.index >= start_date]
-    return df
 
 
 def rebase(df: pd.DataFrame, date: str = None) -> pd.DataFrame:
