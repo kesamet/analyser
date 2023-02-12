@@ -6,7 +6,7 @@ Pillow
 plotly
 PyMuPDF
 scipy
-streamlit
+streamlit==1.18.1
 ta
 xlrd
 yahoofinancials

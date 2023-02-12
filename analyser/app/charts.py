@@ -14,14 +14,14 @@ from analyser.app.constants import str2days
 from analyser.data import get_data_ohlcv, pct_change
 
 
-@st.cache(allow_output_mutation=True)
-def load_ohlcv_data(symbol: str, dates: pd.DatetimeIndex) -> pd.DataFrame:
+@st.cache_data
+def load_ohlcv_data(symbol: str, _dates: pd.DatetimeIndex) -> pd.DataFrame:
     # Load ohlc data
     if symbol in ["IWDA.L", "EIMI.L"]:
         base_symbol = "IWDA.L"
     else:
         base_symbol = "ES3.SI"
-    df = get_data_ohlcv(symbol, dates, base_symbol=base_symbol)
+    df = get_data_ohlcv(symbol, _dates, base_symbol=base_symbol)
 
     # Apply technical analysis
     df = ta.add_volatility_ta(df, "high", "low", "close", fillna=False, colprefix="ta_")

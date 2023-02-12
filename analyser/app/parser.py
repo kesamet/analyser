@@ -70,7 +70,7 @@ def search_highlight(**kwargs):
             st.write("`None found.`")
 
 
-@st.cache
+@st.cache_data
 def extract_lines(uploaded_file, mode):
     if mode == "slides":
         return perform(
@@ -114,7 +114,7 @@ def search_extract(**kwargs):
                 st.markdown("---")
 
 
-@st.cache
+@st.cache_data
 def read_table_custom(uploaded_file, page_num, heading, ending):
     return perform(
         lambda x: page_parse_table(x, int(page_num) - 1, heading, ending),
