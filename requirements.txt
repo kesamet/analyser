@@ -1,12 +1,15 @@
 matplotlib
+nasdaq-data-link
 numpy
 openpyxl
 pandas
 Pillow
 plotly
 PyMuPDF
+PyYAML
 scipy
-streamlit==1.18.1
+seaborn
+streamlit
 ta
 xlrd
 yahoofinancials
