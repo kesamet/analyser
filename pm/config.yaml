@@ -1,0 +1,5 @@
+data_dir: "data"
+summary_dir: "data/summary"
+flowdata: "data/summary/aSummary.xlsx"
+quandl_api_key: "yGJuyc3QNhH4pyq3x3-n"
+# xlsx_file: "data/summary/prices.xlsx"
