@@ -1,6 +1,7 @@
 """
 Script containing commonly used functions for portfolio.
 """
+import argparse
 from datetime import datetime
 from typing import List, Optional, Tuple
 
@@ -587,28 +588,38 @@ def get_portfolio(end_date, start_date, sheet, xlsx_file):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-o", "--output", default="all", type=str)
+    args = parser.parse_args()
+
     end_date = datetime.today().isoformat()
 
-    print("Generating portfolio_sgd...")
-    sgd_df = get_portfolio(end_date, "2015-01-01", "SGD", "data/summary/aSummary.xlsx")
-    sgd_df.to_csv("data/summary/portfolio_sgd.csv")
+    if args.output in ["all", "sgd"]:
+        print("Generating portfolio_sgd...")
+        sgd_df = get_portfolio(end_date, "2015-01-01", "SGD", "data/summary/aSummary.xlsx")
+        sgd_df.to_csv("data/summary/portfolio_sgd.csv")
 
-    print("Generating portfolio_usd...")
-    usd_df = get_portfolio(end_date, "2019-07-01", "USD", "data/summary/aSummary.xlsx")
-    usd_df.to_csv("data/summary/portfolio_usd.csv")
+    if args.output in ["all", "usd"]:
+        print("Generating portfolio_usd...")
+        usd_df = get_portfolio(end_date, "2019-07-01", "USD", "data/summary/aSummary.xlsx")
+        usd_df.to_csv("data/summary/portfolio_usd.csv")
 
-    print("Generating portfolio_fund...")
-    fund_df = get_portfolio(end_date, "2021-04-01", "Fund", "data/summary/aSummary.xlsx")
-    fund_df.to_csv("data/summary/portfolio_fund.csv")
+    if args.output in ["all", "fund"]:
+        print("Generating portfolio_fund...")
+        fund_df = get_portfolio(end_date, "2021-04-01", "Fund", "data/summary/aSummary.xlsx")
+        fund_df.to_csv("data/summary/portfolio_fund.csv")
 
-    print("Generating portfolio_srs...")
-    srs_df = get_portfolio(end_date, "2019-02-01", "SRS", "data/summary/aSummary.xlsx")
-    srs_df.to_csv("data/summary/portfolio_srs.csv")
+    if args.output in ["all", "srs"]:
+        print("Generating portfolio_srs...")
+        srs_df = get_portfolio(end_date, "2019-02-01", "SRS", "data/summary/aSummary.xlsx")
+        srs_df.to_csv("data/summary/portfolio_srs.csv")
 
-    print("Generating portfolio_bond...")
-    bond_df = get_portfolio(end_date, "2015-11-01", "Bond", "data/summary/aSummary.xlsx")
-    bond_df.to_csv("data/summary/portfolio_bond.csv")
+    if args.output in ["all", "bond"]:
+        print("Generating portfolio_bond...")
+        bond_df = get_portfolio(end_date, "2015-11-01", "Bond", "data/summary/aSummary.xlsx")
+        bond_df.to_csv("data/summary/portfolio_bond.csv")
 
-    print("Generating portfolio_idr...")
-    idr_df = get_portfolio(end_date, "2023-02-01", "IDR", "data/summary/aSummary2.xlsx")
-    idr_df.to_csv("data/summary/portfolio_idr.csv")
+    if args.output in ["all", "idr"]:
+        print("Generating portfolio_idr...")
+        idr_df = get_portfolio(end_date, "2023-02-01", "IDR", "data/summary/aSummary2.xlsx")
+        idr_df.to_csv("data/summary/portfolio_idr.csv")

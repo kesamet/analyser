@@ -2,7 +2,7 @@
 Script to download data.
 """
 import argparse
-import datetime
+from datetime import date
 
 import nasdaqdatalink
 
@@ -18,7 +18,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     start_date = args.start_date
-    end_date = datetime.date.today().strftime("%Y-%m-%d")
+    end_date = date.today().strftime("%Y-%m-%d")
     dest = args.dest or DATA_DIR
     print(f"\nDownloading to {dest}/")
     print(f"Period: {start_date} to {end_date}\n")
