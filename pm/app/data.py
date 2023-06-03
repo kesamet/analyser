@@ -123,7 +123,9 @@ def get_overall_portfolio(inclu_bond: bool = True) -> pd.DataFrame:
         last["Bond"] = bond_df["Portfolio"].iloc[-1]
 
     dfs = [sgd_df, fund_df, srs_df]
-    dates = pd.date_range(sgd_df.index[0], sgd_df.index[-1])
+
+    # Use trading days of "USDSGD=X"
+    dates = pd.date_range(srs_df.index[0], srs_df.index[-1])
     df = pd.DataFrame(index=dates)
     for c in ["Div", "Realised_Gain", "Paper_Gain", "Cost"]:
         tmp = pd.DataFrame(index=dates)
@@ -236,8 +238,11 @@ def page_portfolio(last_date: date, sheet: str) -> None:
     elif sheet in ["USD", "IDR"]:
         st.line_chart(subset_df[["Portfolio", "Cost", "Equity", "Cash"]])
         st.line_chart(subset_df[["Paper_Gain"]])
-    else:
+    elif sheet == "SGD":
         st.line_chart(subset_df[["Benchmark", "Portfolio", "Cost"]])
+        st.line_chart(subset_df[["Net_Gain", "Paper_Gain", "Div"]])
+    else:
+        st.line_chart(subset_df[["Portfolio", "Cost"]])
         st.line_chart(subset_df[["Net_Gain", "Paper_Gain", "Div"]])
 
     if "Net_Yield_bm" in subset_df.columns:

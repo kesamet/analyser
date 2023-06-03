@@ -18,10 +18,10 @@ from pm import FLOWDATA, SUMMARY_DIR
 BASE_SYMBOLS = {
     "SGD": "ES3.SI",
     "USD": "IWDA.L",
-    "SRS": "USDSGD=X",
-    "Fund": "USDSGD=X",
+    "SRS": "ES3.SI",  # as inital SRS is in SG
+    "Fund": "IWDA.L",
     "Bond": "ES3.SI",
-    "IDR": "SGDIDR=X",
+    "IDR": "GOTO.JK",
 }
 MAIN_SYMBOLS = {
     "USD": ["IWDA.L", "EIMI.L"],
@@ -197,10 +197,21 @@ def _map_stock_to_symbol(sheet: str, xlsx_file: str) -> pd.DataFrame:
     return all_symbols
 
 
+def _load_fund_portvals():
+    core = pd.read_csv(f"{SUMMARY_DIR}/Core.csv", index_col="date", parse_dates=True)
+    esg = pd.read_csv(f"{SUMMARY_DIR}/ESG.csv", index_col="date", parse_dates=True)
+    portvals = core["close"] + esg["close"]
+    return portvals
+
+
 def compute_portvals(
     end_date: str, start_date: str = "2015-01-01", sheet: str = "SGD", xlsx_file: str = FLOWDATA
 ) -> pd.DataFrame:
     """Compute daily portfolio value."""
+    if sheet == "Fund":
+        # HACK: bypass
+        return _load_fund_portvals()
+
     # Load data
     df = pd.read_excel(
         xlsx_file,
@@ -250,14 +261,10 @@ def compute_portvals(
     # Compute portfolio values
     portvals = (prices * df_units).sum(axis=1)
 
-    # HACK: for SRS and Fund, concat with csv
+    # HACK: for SRS, concat with csv
     if sheet == "SRS":
         ut = pd.read_csv(f"{SUMMARY_DIR}/SRS.csv", index_col="date", parse_dates=True)
         portvals = pd.concat([portvals[portvals.index < ut.index[0]], ut["close"]])
-    elif sheet == "Fund":
-        core = pd.read_csv(f"{SUMMARY_DIR}/Core.csv", index_col="date", parse_dates=True)
-        esg = pd.read_csv(f"{SUMMARY_DIR}/ESG.csv", index_col="date", parse_dates=True)
-        portvals = pd.concat([portvals, core["close"] + esg["close"]]).groupby(level=0).sum()
     return portvals
 
 
@@ -284,25 +291,31 @@ def agg_daily_cost(sheet: str, xlsx_file: str) -> pd.DataFrame:
 
 
 def compute_cost(
-    end_date: str, start_date: str = "2015-01-01", sheet: str = "SGD", xlsx_file: str = FLOWDATA
+    trading_dates: pd.DatetimeIndex, sheet: str, xlsx_file: str = FLOWDATA
 ) -> pd.DataFrame:
     """Compute cumulative cost and daily benchmark portfolio value."""
     cost_df = agg_daily_cost(sheet, xlsx_file)
-
-    dates = pd.date_range(start_date, end_date)
-    prices_bm = _get_data(["ES3.SI"], dates, col="close")
-    cost_df = prices_bm.join(cost_df)
+    cost_df = pd.DataFrame(index=trading_dates).join(cost_df)
     cost_df.fillna(0, inplace=True)
-    cost_df["Units_bm"] = cost_df["Value"] / cost_df["ES3.SI"]
 
-    for c in ["Value", "Units_bm"]:
-        cost_df[c] = cost_df[c].cumsum()
+    if sheet == "SGD":
+        prices_bm = _get_data([], trading_dates, base_symbol="ES3.SI", col="close")
+        cost_df = cost_df.join(prices_bm)
+        cost_df.fillna(method="ffill", inplace=True)
+        cost_df["Units_bm"] = cost_df["Value"] / cost_df["ES3.SI"]
 
-    # Compute benchmark portfolio
-    cost_df["Value_bm"] = cost_df["ES3.SI"] * cost_df["Units_bm"]
+        for c in ["Value", "Units_bm"]:
+            cost_df[c] = cost_df[c].cumsum()
 
-    cost_df = cost_df[["Value", "Value_bm"]]
-    cost_df.columns = ["Cost", "Benchmark"]
+        # Compute benchmark portfolio
+        cost_df["Value_bm"] = cost_df["ES3.SI"] * cost_df["Units_bm"]
+
+        cost_df = cost_df[["Value", "Value_bm"]]
+        cost_df.columns = ["Cost", "Benchmark"]
+    else:
+        cost_df["Value"] = cost_df["Value"].cumsum()
+        cost_df = cost_df[["Value"]]
+        cost_df.columns = ["Cost"]
     return cost_df
 
 
@@ -328,25 +341,20 @@ def agg_daily_gain(gain_type: str, sheet: str, xlsx_file: str) -> pd.DataFrame:
 
 def compute_gains(
     gain_type: str,
-    end_date: str,
-    start_date: str = "2015-01-01",
+    trading_dates: pd.DatetimeIndex,
     sheet: str = "SGD",
     xlsx_file: str = FLOWDATA,
 ) -> pd.DataFrame:
     """Compute cumulative gains."""
     gains_df = agg_daily_gain(gain_type, sheet, xlsx_file)
-
     gains_df = gains_df.cumsum()
-
-    dates = pd.date_range(start_date, end_date)
-    prices_bm = _get_data([BASE_SYMBOLS[sheet]], dates, col="close")
-    gains_df = pd.DataFrame(index=prices_bm.index).join(gains_df)
+    gains_df = pd.DataFrame(index=trading_dates).join(gains_df)
     gains_df.iloc[0] = 0
     gains_df.fillna(method="ffill", inplace=True)
     return gains_df["Value"]
 
 
-def compute_etf(end_date: str, start_date: str = "2019-07-01", xlsx_file: str = FLOWDATA) -> pd.DataFrame:
+def compute_etf(trading_dates: pd.DatetimeIndex, xlsx_file: str = FLOWDATA) -> pd.DataFrame:
     """Compute cumulative cost and cash."""
     # Load data
     df = pd.read_excel(
@@ -384,13 +392,12 @@ def compute_etf(end_date: str, start_date: str = "2019-07-01", xlsx_file: str = 
         },
         inplace=True,
     )
+    cost_df = pd.DataFrame(index=trading_dates).join(cost_df)
 
-    dates = pd.date_range(start_date, end_date)
-    # prices = get_xlsx(["USDSGD"], dates, col="Close", xlsx=XLSX_FILE)
-    prices = _get_data([], dates, col="close", base_symbol="USDSGD=X")
+    prices = _get_data(["USDSGD=X"], trading_dates, base_symbol=BASE_SYMBOLS["USD"], col="close")
     prices.rename(columns={"USDSGD=X": "USDSGD"}, inplace=True)
 
-    cost_df = prices[["USDSGD"]].join(cost_df)
+    cost_df = cost_df.join(prices[["USDSGD"]])
     cost_df.fillna(0, inplace=True)
     for c in ["SGD_Deposit", "USD_Deposit", "USD-SGD", "EIMI.L", "IWDA.L"]:
         cost_df[c] = cost_df[c].cumsum()
@@ -399,7 +406,7 @@ def compute_etf(end_date: str, start_date: str = "2019-07-01", xlsx_file: str = 
     units_df = df.query("Stock == 'USD-SGD'").pivot(
         index="Date", columns="Stock", values="Units"
     )
-    units_df = prices[["USDSGD"]].join(units_df)[["USD-SGD"]]
+    units_df = cost_df[["USDSGD"]].join(units_df)[["USD-SGD"]]
     units_df.fillna(0, inplace=True)
     units_df = units_df.cumsum()
 
@@ -420,7 +427,7 @@ def compute_etf(end_date: str, start_date: str = "2019-07-01", xlsx_file: str = 
     return cost_df[["USDSGD", "Cost", "Cash"]]
 
 
-def compute_idr(end_date: str, start_date: str,  xlsx_file: str):
+def compute_idr(trading_dates: pd.DatetimeIndex, xlsx_file: str):
     df = pd.read_excel(
         xlsx_file,
         sheet_name="IDR Txn",
@@ -455,13 +462,12 @@ def compute_idr(end_date: str, start_date: str,  xlsx_file: str):
         },
         inplace=True,
     )
+    cost_df = pd.DataFrame(index=trading_dates).join(cost_df)
 
-    dates = pd.date_range(start_date, end_date)
-    prices = _get_data([], dates, col="close", base_symbol="SGDIDR=X")
-    # prices.rename(columns={"SGDIDR=X": "SGDIDR"}, inplace=True)
+    prices = _get_data(["SGDIDR=X"], trading_dates, base_symbol=BASE_SYMBOLS["IDR"], col="close")
     prices["IDRSGD"] = 10000 / prices["SGDIDR=X"]  # HACK
 
-    cost_df = prices[["IDRSGD"]].join(cost_df)
+    cost_df = cost_df.join(prices[["IDRSGD"]])
     cost_df.fillna(0, inplace=True)
     for c in ["SGD_Deposit", "IDR_Deposit", "IDR-SGD", "GOTO.JK"]:
         cost_df[c] = cost_df[c].cumsum()
@@ -470,7 +476,7 @@ def compute_idr(end_date: str, start_date: str,  xlsx_file: str):
     units_df = df.query("Stock == 'IDR-SGD'").pivot(
         index="Date", columns="Stock", values="Units"
     )
-    units_df = prices[["IDRSGD"]].join(units_df)[["IDR-SGD"]]
+    units_df = cost_df[["IDRSGD"]].join(units_df)[["IDR-SGD"]]
     units_df.fillna(0, inplace=True)
     units_df = units_df.cumsum()
 
@@ -565,22 +571,25 @@ def compute_idr(end_date: str, start_date: str,  xlsx_file: str):
 
 
 def get_portfolio(end_date, start_date, sheet, xlsx_file):
+    portvals = compute_portvals(end_date, start_date, sheet, xlsx_file)
+    trading_dates = portvals.index
+
     if sheet in ["SGD", "Fund", "SRS", "Bond"]:
-        df = compute_cost(end_date, start_date, sheet, xlsx_file)
-        df["Portfolio"] = compute_portvals(end_date, start_date, sheet, xlsx_file)
+        df = compute_cost(trading_dates, sheet, xlsx_file)
+        df["Portfolio"] = portvals
     elif sheet == "USD":
-        df = compute_etf(end_date, start_date,  xlsx_file)
-        df["Equity"] = compute_portvals(end_date, start_date, sheet, xlsx_file)
+        df = compute_etf(trading_dates,  xlsx_file)
+        df["Equity"] = portvals
         df["Portfolio"] = df["Equity"] + df["Cash"]
     elif sheet == "IDR":
-        df = compute_idr(end_date, start_date,  xlsx_file)
-        df["Equity"] = compute_portvals(end_date, start_date, sheet, xlsx_file)
+        df = compute_idr(trading_dates,  xlsx_file)
+        df["Equity"] = portvals
         df["Portfolio"] = df["Equity"] + df["Cash"]
     else:
         raise NotImplementedError
 
-    df["Div"] = compute_gains("Div", end_date, start_date, sheet, xlsx_file)
-    df["Realised_Gain"] = compute_gains("Sell", end_date, start_date, sheet, xlsx_file)
+    df["Div"] = compute_gains("Div", trading_dates, sheet, xlsx_file)
+    df["Realised_Gain"] = compute_gains("Sell", trading_dates, sheet, xlsx_file)
     df["Paper_Gain"] = df["Portfolio"] - df["Cost"]
     df["Net_Gain"] = df["Paper_Gain"] + df["Realised_Gain"] + df["Div"]
     df = df.dropna()
@@ -592,7 +601,7 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--output", default="all", type=str)
     args = parser.parse_args()
 
-    end_date = datetime.today().isoformat()
+    end_date = datetime.today().date().isoformat()
 
     if args.output in ["all", "sgd"]:
         print("Generating portfolio_sgd...")
