@@ -605,7 +605,7 @@ if __name__ == "__main__":
 
     if args.output in ["all", "sgd"]:
         print("Generating portfolio_sgd...")
-        sgd_df = get_portfolio(end_date, "2015-01-01", "SGD", "data/summary/aSummary.xlsx")
+        sgd_df = get_portfolio(end_date, "2015-03-23", "SGD", "data/summary/aSummary.xlsx")
         sgd_df.to_csv("data/summary/portfolio_sgd.csv")
 
     if args.output in ["all", "usd"]:
@@ -615,7 +615,7 @@ if __name__ == "__main__":
 
     if args.output in ["all", "fund"]:
         print("Generating portfolio_fund...")
-        fund_df = get_portfolio(end_date, "2021-04-01", "Fund", "data/summary/aSummary.xlsx")
+        fund_df = get_portfolio(end_date, "2021-04-06", "Fund", "data/summary/aSummary.xlsx")
         fund_df.to_csv("data/summary/portfolio_fund.csv")
 
     if args.output in ["all", "srs"]:
@@ -630,5 +630,5 @@ if __name__ == "__main__":
 
     if args.output in ["all", "idr"]:
         print("Generating portfolio_idr...")
-        idr_df = get_portfolio(end_date, "2023-02-01", "IDR", "data/summary/aSummary2.xlsx")
+        idr_df = get_portfolio(end_date, "2023-02-07", "IDR", "data/summary/aSummary2.xlsx")
         idr_df.to_csv("data/summary/portfolio_idr.csv")
