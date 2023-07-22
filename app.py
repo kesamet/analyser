@@ -4,6 +4,7 @@ Streamlit app
 from datetime import date, timedelta
 
 import streamlit as st
+from streamlit_option_menu import option_menu
 
 from analyser.app.charts import page_ta
 from pm.symbols import EQ_DICT
@@ -14,7 +15,6 @@ from pm.app.trend import page_trend
 
 
 def main():
-    st.sidebar.title("PM")
     today_date = date.today()
 
     dict_pages = {
@@ -32,17 +32,11 @@ def main():
         "Technical Analysis": lambda x: page_ta(x, EQ_DICT),
     }
 
-    select = st.sidebar.radio(
-        "pages", list(dict_pages.keys()), label_visibility="collapsed"
-    )
-    st.title(select)
-    dict_pages[select](today_date - timedelta(days=1))
+    with st.sidebar:
+        selected = option_menu("PM", list(dict_pages.keys()), menu_icon="cast")
 
-    left = (date(2023, 8, 28) - today_date).days
-    milestone = today_date + timedelta(days=(left % 50))
-    st.sidebar.info(f"{left} days left\n\n{milestone.isoformat()}")
-    if left % 50 == 0:
-        st.balloons()
+    st.title(selected)
+    dict_pages[selected](today_date - timedelta(days=1))
 
 
 if __name__ == "__main__":

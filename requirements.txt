@@ -10,6 +10,7 @@ PyYAML
 scipy
 seaborn
 streamlit
+streamlit_option_menu
 ta
 xlrd
 yahoofinancials
