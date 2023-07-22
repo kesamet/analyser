@@ -18,3 +18,14 @@ To run Streamlit app,
 ```bash
 streamlit run app_analyser.py
 ```
+
+<!-- <details><summary>Example</summary>
+<p>
+
+```python
+def f(x):
+    return 2 * x
+```
+
+</p>
+</details> -->
