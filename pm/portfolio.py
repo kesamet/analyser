@@ -8,11 +8,10 @@ from typing import List, Optional, Tuple
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from IPython.display import display
 
 from analyser.data import get_data
 from analyser.plots import plot_normalized_data
-from pm import FLOWDATA, SUMMARY_DIR
+from pm import CFG
 
 
 BASE_SYMBOLS = {
@@ -46,20 +45,20 @@ def _get_data(
 def get_portfolio_value(
     prices: pd.DataFrame,
     allocs: Optional[np.ndarray] = None,
-    start_val: float = 1.,
+    start_val: float = 1.0,
     units: Optional[int] = None,
-):
+) -> pd.Series:
     """Compute daily portfolio value given stock prices, allocations and
     starting value, or units.
 
     Args:
-        prices: daily prices for each stock in portfolio
-        allocs: initial allocations, as fractions that sum to 1
-        start_val: total starting value invested in portfolio (default: 1)
-        units: initial number of units
+        prices (pd.DataFrame): Prices of the assets in the portfolio.
+        allocs (Optional[np.ndarray]): Allocations of the assets in the portfolio.
+        start_val (float): Initial value of the portfolio.
+        units (Optional[int]): Number of units of each asset in the portfolio.
 
     Returns:
-        port_val: daily portfolio value
+        pd.Series: The value of the portfolio over time.
     """
     if allocs is None and units is None:
         raise Exception("Input 'allocs' or 'units'")
@@ -75,10 +74,22 @@ def portfolio_const(
     end_date: str,
     symbols: List[str],
     allocs: Optional[np.ndarray] = None,
-    start_val: float = 1.,
+    start_val: float = 1.0,
     units: Optional[int] = None,
-):
-    """Constant portfolio."""
+) -> pd.Series:
+    """Constructs a constant portfolio.
+
+    Args:
+        start_date (str): Start date of the portfolio.
+        end_date (str): End date of the portfolio.
+        symbols (List[str]): List of symbols to include in the portfolio.
+        allocs (Optional[np.ndarray]): Weights of each symbol in the portfolio.
+        start_val (float): Initial value of the portfolio.
+        units (Optional[int]): Number of units of each symbol to purchase.
+
+    Returns:
+        pd.Series: The value of the portfolio over time.
+    """
     if allocs is None and units is None:
         raise Exception("Input 'allocs' or 'units'")
 
@@ -89,7 +100,7 @@ def portfolio_const(
 
 
 def get_portfolio_stats(
-    port_val: pd.DataFrame, rfr: float = 0., freq: int = 252
+    port_val: pd.DataFrame, rfr: float = 0.0, freq: int = 252
 ) -> Tuple[float]:
     """Calculate statistics on given portfolio values.
 
@@ -116,7 +127,7 @@ def get_portfolio_stats(
 
 
 def assess_portfolio(
-    port_val: pd.DataFrame, rfr: float = 0., bm: str = "ES3.SI"
+    port_val: pd.DataFrame, rfr: float = 0.0, bm: str = "ES3.SI"
 ) -> Tuple[dict, pd.DataFrame, pd.DataFrame]:
     """Simulates and assesses the performance of a stock portfolio.
 
@@ -174,6 +185,8 @@ def assess_portfolio(
 
 def print_results(dct: dict, results_df: pd.DataFrame, ts_df: pd.DataFrame) -> None:
     """Print statistics."""
+    from IPython.display import display
+
     print("Date Range: {} to {}\n".format(dct["start_date"], dct["end_date"]))
     print("Final Portfolio Value: {:.2f}".format(dct["port_val"]))
 
@@ -198,14 +211,19 @@ def _map_stock_to_symbol(sheet: str, xlsx_file: str) -> pd.DataFrame:
 
 
 def _load_fund_portvals():
-    core = pd.read_csv(f"{SUMMARY_DIR}/Core.csv", index_col="date", parse_dates=True)
-    esg = pd.read_csv(f"{SUMMARY_DIR}/ESG.csv", index_col="date", parse_dates=True)
+    core = pd.read_csv(
+        f"{CFG.SUMMARY_DIR}/Core.csv", index_col="date", parse_dates=True
+    )
+    esg = pd.read_csv(f"{CFG.SUMMARY_DIR}/ESG.csv", index_col="date", parse_dates=True)
     portvals = core["close"] + esg["close"]
     return portvals
 
 
 def compute_portvals(
-    end_date: str, start_date: str = "2015-01-01", sheet: str = "SGD", xlsx_file: str = FLOWDATA
+    end_date: str,
+    start_date: str = "2015-01-01",
+    sheet: str = "SGD",
+    xlsx_file: str = CFG.FLOWDATA,
 ) -> pd.DataFrame:
     """Compute daily portfolio value."""
     if sheet == "Fund":
@@ -233,15 +251,16 @@ def compute_portvals(
     else:
         symbols = MAIN_SYMBOLS[sheet]
     dates = pd.date_range(start_date, end_date)
-    prices = _get_data(symbols, dates, base_symbol=BASE_SYMBOLS[sheet], col="close")[symbols]
+    prices = _get_data(symbols, dates, base_symbol=BASE_SYMBOLS[sheet], col="close")[
+        symbols
+    ]
     if sheet == "IDR":  # HACK
         prices /= 10000
 
     # Get daily units
     def _get_units(ttype):
         df_tmp = (
-            df_orders
-            .query("Type == @ttype")
+            df_orders.query("Type == @ttype")
             .groupby(["Date", "Symbol"], as_index=False)[["Units"]]
             .sum()
             .pivot(index="Date", columns="Symbol", values="Units")
@@ -263,13 +282,23 @@ def compute_portvals(
 
     # HACK: for SRS, concat with csv
     if sheet == "SRS":
-        ut = pd.read_csv(f"{SUMMARY_DIR}/SRS.csv", index_col="date", parse_dates=True)
+        ut = pd.read_csv(
+            f"{CFG.SUMMARY_DIR}/SRS.csv", index_col="date", parse_dates=True
+        )
         portvals = pd.concat([portvals[portvals.index < ut.index[0]], ut["close"]])
     return portvals
 
 
 def agg_daily_cost(sheet: str, xlsx_file: str) -> pd.DataFrame:
-    """Aggregate cost daily."""
+    """Aggregate daily cost from a sheet in an xlsx file.
+
+    Args:
+      sheet (str): The name of the sheet to aggregate.
+      xlsx_file (str): The path to the xlsx file.
+
+    Returns:
+      pd.DataFrame: A DataFrame with the aggregated daily cost.
+    """
     # Load data
     df = pd.read_excel(
         xlsx_file,
@@ -291,7 +320,7 @@ def agg_daily_cost(sheet: str, xlsx_file: str) -> pd.DataFrame:
 
 
 def compute_cost(
-    trading_dates: pd.DatetimeIndex, sheet: str, xlsx_file: str = FLOWDATA
+    trading_dates: pd.DatetimeIndex, sheet: str, xlsx_file: str = CFG.FLOWDATA
 ) -> pd.DataFrame:
     """Compute cumulative cost and daily benchmark portfolio value."""
     cost_df = agg_daily_cost(sheet, xlsx_file)
@@ -343,7 +372,7 @@ def compute_gains(
     gain_type: str,
     trading_dates: pd.DatetimeIndex,
     sheet: str = "SGD",
-    xlsx_file: str = FLOWDATA,
+    xlsx_file: str = CFG.FLOWDATA,
 ) -> pd.DataFrame:
     """Compute cumulative gains."""
     gains_df = agg_daily_gain(gain_type, sheet, xlsx_file)
@@ -354,7 +383,9 @@ def compute_gains(
     return gains_df["Value"]
 
 
-def compute_etf(trading_dates: pd.DatetimeIndex, xlsx_file: str = FLOWDATA) -> pd.DataFrame:
+def compute_etf(
+    trading_dates: pd.DatetimeIndex, xlsx_file: str = CFG.FLOWDATA
+) -> pd.DataFrame:
     """Compute cumulative cost and cash."""
     # Load data
     df = pd.read_excel(
@@ -394,7 +425,9 @@ def compute_etf(trading_dates: pd.DatetimeIndex, xlsx_file: str = FLOWDATA) -> p
     )
     cost_df = pd.DataFrame(index=trading_dates).join(cost_df)
 
-    prices = _get_data(["USDSGD=X"], trading_dates, base_symbol=BASE_SYMBOLS["USD"], col="close")
+    prices = _get_data(
+        ["USDSGD=X"], trading_dates, base_symbol=BASE_SYMBOLS["USD"], col="close"
+    )
     prices.rename(columns={"USDSGD=X": "USDSGD"}, inplace=True)
 
     cost_df = cost_df.join(prices[["USDSGD"]])
@@ -464,7 +497,9 @@ def compute_idr(trading_dates: pd.DatetimeIndex, xlsx_file: str):
     )
     cost_df = pd.DataFrame(index=trading_dates).join(cost_df)
 
-    prices = _get_data(["SGDIDR=X"], trading_dates, base_symbol=BASE_SYMBOLS["IDR"], col="close")
+    prices = _get_data(
+        ["SGDIDR=X"], trading_dates, base_symbol=BASE_SYMBOLS["IDR"], col="close"
+    )
     prices["IDRSGD"] = 10000 / prices["SGDIDR=X"]  # HACK
 
     cost_df = cost_df.join(prices[["IDRSGD"]])
@@ -482,9 +517,7 @@ def compute_idr(trading_dates: pd.DatetimeIndex, xlsx_file: str):
 
     cost_df["Cash_SGD"] = cost_df["SGD_Deposit"] - cost_df["IDR-SGD"]
     cost_df["Cash_IDR"] = (
-        cost_df["IDR_Deposit"]
-        + units_df["IDR-SGD"]
-        - cost_df["GOTO.JK"]
+        cost_df["IDR_Deposit"] + units_df["IDR-SGD"] - cost_df["GOTO.JK"]
     )
     cost_df["Cash"] = cost_df["Cash_IDR"] + cost_df["Cash_SGD"] / cost_df["IDRSGD"]
     # TODO: Cost fluctuating due to FX
@@ -578,11 +611,11 @@ def get_portfolio(end_date, start_date, sheet, xlsx_file):
         df = compute_cost(trading_dates, sheet, xlsx_file)
         df["Portfolio"] = portvals
     elif sheet == "USD":
-        df = compute_etf(trading_dates,  xlsx_file)
+        df = compute_etf(trading_dates, xlsx_file)
         df["Equity"] = portvals
         df["Portfolio"] = df["Equity"] + df["Cash"]
     elif sheet == "IDR":
-        df = compute_idr(trading_dates,  xlsx_file)
+        df = compute_idr(trading_dates, xlsx_file)
         df["Equity"] = portvals
         df["Portfolio"] = df["Equity"] + df["Cash"]
     else:
@@ -605,30 +638,42 @@ if __name__ == "__main__":
 
     if args.output in ["all", "sgd"]:
         print("Generating portfolio_sgd...")
-        sgd_df = get_portfolio(end_date, "2015-03-23", "SGD", "data/summary/aSummary.xlsx")
+        sgd_df = get_portfolio(
+            end_date, "2015-03-23", "SGD", "data/summary/aSummary.xlsx"
+        )
         sgd_df.to_csv("data/summary/portfolio_sgd.csv")
 
     if args.output in ["all", "usd"]:
         print("Generating portfolio_usd...")
-        usd_df = get_portfolio(end_date, "2019-07-01", "USD", "data/summary/aSummary.xlsx")
+        usd_df = get_portfolio(
+            end_date, "2019-07-01", "USD", "data/summary/aSummary.xlsx"
+        )
         usd_df.to_csv("data/summary/portfolio_usd.csv")
 
     if args.output in ["all", "fund"]:
         print("Generating portfolio_fund...")
-        fund_df = get_portfolio(end_date, "2021-04-06", "Fund", "data/summary/aSummary.xlsx")
+        fund_df = get_portfolio(
+            end_date, "2021-04-06", "Fund", "data/summary/aSummary.xlsx"
+        )
         fund_df.to_csv("data/summary/portfolio_fund.csv")
 
     if args.output in ["all", "srs"]:
         print("Generating portfolio_srs...")
-        srs_df = get_portfolio(end_date, "2019-02-01", "SRS", "data/summary/aSummary.xlsx")
+        srs_df = get_portfolio(
+            end_date, "2019-02-01", "SRS", "data/summary/aSummary.xlsx"
+        )
         srs_df.to_csv("data/summary/portfolio_srs.csv")
 
     if args.output in ["all", "bond"]:
         print("Generating portfolio_bond...")
-        bond_df = get_portfolio(end_date, "2015-11-01", "Bond", "data/summary/aSummary.xlsx")
+        bond_df = get_portfolio(
+            end_date, "2015-11-01", "Bond", "data/summary/aSummary.xlsx"
+        )
         bond_df.to_csv("data/summary/portfolio_bond.csv")
 
     if args.output in ["all", "idr"]:
         print("Generating portfolio_idr...")
-        idr_df = get_portfolio(end_date, "2023-02-07", "IDR", "data/summary/aSummary2.xlsx")
+        idr_df = get_portfolio(
+            end_date, "2023-02-07", "IDR", "data/summary/aSummary2.xlsx"
+        )
         idr_df.to_csv("data/summary/portfolio_idr.csv")

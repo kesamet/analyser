@@ -6,6 +6,8 @@ pandas
 Pillow
 plotly
 PyMuPDF
+python-box
+python-dotenv
 PyYAML
 scipy
 seaborn

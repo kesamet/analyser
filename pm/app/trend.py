@@ -7,7 +7,7 @@ from analyser.app.constants import str2days
 from analyser.data import get_data
 
 import pm.ta as ta
-from pm import DATA_DIR
+from pm import CFG
 from pm.symbols import EQ_DICT
 
 
@@ -17,7 +17,7 @@ def _table_trend_by_days(last_date: date, days: int) -> pd.DataFrame:
     dates = pd.date_range(last_date - timedelta(days=days), last_date)
 
     results = list()
-    df1 = get_data(symbols, dates, col="adjclose", dirname=DATA_DIR)
+    df1 = get_data(symbols, dates, col="adjclose", dirname=CFG.DATA_DIR)
     for symbol in symbols:
         _, level, res, _, grad, pred = ta.linearfit(df1[symbol])
         results.append(
@@ -46,7 +46,7 @@ def _table_trend_by_days(last_date: date, days: int) -> pd.DataFrame:
 @st.cache_data
 def _table_trend_by_symbol(last_date: date, symbol: str) -> pd.DataFrame:
     dates = pd.date_range(last_date - timedelta(days=730), last_date)
-    df = get_data([symbol], dates, col="adjclose", dirname=DATA_DIR)
+    df = get_data([symbol], dates, col="adjclose", dirname=CFG.DATA_DIR)
 
     periods = ["3M", "6M", "9M", "1Y", "2Y"]
     results = list()

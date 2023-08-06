@@ -6,7 +6,7 @@ from dateutil import parser
 
 import pandas as pd
 
-from pm import SUMMARY_DIR
+from pm import CFG
 
 
 if __name__ == "__main__":
@@ -15,7 +15,7 @@ if __name__ == "__main__":
     if i not in [0, 1, 2]:
         raise FileNotFoundError
 
-    filepath = f"{SUMMARY_DIR}/{options[i]}.csv"
+    filepath = f"{CFG.SUMMARY_DIR}/{options[i]}.csv"
     df = pd.read_csv(filepath)
     print(df.tail())
 

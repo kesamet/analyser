@@ -7,14 +7,14 @@ import streamlit as st
 from streamlit.elements import legacy_altair as altair
 
 from analyser.data import get_data, rebase
-from pm import DATA_DIR, SUMMARY_DIR
+from pm import CFG
 from pm.app.utils import get_start_date
 
 
 @st.cache_data
 def _load_pe_data(start_date: str = "1990-01-01") -> pd.DataFrame:
     """Shiller monthly PE data downloaded from nasdaq-data-link."""
-    df = pd.read_csv(f"{SUMMARY_DIR}/pe_data.csv")
+    df = pd.read_csv(f"{CFG.SUMMARY_DIR}/pe_data.csv")
     df["Date"] = pd.to_datetime(df["Date"].astype(str))
     df.set_index("Date", inplace=True)
     if start_date is not None:
@@ -25,7 +25,7 @@ def _load_pe_data(start_date: str = "1990-01-01") -> pd.DataFrame:
 @st.cache_data
 def _load_ie_data(start_date: str = "1990-01-01") -> pd.DataFrame:
     """Data downloaded from http://www.econ.yale.edu/~shiller/data.htm."""
-    df = pd.read_excel(f"{SUMMARY_DIR}/ie_data.xls", sheet_name="Data", skiprows=7)
+    df = pd.read_excel(f"{CFG.SUMMARY_DIR}/ie_data.xls", sheet_name="Data", skiprows=7)
     df.drop(["Fraction", "Unnamed: 13", "Unnamed: 15"], axis=1, inplace=True)
     df.columns = [
         "Date",
@@ -67,7 +67,9 @@ def _get_chart(
     base_symbol: str = "ES3.SI",
     title: str = "",
 ):
-    df = get_data(symbols, dates, base_symbol=base_symbol, dirname=DATA_DIR)[symbols]
+    df = get_data(symbols, dates, base_symbol=base_symbol, dirname=CFG.DATA_DIR)[
+        symbols
+    ]
     df = rebase(df)
     if symbol_names is not None:
         df.columns = symbol_names
@@ -105,7 +107,7 @@ def page_charts(last_date: date) -> None:
         width=260,
     )
 
-    df1 = get_data(["^VIX"], dates, base_symbol="^VIX", dirname=DATA_DIR)["^VIX"]
+    df1 = get_data(["^VIX"], dates, base_symbol="^VIX", dirname=CFG.DATA_DIR)["^VIX"]
     df1.columns = ["VIX"]
     chart1 = altair.generate_chart("line", df1).properties(
         title="VIX",

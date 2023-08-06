@@ -1,13 +1,14 @@
 """
 Script to download data.
 """
+import os
 import argparse
 from datetime import date
 
 import nasdaqdatalink
 
 from analyser.data import download_data
-from pm import DATA_DIR, SUMMARY_DIR, cfg
+from pm import CFG
 from pm.symbols import SYMBOLS
 
 
@@ -19,7 +20,7 @@ if __name__ == "__main__":
 
     start_date = args.start_date
     end_date = date.today().strftime("%Y-%m-%d")
-    dest = args.dest or DATA_DIR
+    dest = args.dest or CFG.DATA_DIR
     print(f"\nDownloading to {dest}/")
     print(f"Period: {start_date} to {end_date}\n")
 
@@ -28,6 +29,8 @@ if __name__ == "__main__":
         download_data(symbol, start_date, end_date, dirname=dest)
 
     print(f"{i + 1:2d} of {len(SYMBOLS)}: MULTPL/SHILLER_PE_RATIO_MONTH")
-    df = nasdaqdatalink.get("MULTPL/SHILLER_PE_RATIO_MONTH", authtoken=cfg["quandl_api_key"])
+    df = nasdaqdatalink.get(
+        "MULTPL/SHILLER_PE_RATIO_MONTH", authtoken=os.getenv("QUANDL_API_KEY")
+    )
     df.columns = ["CAPE"]
-    df.to_csv(f"{SUMMARY_DIR}/ie_data.csv")
+    df.to_csv(f"{CFG.SUMMARY_DIR}/ie_data.csv")

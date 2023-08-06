@@ -1,11 +1,10 @@
-
 from datetime import date
 
 import pandas as pd
 import streamlit as st
 
 from analyser.plots import plotly_ringchart
-from pm import SUMMARY_DIR
+from pm import CFG
 from pm.app.data import get_overall_portfolio
 
 
@@ -16,7 +15,7 @@ def page_summary(last_date: date) -> None:
 
     c0, c1 = st.columns(2)
 
-    _cash_filename = f"{SUMMARY_DIR}/cash.txt"
+    _cash_filename = f"{CFG.SUMMARY_DIR}/cash.txt"
     with open(_cash_filename, "r") as f:
         cash = int(f.read())
     with c1.form("my_form"):

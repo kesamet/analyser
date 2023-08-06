@@ -12,7 +12,7 @@ from analyser.data import get_data, rebase, annualise
 from analyser.plots import barchart
 
 import pm.portfolio as F
-from pm import DATA_DIR, FLOWDATA
+from pm import CFG
 from pm.app.utils import get_start_date
 
 
@@ -38,9 +38,9 @@ def get_portfolio(sheet: str) -> pd.DataFrame:
         return _load_portfolio("data/summary/portfolio_bond.csv")
     elif sheet == "SGD":
         df = _load_portfolio("data/summary/portfolio_sgd.csv")
-        df["bm"] = get_data(
-            ["ES3.SI"], df.index, col="adjclose", dirname=DATA_DIR
-        )["ES3.SI"]
+        df["bm"] = get_data(["ES3.SI"], df.index, col="adjclose", dirname=CFG.DATA_DIR)[
+            "ES3.SI"
+        ]
         return df
     else:
         raise NotImplementedError
@@ -61,7 +61,9 @@ def subset_portfolio(df: pd.DataFrame, start_date: str) -> pd.DataFrame:
 
 
 @st.cache_data
-def rebase_table(subset_df: pd.DataFrame, sheet: str, currency: Optional[str] = None) -> pd.DataFrame:
+def rebase_table(
+    subset_df: pd.DataFrame, sheet: str, currency: Optional[str] = None
+) -> pd.DataFrame:
     df = subset_df.copy()
 
     if sheet != currency and currency == "SGD":
@@ -70,7 +72,14 @@ def rebase_table(subset_df: pd.DataFrame, sheet: str, currency: Optional[str] = 
         else:
             fx = 1 / df[f"SGD{sheet}"]
 
-        for c in ["Cost", "Portfolio", "Div", "Realised_Gain", "Paper_Gain", "Net_Gain"]:
+        for c in [
+            "Cost",
+            "Portfolio",
+            "Div",
+            "Realised_Gain",
+            "Paper_Gain",
+            "Net_Gain",
+        ]:
             df[c] *= fx
         if "Cash" in df.columns:
             df["Cash"] *= fx
@@ -93,7 +102,7 @@ def rebase_table(subset_df: pd.DataFrame, sheet: str, currency: Optional[str] = 
 @st.cache_data
 def get_whatif_portfolio(start_date: date, end_date: date) -> pd.DataFrame:
     df = pd.read_excel(
-        FLOWDATA,
+        CFG.FLOWDATA,
         sheet_name="SGD Summary",
         usecols=["Yahoo Quote", "Units"],
     ).query("Units > 0")
@@ -166,17 +175,17 @@ def sum_by_time(sheet: str, last_date: date, timeunits: str) -> pd.DataFrame:
     def filter_before_today(df):
         return df[df.index <= last_date.isoformat()]
 
-    df = filter_before_today(F.agg_daily_cost(sheet, FLOWDATA))
+    df = filter_before_today(F.agg_daily_cost(sheet, CFG.FLOWDATA))
     df = df.resample(timeunits).sum()
     df.columns = ["cost"]
 
-    div_df = filter_before_today(F.agg_daily_gain("Div", sheet, FLOWDATA))
+    div_df = filter_before_today(F.agg_daily_gain("Div", sheet, CFG.FLOWDATA))
     if not div_df.empty:
         div_df = div_df.resample(timeunits).sum()
         div_df.columns = ["div"]
         df = df.join(div_df, how="outer")
 
-    gain_df = filter_before_today(F.agg_daily_gain("Sell", sheet, FLOWDATA))
+    gain_df = filter_before_today(F.agg_daily_gain("Sell", sheet, CFG.FLOWDATA))
     if not gain_df.empty:
         gain_df = gain_df.resample(timeunits).sum()
         gain_df.columns = ["gain"]
@@ -300,9 +309,7 @@ def page_portfolio(last_date: date, sheet: str) -> None:
     }
     timeunits = st.selectbox("Select time units.", list(tu_map.keys()), 1)
     df = sum_by_time(sheet, last_date, tu_map[timeunits])
-    st.altair_chart(
-        barchart(df[["cost"]], "Cost", timeunits), use_container_width=True
-    )
+    st.altair_chart(barchart(df[["cost"]], "Cost", timeunits), use_container_width=True)
     if "div" in df.columns:
         st.altair_chart(
             barchart(df[["div"]], "Dividends", timeunits), use_container_width=True
@@ -324,7 +331,11 @@ def page_portfolio(last_date: date, sheet: str) -> None:
 
 
 def _print_results(dct, results_df, ts_df):
-    st.write("Date Range: `{}` to `{}` (Values in %)".format(dct["start_date"], dct["end_date"]))
+    st.write(
+        "Date Range: `{}` to `{}` (Values in %)".format(
+            dct["start_date"], dct["end_date"]
+        )
+    )
     st.table(results_df * 100)
     # Compare daily portfolio value with index using a normalized plot
     st.line_chart(rebase(ts_df))
