@@ -3,9 +3,8 @@
 ## 🔧 Getting Started
 
 You will need to set up your development environment using conda, which you can install [directly](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html).
-
 ```bash
-conda env create --name analyser -f environment.yaml --force
+conda env create --name analyser python=3.11
 ```
 
 Activate the environment.
@@ -13,14 +12,29 @@ Activate the environment.
 conda activate analyser
 ```
 
+Install the Python packages.
+```bash
+pip install -r requirements.txt
+```
+
 
 ### Download data
-Data is download from Yahoo Finance. The stocks of interest are added to the file `symbols.py`.
+Stock data is download from Yahoo Finance. The symbols of the stocks of interest are first added to the file `symbols.py`.
 
-To download data,
+The data can then be downloaded by
 ```bash
 python -m download
 ```
+
+<details><summary>Shiller data</summary>
+<p>
+
+```bash
+wget http://www.econ.yale.edu/~shiller/data/ie_data.xls -P ./data/summary
+```
+
+</p>
+</details>
 
 
 ## 💻 App
