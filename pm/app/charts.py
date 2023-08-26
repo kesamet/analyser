@@ -22,45 +22,44 @@ def _load_pe_data(start_date: str = "1990-01-01") -> pd.DataFrame:
     return df
 
 
-@st.cache_data
-def _load_ie_data(start_date: str = "1990-01-01") -> pd.DataFrame:
-    """Data downloaded from http://www.econ.yale.edu/~shiller/data.htm."""
-    df = pd.read_excel(f"{CFG.SUMMARY_DIR}/ie_data.xls", sheet_name="Data", skiprows=7)
-    df.drop(["Fraction", "Unnamed: 13", "Unnamed: 15"], axis=1, inplace=True)
-    df.columns = [
-        "Date",
-        "S&P500",
-        "Dividend",
-        "Earnings",
-        "CPI",
-        "Long_IR",
-        "Real_Price",
-        "Real_Dividend",
-        "Real_TR_Price",
-        "Real_Earnings",
-        "Real_TR_Scaled_Earnings",
-        "CAPE",
-        "TRCAPE",
-        "Excess_CAPE_Yield",
-        "Mth_Bond_TR",
-        "Bond_RTR",
-        "10Y_Stock_RR",
-        "10Y_Bond_RR",
-        "10Y_Excess_RR",
-    ]
-    df["Date"] = pd.to_datetime(df["Date"].astype(str))
-    df.set_index("Date", inplace=True)
-    df = df.iloc[:-1]
-    if start_date is not None:
-        df = df[df.index >= start_date]
+# @st.cache_data
+# def _load_ie_data(start_date: str = "1990-01-01") -> pd.DataFrame:
+#     """Data downloaded from http://www.econ.yale.edu/~shiller/data.htm."""
+#     df = pd.read_excel(f"{CFG.SUMMARY_DIR}/ie_data.xls", sheet_name="Data", skiprows=7)
+#     df.drop(["Fraction", "Unnamed: 13", "Unnamed: 15"], axis=1, inplace=True)
+#     df.columns = [
+#         "Date",
+#         "S&P500",
+#         "Dividend",
+#         "Earnings",
+#         "CPI",
+#         "Long_IR",
+#         "Real_Price",
+#         "Real_Dividend",
+#         "Real_TR_Price",
+#         "Real_Earnings",
+#         "Real_TR_Scaled_Earnings",
+#         "CAPE",
+#         "TRCAPE",
+#         "Excess_CAPE_Yield",
+#         "Mth_Bond_TR",
+#         "Bond_RTR",
+#         "10Y_Stock_RR",
+#         "10Y_Bond_RR",
+#         "10Y_Excess_RR",
+#     ]
+#     df["Date"] = pd.to_datetime(df["Date"].astype(str))
+#     df.set_index("Date", inplace=True)
+#     df = df.iloc[:-1]
+#     if start_date is not None:
+#         df = df[df.index >= start_date]
 
-    df["10xReal_Earnings"] = 10 * df["Real_Earnings"]
-    df["10xLong_IR"] = 10 * df["Long_IR"]
-    return df[["Real_Price", "10xReal_Earnings", "CAPE", "10xLong_IR"]]
+#     df["10xReal_Earnings"] = 10 * df["Real_Earnings"]
+#     df["10xLong_IR"] = 10 * df["Long_IR"]
+#     return df[["Real_Price", "10xReal_Earnings", "CAPE", "10xLong_IR"]]
 
 
 def _get_chart(
-    start_date: str,
     dates: pd.DatetimeIndex,
     symbols: List[str],
     symbol_names: Optional[List[str]] = None,
@@ -82,22 +81,22 @@ def _get_chart(
 
 
 def page_charts(last_date: date) -> None:
-    df0 = _load_ie_data()
-    c1 = altair.generate_chart(
-        "line", df0[["Real_Price", "10xReal_Earnings"]]
-    ).properties(
-        title="Index",
-        height=200,
-        width=260,
-    )
-    c2 = altair.generate_chart("line", df0[["CAPE", "10xLong_IR"]]).properties(
-        title="CAPE",
-        height=200,
-        width=260,
-    )
-    st.altair_chart(alt.concat(c1, c2, columns=2), use_container_width=True)
+    # df0 = _load_ie_data()
+    # c1 = altair.generate_chart(
+    #     "line", df0[["Real_Price", "10xReal_Earnings"]]
+    # ).properties(
+    #     title="Index",
+    #     height=200,
+    #     width=260,
+    # )
+    # c2 = altair.generate_chart("line", df0[["CAPE", "10xLong_IR"]]).properties(
+    #     title="CAPE",
+    #     height=200,
+    #     width=260,
+    # )
+    # st.altair_chart(alt.concat(c1, c2, columns=2), use_container_width=True)
 
-    start_date = get_start_date(last_date, options=("3Y", "2Y", "1Y"))
+    start_date = get_start_date(last_date, options=("1Y", "2Y", "3Y"))
     dates = pd.date_range(start_date, last_date)
 
     df0 = _load_pe_data()
@@ -119,7 +118,6 @@ def page_charts(last_date: date) -> None:
     st.subheader("Stock charts")
     # MSCI
     chart2 = _get_chart(
-        start_date,
         dates,
         ["URTH", "EEM", "IEUR", "SPY", "ES3.SI"],
         symbol_names=["MSCI World", "MSCI EM", "MSCI EUR", "S&P500", "ES3.SI"],
@@ -130,7 +128,6 @@ def page_charts(last_date: date) -> None:
 
     # ETFs
     chart3 = _get_chart(
-        start_date,
         dates,
         ["IWDA.L", "EIMI.L"],
         base_symbol="IWDA.L",
@@ -140,7 +137,6 @@ def page_charts(last_date: date) -> None:
 
     # banks
     chart4 = _get_chart(
-        start_date,
         dates,
         ["ES3.SI", "D05.SI", "O39.SI", "U11.SI"],
         symbol_names=["ES3", "DBS", "OCBC", "UOB"],
@@ -150,7 +146,6 @@ def page_charts(last_date: date) -> None:
 
     # industrial
     chart5 = _get_chart(
-        start_date,
         dates,
         ["ES3.SI", "O5RU.SI", "A17U.SI", "BUOU.SI", "ME8U.SI", "M44U.SI"],
         symbol_names=["ES3", "AA", "Ascendas", "FLCT", "MIT", "MLT"],
@@ -160,7 +155,6 @@ def page_charts(last_date: date) -> None:
 
     # Commercial
     chart6 = _get_chart(
-        start_date,
         dates,
         ["ES3.SI", "C38U.SI", "J69U.SI", "N2IU.SI"],
         symbol_names=["ES3", "CICT", "FCT", "MPACT"],
@@ -170,7 +164,6 @@ def page_charts(last_date: date) -> None:
 
     # Others
     chart7 = _get_chart(
-        start_date,
         dates,
         ["GOTO.JK", "GRAB"],
         symbol_names=["GoTo", "Grab"],
