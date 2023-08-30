@@ -4,6 +4,7 @@ Streamlit app
 from datetime import date, timedelta
 
 import streamlit as st
+from streamlit_option_menu import option_menu
 
 from analyser.app.charts import page_ta
 from analyser.app.parser import search_highlight, table_ocr, search_extract
@@ -11,7 +12,7 @@ from symbols import EQ_DICT
 
 
 def main():
-    st.sidebar.title("Analyser")
+    today_date = date.today()
 
     dict_pages = {
         "Technical Analysis": page_ta,
@@ -20,14 +21,11 @@ def main():
         "Table OCR": table_ocr,
     }
 
-    select_page = st.sidebar.radio("pages", list(dict_pages.keys()), label_visibility="collapsed")
-    st.title(select_page)
+    with st.sidebar:
+        selected = option_menu("Analyser", list(dict_pages.keys()), menu_icon="cast")
 
-    today_date = date.today()
-    dict_pages[select_page](
-        last_date=today_date - timedelta(days=1),
-        eq_dict=EQ_DICT,
-    )
+    st.title(selected)
+    dict_pages[selected](last_date=today_date - timedelta(days=1), eq_dict=EQ_DICT)
 
 
 if __name__ == "__main__":
