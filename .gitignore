@@ -135,9 +135,7 @@ dmypy.json
 
 # others
 ML4T/
-pm/
 dev/
-app.py
 
 data/*/
 data/*.csv

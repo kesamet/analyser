@@ -1,0 +1,3 @@
+DATA_DIR: "data"
+SUMMARY_DIR: "data/summary"
+FLOWDATA: "data/summary/aSummary.xlsx"
