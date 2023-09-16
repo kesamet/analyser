@@ -28,7 +28,7 @@ def page_summary(last_date: date) -> None:
         else:
             _last["Cash"] = cash * 1000
 
-    with c0.container():
+    with c0:
         df = pd.DataFrame.from_dict(_last, orient="index", columns=["Value"])
         df = df.loc[["Cash", "SRS", "Fund", "USD", "SGD", "Bond", "IDR"]]
         df.loc["Total"] = df["Value"].sum()

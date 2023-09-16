@@ -17,7 +17,7 @@ from pm import CFG
 BASE_SYMBOLS = {
     "SGD": "ES3.SI",
     "USD": "IWDA.L",
-    "SRS": "ES3.SI",  # as inital SRS is in SG
+    "SRS": "ES3.SI",
     "Fund": "IWDA.L",
     "Bond": "ES3.SI",
     "IDR": "GOTO.JK",
@@ -211,11 +211,19 @@ def _map_stock_to_symbol(sheet: str, xlsx_file: str) -> pd.DataFrame:
 
 
 def _load_fund_portvals():
-    core = pd.read_csv(
-        f"{CFG.SUMMARY_DIR}/Core.csv", index_col="date", parse_dates=True
-    )
-    esg = pd.read_csv(f"{CFG.SUMMARY_DIR}/ESG.csv", index_col="date", parse_dates=True)
-    portvals = core["close"] + esg["close"]
+    dfs = None
+    for fn in CFG.FUNDNAMES:
+        df = pd.read_csv(
+            f"{CFG.SUMMARY_DIR}/{fn}.csv", index_col="date", parse_dates=True
+        )
+        df.columns = [fn]
+        if dfs is None:
+            dfs = df
+        else:
+            dfs = dfs.join(df, how="outer")
+
+    dfs.fillna(0, inplace=True)
+    portvals = dfs[CFG.FUNDNAMES].sum(axis=1)
     return portvals
 
 
