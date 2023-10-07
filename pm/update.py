@@ -10,9 +10,9 @@ from pm import CFG
 
 
 if __name__ == "__main__":
-    options = ["SRS", "Core", "ESG"]
-    i = int(input("  Enter sheet (SRS=0, Core=1, ESG=2): "))
-    if i not in [0, 1, 2]:
+    options = ["SRS", "Core", "ESG", "QED"]
+    i = int(input("  Enter sheet (SRS=0, Core=1, ESG=2, QED=3): "))
+    if i not in [0, 1, 2, 3]:
         raise FileNotFoundError
 
     filepath = f"{CFG.SUMMARY_DIR}/{options[i]}.csv"
