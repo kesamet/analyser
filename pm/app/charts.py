@@ -72,7 +72,7 @@ def _get_chart(
     df = rebase(df)
     if symbol_names is not None:
         df.columns = symbol_names
-    chart = altair.generate_chart("line", df).properties(
+    chart = altair.generate_chart("line", df)[0].properties(
         title=title,
         height=200,
         width=260,
@@ -100,7 +100,7 @@ def page_charts(last_date: date) -> None:
     dates = pd.date_range(start_date, last_date)
 
     df0 = _load_pe_data()
-    chart0 = altair.generate_chart("line", df0[["CAPE"]]).properties(
+    chart0 = altair.generate_chart("line", df0[["CAPE"]])[0].properties(
         title="Shiller PE",
         height=200,
         width=260,
@@ -108,7 +108,7 @@ def page_charts(last_date: date) -> None:
 
     df1 = get_data(["^VIX"], dates, base_symbol="^VIX", dirname=CFG.DATA_DIR)["^VIX"]
     df1.columns = ["VIX"]
-    chart1 = altair.generate_chart("line", df1).properties(
+    chart1 = altair.generate_chart("line", df1)[0].properties(
         title="VIX",
         height=200,
         width=260,
