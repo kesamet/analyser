@@ -195,7 +195,19 @@ def sum_by_time(sheet: str, last_date: date, timeunits: str) -> pd.DataFrame:
     return df
 
 
-def page_portfolio(last_date: date, sheet: str) -> None:
+def page_data(last_date: date) -> None:
+    """Portfolio page."""
+    tentative_start_date = get_start_date(last_date)
+
+    sheets = ["Overall", "Overall Equity", "SGD", "USD", "Fund", "SRS", "IDR", "Bond"]
+    tabs = st.tabs(sheets)
+
+    for tab, sheet in zip(tabs, sheets):
+        with tab:
+            tab_portfolio(last_date, sheet, tentative_start_date)
+
+
+def tab_portfolio(last_date: date, sheet: str, tentative_start_date: date) -> None:
     """Portfolio page."""
     if sheet == "Overall":
         df, _ = get_overall_portfolio()
@@ -204,7 +216,7 @@ def page_portfolio(last_date: date, sheet: str) -> None:
     else:
         df = get_portfolio(sheet)
 
-    _df = subset_portfolio(df, get_start_date(last_date))
+    _df = subset_portfolio(df, tentative_start_date)
     if _df is None:
         st.warning("No data found")
         return
@@ -307,7 +319,7 @@ def page_portfolio(last_date: date, sheet: str) -> None:
         "yearquarter": "1Q",
         "year": "1Y",
     }
-    timeunits = st.selectbox("Select time units.", list(tu_map.keys()), 1)
+    timeunits = st.selectbox("Select time units.", list(tu_map.keys()), 1, key=sheet)
     df = sum_by_time(sheet, last_date, tu_map[timeunits])
     st.altair_chart(barchart(df[["cost"]], "Cost", timeunits), use_container_width=True)
     if "div" in df.columns:

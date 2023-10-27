@@ -63,11 +63,13 @@ def _get_chart(
     symbols: List[str],
     symbol_names: Optional[List[str]] = None,
     base_symbol: str = "ES3.SI",
+    to_rebase: bool = True,
 ):
     df = get_data(symbols, dates, base_symbol=base_symbol, dirname=CFG.DATA_DIR)[
         symbols
     ]
-    df = rebase(df)
+    if to_rebase:
+        df = rebase(df)
     if symbol_names is not None:
         df.columns = symbol_names
     return legacy_altair.generate_chart("line", df)[0]
@@ -84,11 +86,13 @@ def page_charts(last_date: date) -> None:
     dates = pd.date_range(start_date, last_date)
 
     with st.expander("VIX"):
-        df1 = get_data(["^VIX"], dates, base_symbol="^VIX", dirname=CFG.DATA_DIR)[
-            "^VIX"
-        ]
-        df1.columns = ["VIX"]
-        chart1 = legacy_altair.generate_chart("line", df1)[0]
+        chart1 = _get_chart(
+            dates,
+            ["^VIX"],
+            symbol_names=["VIX"],
+            base_symbol="^VIX",
+            to_rebase=False,
+        )
         st.altair_chart(chart1, use_container_width=True)
 
     with st.expander("MSCI"):
