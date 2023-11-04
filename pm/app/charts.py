@@ -3,7 +3,7 @@ from datetime import date
 
 import pandas as pd
 import streamlit as st
-from streamlit.elements import legacy_altair
+from streamlit.elements.arrow_altair import ChartType, _generate_chart
 
 from analyser.data import get_data, rebase
 from pm import CFG
@@ -58,6 +58,12 @@ def _load_pe_data(start_date: str = "1990-01-01") -> pd.DataFrame:
     return df
 
 
+def _linechart(df: pd.DataFrame):
+    """A simple streamlit.elements.arrow_altair._generate_chart wrapper."""
+    chart, _ = _generate_chart(chart_type=ChartType.LINE, data=df)
+    return chart
+
+
 def _get_chart(
     dates: pd.DatetimeIndex,
     symbols: List[str],
@@ -65,21 +71,18 @@ def _get_chart(
     base_symbol: str = "ES3.SI",
     to_rebase: bool = True,
 ):
-    df = get_data(symbols, dates, base_symbol=base_symbol, dirname=CFG.DATA_DIR)[
-        symbols
-    ]
+    df = get_data(symbols, dates, base_symbol=base_symbol, dirname=CFG.DATA_DIR)
+    df = df[symbols]
     if to_rebase:
         df = rebase(df)
     if symbol_names is not None:
         df.columns = symbol_names
-    return legacy_altair.generate_chart("line", df)[0]
+    return _linechart(df)
 
 
 def page_charts(last_date: date) -> None:
     df0 = _load_pe_data()
-    chart0 = legacy_altair.generate_chart("line", df0[["CAPE"]])[0].properties(
-        title="Shiller PE"
-    )
+    chart0 = _linechart(df0[["CAPE"]]).properties(title="Shiller PE")
     st.altair_chart(chart0, use_container_width=True)
 
     start_date = get_start_date(last_date, options=("1Y", "2Y", "3Y"))
