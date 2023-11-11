@@ -33,4 +33,4 @@ if __name__ == "__main__":
         "MULTPL/SHILLER_PE_RATIO_MONTH", authtoken=os.getenv("QUANDL_API_KEY")
     )
     df.columns = ["CAPE"]
-    df.to_csv(f"{CFG.SUMMARY_DIR}/ie_data.csv")
+    df.to_csv(f"{CFG.SUMMARY_DIR}/pe_data.csv")
