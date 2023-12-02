@@ -1,5 +1,5 @@
-DATA_DIR: "data"
-SUMMARY_DIR: "data/summary"
-FLOWDATA: "data/summary/aSummary.xlsx"
+DATA_DIR: "./data"
+SUMMARY_DIR: "./data/summary"
+FLOWDATA: "./data/summary/aSummary.xlsx"
 FUNDNAMES: ["Core", "ESG", "QED"]
 

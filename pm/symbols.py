@@ -1,7 +1,6 @@
 """
 Symbols
 """
-
 others_dict = {
     "IWDA.L": "IWDA",
     "EIMI.L": "EIMI",
@@ -10,9 +9,6 @@ others_dict = {
     "^VIX": "VIX",
     # "^GSPC": "SP500",
     # "^STI": "STI",
-    "D05.SI": "DBS Group Holdings Ltd",
-    "O39.SI": "Oversea-Chinese Banking Corp Ltd",
-    "U11.SI": "United Overseas Bank Ltd",
     "ES3.SI": "STI ETF",
     "ACWI": "iShares MSCI ACWI ETF",
     "URTH": "iShares MSCI World ETF",
@@ -26,6 +22,9 @@ others_dict = {
     # "A35.SI": "ABF SG Bond ETF",
     "GOTO.JK": "GoTo",
     "GRAB": "Grab",
+    "D05.SI": "DBS Group Holdings Ltd",
+    "O39.SI": "Oversea-Chinese Banking Corp Ltd",
+    "U11.SI": "United Overseas Bank Ltd",
 }
 
 reits_dict = {
@@ -70,47 +69,9 @@ reits_dict = {
     "CJLU.SI": "NetLink NBN Trust",
 }
 
-sti_dict = {
-    "C09.SI": "City Developments Ltd",
-    "C52.SI": "ComfortDelgro Corporation Ltd",
-    "D01.SI": "Dairy Farm Intl Holdings Ltd",
-    "D05.SI": "DBS Group Holdings Ltd",
-    # "F99.SI": "Fraser and Neave Ltd",
-    "G13.SI": "Genting Singapore Ltd",
-    # "G07.SI": "Great Eastern Holding Ltd",
-    # "F17.SI": "GuocoLand Ltd",
-    # "H02.SI": "Haw Par Corporation Ltd",
-    # "H13.SI": "Ho Bee Land Ltd",
-    "H78.SI": "Hongkong Land Holdings Ltd",
-    "C07.SI": "Jardine Cycle & Carriage Ltd ",
-    "J36.SI": "Jardine Matheson Holdings Ltd",
-    "BN4.SI": "Keppel Corporation Ltd",
-    # "O32.SI": "Olam International Ltd",
-    "O39.SI": "Oversea-Chinese Banking Corp Ltd",
-    # "BSL.SI": "Raffles Medical Group Ltd",
-    # "S59.SI": "SIA Engineering Company Ltd",
-    "S58.SI": "SATS Ltd",
-    "U96.SI": "SembCorp Industries Ltd",
-    # "S51.SI": "Sembcorp Marine Ltd ",
-    # "OV8.SI": "Sheng Siong Group Ltd",
-    # "S05.SI": "Sim Lian Group Ltd ",
-    "C6L.SI": "Singapore Airlines Ltd",
-    "S68.SI": "Singapore Exchange Ltd",
-    # "S08.SI": "Singapore Post Ltd",
-    "S63.SI": "Singapore Technologies Engineering Ltd",
-    "Z74.SI": "Singtel",
-    # "CC3.SI": "StarHub Ltd",
-    "Y92.SI": "Thai Beverage Public Company Ltd",
-    "U11.SI": "United Overseas Bank Ltd",
-    "U14.SI": "UOL Group Limited",
-    "V03.SI": "Venture Corporation Ltd",
-    "F34.SI": "Wilmar International Ltd",
-    "BS6.SI": "Yangzijiang Shipbuilding Holdings Ltd",
-}
-
 SYMBOLS = list(others_dict.keys()) + list(reits_dict.keys())
 
-# Selected equities
+# Selected
 dct = {
     "IWDA.L": "IWDA",
     "EIMI.L": "EIMI",
