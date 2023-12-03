@@ -13,19 +13,21 @@ from analyser.data import get_data
 from analyser.plots import plot_normalized_data
 from pm import CFG
 
+BASE_SYMBOLS = CFG["BASE_SYMBOLS"]
+MAIN_SYMBOLS = CFG["MAIN_SYMBOLS"]
 
-BASE_SYMBOLS = {
-    "SGD": "ES3.SI",
-    "USD": "IWDA.L",
-    "SRS": "ES3.SI",
-    "Fund": "IWDA.L",
-    "Bond": "ES3.SI",
-    "IDR": "GOTO.JK",
-}
-MAIN_SYMBOLS = {
-    "USD": ["IWDA.L", "EIMI.L"],
-    "IDR": ["GOTO.JK"],
-}
+# BASE_SYMBOLS = {
+#     "SGD": "ES3.SI",
+#     "USD": "IWDA.L",
+#     "SRS": "ES3.SI",
+#     "Fund": "IWDA.L",
+#     "Bond": "ES3.SI",
+#     "IDR": "GOTO.JK",
+# }
+# MAIN_SYMBOLS = {
+#     "USD": ["IWDA.L", "EIMI.L"],
+#     "IDR": ["GOTO.JK"],
+# }
 
 
 def _get_data(

@@ -8,7 +8,8 @@ from analyser.data import get_data
 
 import pm.ta as ta
 from pm import CFG
-from pm.symbols import EQ_DICT
+
+EQ_DICT = CFG["EQ_DICT"]
 
 
 @st.cache_data
@@ -95,28 +96,28 @@ def page_trend(last_date: date) -> None:
         return ""
 
     st.subheader("Main")
-    symbols = [
-        "O5RU.SI",
-        "A17U.SI",
-        "J69U.SI",
-        "BUOU.SI",
-        "ME8U.SI",
-        "M44U.SI",
-        "AJBU.SI",
-        "D05.SI",
-        "C38U.SI",
-        "N2IU.SI",
-        "CJLU.SI",
-        "ES3.SI",
-        "IWDA.L",
-        "EIMI.L",
-    ]
-    # corresponds to [
-    #     'AA', 'Ascendas', 'FCT', 'FLCT', 'MIT', 'MLT', 'KDC',
-    #     'DBS', 'CMT', 'MCT', 'Netlink', 'ES3', 'IWDA', 'EIMI'
+    # symbols = [
+    #     "O5RU.SI",
+    #     "A17U.SI",
+    #     "J69U.SI",
+    #     "BUOU.SI",
+    #     "ME8U.SI",
+    #     "M44U.SI",
+    #     "AJBU.SI",
+    #     "D05.SI",
+    #     "C38U.SI",
+    #     "N2IU.SI",
+    #     "CJLU.SI",
+    #     "ES3.SI",
+    #     "IWDA.L",
+    #     "EIMI.L",
     # ]
+    # # corresponds to [
+    # #     'AA', 'Ascendas', 'FCT', 'FLCT', 'MIT', 'MLT', 'KDC',
+    # #     'DBS', 'CMT', 'MCT', 'Netlink', 'ES3', 'IWDA', 'EIMI'
+    # # ]
     st.dataframe(
-        df1[df1.index.isin(symbols)]
+        df1[df1.index.isin(CFG["TREND_SYMBOLS"])]
         .style.format(precision=3)
         .applymap(lambda x: "color: red" if x < 0 else "", subset=["grad"])
         .applymap(highlight, subset=["level"]),

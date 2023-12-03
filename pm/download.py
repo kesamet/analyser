@@ -8,8 +8,7 @@ from datetime import date
 import nasdaqdatalink
 
 from analyser.data import download_data
-from pm import CFG
-from pm.symbols import SYMBOLS
+from pm import CFG, SYMBOLS
 
 
 if __name__ == "__main__":
