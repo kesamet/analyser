@@ -153,37 +153,3 @@ def extract_all_images(
                 fitz.Rect(*bb),
                 save=output_dir + f"page{i + 1}_fig{j + 1}.png",
             )
-
-
-# def extract_rows(doc, page_num, feature, heading, ending):
-#     page = doc.loadPage(page_num)
-#     df = parse_table(page, heading, ending)
-#     out_df = pd.concat(
-#         [df.iloc[:3], df[df["0"].str.contains(feature)]], axis=0)
-#     return out_df
-
-
-# def extract_tables_report(doc, dct):
-#     results = dict()
-#     for feature, v in dct.items():
-#         title = v["title"]
-#         heading = v.get("heading") or v["title"] or "Group"
-#         ending = v.get("ending") or "Page"
-#         page_nums = search_for_keyword(doc, title)
-
-#         res = list()
-#         for page_num in page_nums.keys():
-#             df = extract_rows(doc, page_num, feature, heading, ending)
-#             if len(df) > 0:
-#                 res.append(df)
-
-#         results[feature] = res
-#     return results
-
-
-# def extract_all_tables_report(filename, key):
-#     from analyser.constants import dct
-
-#     doc = fitz.Document(filename)
-#     results = extract_tables_report(doc, dct[key])
-#     return results

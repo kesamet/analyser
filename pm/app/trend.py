@@ -96,26 +96,6 @@ def page_trend(last_date: date) -> None:
         return ""
 
     st.subheader("Main")
-    # symbols = [
-    #     "O5RU.SI",
-    #     "A17U.SI",
-    #     "J69U.SI",
-    #     "BUOU.SI",
-    #     "ME8U.SI",
-    #     "M44U.SI",
-    #     "AJBU.SI",
-    #     "D05.SI",
-    #     "C38U.SI",
-    #     "N2IU.SI",
-    #     "CJLU.SI",
-    #     "ES3.SI",
-    #     "IWDA.L",
-    #     "EIMI.L",
-    # ]
-    # # corresponds to [
-    # #     'AA', 'Ascendas', 'FCT', 'FLCT', 'MIT', 'MLT', 'KDC',
-    # #     'DBS', 'CMT', 'MCT', 'Netlink', 'ES3', 'IWDA', 'EIMI'
-    # # ]
     st.dataframe(
         df1[df1.index.isin(CFG["TREND_SYMBOLS"])]
         .style.format(precision=3)

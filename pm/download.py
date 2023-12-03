@@ -8,7 +8,7 @@ from datetime import date
 import nasdaqdatalink
 
 from analyser.data import download_data
-from pm import CFG, SYMBOLS
+from pm import CFG
 
 
 if __name__ == "__main__":
@@ -23,11 +23,12 @@ if __name__ == "__main__":
     print(f"\nDownloading to {dest}/")
     print(f"Period: {start_date} to {end_date}\n")
 
-    for i, symbol in enumerate(SYMBOLS):
-        print(f"{i:2d} of {len(SYMBOLS)}: {symbol}")
+    symbols = list(CFG["ADDITIONS"].values()) + list(CFG["EQ_DICT"].values())
+    for i, symbol in enumerate(symbols):
+        print(f"{i:2d} of {len(symbols)}: {symbol}")
         download_data(symbol, start_date, end_date, dirname=dest)
 
-    print(f"{i + 1:2d} of {len(SYMBOLS)}: MULTPL/SHILLER_PE_RATIO_MONTH")
+    print(f"{i + 1:2d} of {len(symbols)}: MULTPL/SHILLER_PE_RATIO_MONTH")
     df = nasdaqdatalink.get(
         "MULTPL/SHILLER_PE_RATIO_MONTH", authtoken=os.getenv("QUANDL_API_KEY")
     )
