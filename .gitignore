@@ -135,11 +135,6 @@ dmypy.json
 
 # others
 ML4T/
-pm/
 dev/
-app.py
-
-data/*/
-data/*.csv
-!data/ACWI.csv
-!data/URTH.csv
+data/
+config.yaml
