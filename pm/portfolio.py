@@ -18,7 +18,13 @@ def _get_data(
     col: str = "adjclose",
 ):
     """Wrapper for get_data."""
-    df = get_data(symbols, dates, base_symbol=CFG.CONFIG[sheet].BASE_SYMBOL, col=col, dirname=CFG.DATA_DIR)
+    df = get_data(
+        symbols,
+        dates,
+        base_symbol=CFG.CONFIG[sheet].BASE_SYMBOL,
+        col=col,
+        dirname=CFG.DATA_DIR,
+    )
     if "SB" in df.columns:
         df["SB"] = 100  # default value for bonds
     return df
@@ -243,9 +249,7 @@ def compute_portvals(
         # symbols = MAIN_SYMBOLS[sheet]
         symbols = list(CFG.CONFIG[sheet].MAIN_SYMBOLS.values())
     dates = pd.date_range(start_date, end_date)
-    prices = _get_data(symbols, dates, sheet=sheet, col="close")[
-        symbols
-    ]
+    prices = _get_data(symbols, dates, sheet=sheet, col="close")[symbols]
     if sheet == "IDR":  # HACK
         prices /= 10000
 
@@ -396,7 +400,9 @@ def compute_usd(
     units_df = units_df.cumsum()
 
     cost_df["Cash_SGD"] = cost_df["SGD_Deposit"] - cost_df["USD-SGD"]
-    cost_df["Cash_USD"] = cost_df["USD_Deposit"] + units_df["USD-SGD"] - cost_df[symbols].sum(axis=1)
+    cost_df["Cash_USD"] = (
+        cost_df["USD_Deposit"] + units_df["USD-SGD"] - cost_df[symbols].sum(axis=1)
+    )
     cost_df["Cash"] = cost_df["Cash_USD"] + cost_df["Cash_SGD"] / cost_df["USDSGD"]
     # TODO: Cost fluctuating due to FX
     cost_df["Cost"] = (
@@ -462,7 +468,9 @@ def compute_idr(trading_dates: pd.DatetimeIndex, xlsx_file: str):
     units_df = units_df.cumsum()
 
     cost_df["Cash_SGD"] = cost_df["SGD_Deposit"] - cost_df["IDR-SGD"]
-    cost_df["Cash_IDR"] = cost_df["IDR_Deposit"] + units_df["IDR-SGD"] - cost_df[symbols].sum(axis=1)
+    cost_df["Cash_IDR"] = (
+        cost_df["IDR_Deposit"] + units_df["IDR-SGD"] - cost_df[symbols].sum(axis=1)
+    )
     cost_df["Cash"] = cost_df["Cash_IDR"] + cost_df["Cash_SGD"] / cost_df["IDRSGD"]
     # TODO: Cost fluctuating due to FX
     cost_df["Cost"] = (
