@@ -1,6 +1,3 @@
-"""
-Script containing commonly used functions for portfolio.
-"""
 import argparse
 from datetime import datetime
 from typing import List, Optional, Tuple
@@ -13,19 +10,15 @@ from analyser.data import get_data
 from analyser.plots import plot_normalized_data
 from pm import CFG
 
-BASE_SYMBOLS = CFG["BASE_SYMBOLS"]
-MAIN_SYMBOLS = CFG["MAIN_SYMBOLS"]
-
 
 def _get_data(
     symbols: List[str],
     dates: pd.DatetimeIndex,
-    base_symbol: str = "ES3.SI",
+    sheet: str,
     col: str = "adjclose",
-    dirname: str = "data",
 ):
     """Wrapper for get_data."""
-    df = get_data(symbols, dates, base_symbol=base_symbol, col=col, dirname=dirname)
+    df = get_data(symbols, dates, base_symbol=CFG.CONFIG[sheet].BASE_SYMBOL, col=col, dirname=CFG.DATA_DIR)
     if "SB" in df.columns:
         df["SB"] = 100  # default value for bonds
     return df
@@ -83,7 +76,7 @@ def portfolio_const(
         raise Exception("Input 'allocs' or 'units'")
 
     dates = pd.date_range(start_date, end_date)
-    prices_all = _get_data(symbols, dates)  # automatically adds index
+    prices_all = _get_data(symbols, dates, "SGD")  # automatically adds index
     prices = prices_all[symbols]  # only portfolio symbols
     return get_portfolio_value(prices, allocs, start_val, units)
 
@@ -130,7 +123,7 @@ def assess_portfolio(
 
     # Benchmark
     dates = pd.date_range(start_date, end_date)
-    price_bm = _get_data([bm], dates)[[bm]]
+    price_bm = _get_data([bm], dates, "SGD")[[bm]]
     port_val_bm = get_portfolio_value(price_bm, units=[1.0])
     (
         cumul_ret_bm,
@@ -211,6 +204,7 @@ def _load_fund_portvals():
         else:
             dfs = dfs.join(df, how="outer")
 
+    dfs.ffill(inplace=True)
     dfs.fillna(0, inplace=True)
     portvals = dfs[CFG.FUNDNAMES].sum(axis=1)
     return portvals
@@ -246,9 +240,10 @@ def compute_portvals(
     if sheet in ["SRS", "Fund", "SGD", "Bond"]:
         symbols = df_orders["Symbol"].drop_duplicates().values.tolist()
     else:
-        symbols = MAIN_SYMBOLS[sheet]
+        # symbols = MAIN_SYMBOLS[sheet]
+        symbols = list(CFG.CONFIG[sheet].MAIN_SYMBOLS.values())
     dates = pd.date_range(start_date, end_date)
-    prices = _get_data(symbols, dates, base_symbol=BASE_SYMBOLS[sheet], col="close")[
+    prices = _get_data(symbols, dates, sheet=sheet, col="close")[
         symbols
     ]
     if sheet == "IDR":  # HACK
@@ -303,8 +298,6 @@ def agg_daily_cost(sheet: str, xlsx_file: str) -> pd.DataFrame:
         parse_dates=["Date"],
         usecols=["Date", "Type", "Stock", "Transacted Value", "Gains from Sale"],
     )
-    if sheet == "USD":
-        df = df[df["Stock"].isin(["iShares MSCI EM ETF", "iShares MSCI World ETF"])]
     df.columns = ["Date", "Type", "Stock", "Value", "Realised_Gain"]
     df["Value"] -= df["Realised_Gain"]  # to obtain original cost
 
@@ -325,9 +318,9 @@ def compute_cost(
     cost_df.fillna(0, inplace=True)
 
     if sheet == "SGD":
-        prices_bm = _get_data([], trading_dates, base_symbol="ES3.SI", col="close")
+        prices_bm = _get_data([], trading_dates, sheet, col="close")
         cost_df = cost_df.join(prices_bm)
-        cost_df.fillna(method="ffill", inplace=True)
+        cost_df.ffill(inplace=True)
         cost_df["Units_bm"] = cost_df["Value"] / cost_df["ES3.SI"]
 
         for c in ["Value", "Units_bm"]:
@@ -345,45 +338,10 @@ def compute_cost(
     return cost_df
 
 
-def agg_daily_gain(gain_type: str, sheet: str, xlsx_file: str) -> pd.DataFrame:
-    """Aggregate gain daily."""
-    # Load data
-    df = pd.read_excel(
-        xlsx_file,
-        sheet_name=f"{sheet} Txn",
-        parse_dates=["Date"],
-        usecols=["Date", "Type", "Stock", "Gains from Sale"],
-    )
-    if sheet == "USD":
-        df = df[df["Stock"].isin(["iShares MSCI EM ETF", "iShares MSCI World ETF"])]
-    elif sheet == "IDR":
-        df = df[df["Stock"].isin(["GoTo"])]
-    df.columns = ["Date", "Type", "Stock", "Value"]
-
-    # Compute gains
-    gains_df = df[df["Type"] == gain_type].groupby(["Date"])[["Value"]].sum()
-    return gains_df
-
-
-def compute_gains(
-    gain_type: str,
-    trading_dates: pd.DatetimeIndex,
-    sheet: str = "SGD",
-    xlsx_file: str = CFG.FLOWDATA,
-) -> pd.DataFrame:
-    """Compute cumulative gains."""
-    gains_df = agg_daily_gain(gain_type, sheet, xlsx_file)
-    gains_df = gains_df.cumsum()
-    gains_df = pd.DataFrame(index=trading_dates).join(gains_df)
-    gains_df.iloc[0] = 0
-    gains_df.fillna(method="ffill", inplace=True)
-    return gains_df["Value"]
-
-
-def compute_etf(
+def compute_usd(
     trading_dates: pd.DatetimeIndex, xlsx_file: str = CFG.FLOWDATA
 ) -> pd.DataFrame:
-    """Compute cumulative cost and cash."""
+    """Compute cumulative cost and cash specific to USD."""
     # Load data
     df = pd.read_excel(
         xlsx_file,
@@ -411,25 +369,22 @@ def compute_etf(
         df[c] *= (df["Type"] == "Buy") * 2 - 1
 
     cost_df = df.pivot(index="Date", columns="Stock", values="Value")
-    cost_df.rename(
-        columns={
-            "SGD Deposit": "SGD_Deposit",
-            "USD Deposit": "USD_Deposit",
-            "iShares MSCI EM ETF": "EIMI.L",
-            "iShares MSCI World ETF": "IWDA.L",
-        },
-        inplace=True,
-    )
+    _cols_to_rename = {
+        "SGD Deposit": "SGD_Deposit",
+        "USD Deposit": "USD_Deposit",
+    }
+    _cols_to_rename.update(CFG.CONFIG["USD"].MAIN_SYMBOLS)
+    cost_df.rename(columns=_cols_to_rename, inplace=True)
     cost_df = pd.DataFrame(index=trading_dates).join(cost_df)
 
-    prices = _get_data(
-        ["USDSGD=X"], trading_dates, base_symbol=BASE_SYMBOLS["USD"], col="close"
-    )
+    prices = _get_data(["USDSGD=X"], trading_dates, "USD", col="close")
     prices.rename(columns={"USDSGD=X": "USDSGD"}, inplace=True)
 
     cost_df = cost_df.join(prices[["USDSGD"]])
     cost_df.fillna(0, inplace=True)
-    for c in ["SGD_Deposit", "USD_Deposit", "USD-SGD", "EIMI.L", "IWDA.L"]:
+
+    symbols = list(CFG.CONFIG["USD"].MAIN_SYMBOLS.values())
+    for c in ["SGD_Deposit", "USD_Deposit", "USD-SGD"] + symbols:
         cost_df[c] = cost_df[c].cumsum()
 
     # Compute Cash
@@ -441,12 +396,7 @@ def compute_etf(
     units_df = units_df.cumsum()
 
     cost_df["Cash_SGD"] = cost_df["SGD_Deposit"] - cost_df["USD-SGD"]
-    cost_df["Cash_USD"] = (
-        cost_df["USD_Deposit"]
-        + units_df["USD-SGD"]
-        - cost_df["IWDA.L"]
-        - cost_df["EIMI.L"]
-    )
+    cost_df["Cash_USD"] = cost_df["USD_Deposit"] + units_df["USD-SGD"] - cost_df[symbols].sum(axis=1)
     cost_df["Cash"] = cost_df["Cash_USD"] + cost_df["Cash_SGD"] / cost_df["USDSGD"]
     # TODO: Cost fluctuating due to FX
     cost_df["Cost"] = (
@@ -458,6 +408,7 @@ def compute_etf(
 
 
 def compute_idr(trading_dates: pd.DatetimeIndex, xlsx_file: str):
+    """Compute cumulative cost and cash specific to IDR."""
     df = pd.read_excel(
         xlsx_file,
         sheet_name="IDR Txn",
@@ -484,24 +435,22 @@ def compute_idr(trading_dates: pd.DatetimeIndex, xlsx_file: str):
         df[c] *= (df["Type"] == "Buy") * 2 - 1
 
     cost_df = df.pivot(index="Date", columns="Stock", values="Value")
-    cost_df.rename(
-        columns={
-            "SGD Deposit": "SGD_Deposit",
-            "IDR Deposit": "IDR_Deposit",
-            "GoTo": "GOTO.JK",
-        },
-        inplace=True,
-    )
+    _cols_to_rename = {
+        "SGD Deposit": "SGD_Deposit",
+        "IDR Deposit": "IDR_Deposit",
+    }
+    _cols_to_rename.update(CFG.CONFIG["IDR"].MAIN_SYMBOLS)
+    cost_df.rename(columns=_cols_to_rename, inplace=True)
     cost_df = pd.DataFrame(index=trading_dates).join(cost_df)
 
-    prices = _get_data(
-        ["SGDIDR=X"], trading_dates, base_symbol=BASE_SYMBOLS["IDR"], col="close"
-    )
+    prices = _get_data(["SGDIDR=X"], trading_dates, "IDR", col="close")
     prices["IDRSGD"] = 10000 / prices["SGDIDR=X"]  # HACK
 
     cost_df = cost_df.join(prices[["IDRSGD"]])
     cost_df.fillna(0, inplace=True)
-    for c in ["SGD_Deposit", "IDR_Deposit", "IDR-SGD", "GOTO.JK"]:
+
+    symbols = list(CFG.CONFIG["IDR"].MAIN_SYMBOLS.values())
+    for c in ["SGD_Deposit", "IDR_Deposit", "IDR-SGD"] + symbols:
         cost_df[c] = cost_df[c].cumsum()
 
     # Compute Cash
@@ -513,9 +462,7 @@ def compute_idr(trading_dates: pd.DatetimeIndex, xlsx_file: str):
     units_df = units_df.cumsum()
 
     cost_df["Cash_SGD"] = cost_df["SGD_Deposit"] - cost_df["IDR-SGD"]
-    cost_df["Cash_IDR"] = (
-        cost_df["IDR_Deposit"] + units_df["IDR-SGD"] - cost_df["GOTO.JK"]
-    )
+    cost_df["Cash_IDR"] = cost_df["IDR_Deposit"] + units_df["IDR-SGD"] - cost_df[symbols].sum(axis=1)
     cost_df["Cash"] = cost_df["Cash_IDR"] + cost_df["Cash_SGD"] / cost_df["IDRSGD"]
     # TODO: Cost fluctuating due to FX
     cost_df["Cost"] = (
@@ -526,78 +473,37 @@ def compute_idr(trading_dates: pd.DatetimeIndex, xlsx_file: str):
     return cost_df[["IDRSGD", "Cost", "Cash"]]
 
 
-# TODO: from analyser/data.py
+def agg_daily_gain(gain_type: str, sheet: str, xlsx_file: str) -> pd.DataFrame:
+    """Aggregate gain daily."""
+    # Load data
+    df = pd.read_excel(
+        xlsx_file,
+        sheet_name=f"{sheet} Txn",
+        parse_dates=["Date"],
+        usecols=["Date", "Type", "Stock", "Gains from Sale"],
+    )
+    if sheet in ["USD", "IDR"]:
+        df = df[df["Stock"].isin(list(CFG.CONFIG[sheet].MAIN_SYMBOLS.keys()))]
+    df.columns = ["Date", "Type", "Stock", "Value"]
 
-# def get_xlsx(
-#     symbols: List[str],
-#     dates: pd.DatetimeIndex,
-#     base_symbol: str = "USDSGD",
-#     col: str = "Close",
-#     xlsx: str = "data.xlsx",
-# ) -> pd.DataFrame:
-#     """Load stock data for given symbols from xlsx file."""
-#     df = pd.DataFrame(index=dates)
-#     df.index.name = "Date"
-#     if base_symbol not in symbols:
-#         symbols = [base_symbol] + symbols
-
-#     for symbol in symbols:
-#         df_temp = pd.read_excel(
-#             xlsx,
-#             index_col="Date",
-#             parse_dates=True,
-#             sheet_name=symbol,
-#             usecols=["Date", col],
-#         )
-#         df_temp.index = df_temp.index.date
-#         df_temp.rename(columns={col: symbol}, inplace=True)
-#         df = df.join(df_temp)
-#         if symbol == base_symbol:  # drop dates that base_symbol did not trade
-#             df = df.dropna(subset=[base_symbol])
-#     df = df.replace([0], [np.nan])
-#     fill_missing_values(df)
-#     return df
+    # Compute gains
+    gains_df = df[df["Type"] == gain_type].groupby(["Date"])[["Value"]].sum()
+    return gains_df
 
 
-# def get_xlsx_ohlcv(
-#     symbol: str,
-#     dates: pd.DatetimeIndex,
-#     base_symbol: str = "USDSGD",
-#     xlsx: str = "data.xlsx",
-# ) -> pd.DataFrame:
-#     """Load stock ohlcv data for given symbol from xlsx files."""
-#     df_base = pd.read_excel(
-#         xlsx,
-#         index_col="Date",
-#         parse_dates=True,
-#         sheet_name=symbol,
-#         usecols=["Date", "Close"],
-#     )
-#     df_base.columns = [base_symbol]
-#     df_base.index = df_base.index.date
-#     df_base.index.name = "date"
-
-#     df = pd.DataFrame(index=dates)
-#     df.index.name = "date"
-#     df = df.join(df_base)
-#     df = df.dropna(subset=[base_symbol])
-
-#     df_temp = pd.read_excel(
-#         xlsx,
-#         parse_dates=True,
-#         sheet_name=symbol,
-#         index_col="Date",
-#         usecols=["Date", "Open", "High", "Low", "Close", "Volume"],
-#     )
-#     df_temp.columns = ["open", "high", "low", "close", "volume"]
-#     df_temp.index = df_temp.index.date
-#     df_temp.index.name = "date"
-
-#     df = df.join(df_temp)
-#     df = df.replace([0], [np.nan])
-#     df = df.drop_duplicates()
-#     fill_missing_values(df)
-#     return df
+def compute_gains(
+    gain_type: str,
+    trading_dates: pd.DatetimeIndex,
+    sheet: str = "SGD",
+    xlsx_file: str = CFG.FLOWDATA,
+) -> pd.DataFrame:
+    """Compute cumulative gains."""
+    gains_df = agg_daily_gain(gain_type, sheet, xlsx_file)
+    gains_df = gains_df.cumsum()
+    gains_df = pd.DataFrame(index=trading_dates).join(gains_df)
+    gains_df.iloc[0] = 0
+    gains_df.ffill(inplace=True)
+    return gains_df["Value"]
 
 
 def get_portfolio(end_date, start_date, sheet, xlsx_file):
@@ -608,7 +514,7 @@ def get_portfolio(end_date, start_date, sheet, xlsx_file):
         df = compute_cost(trading_dates, sheet, xlsx_file)
         df["Portfolio"] = portvals
     elif sheet == "USD":
-        df = compute_etf(trading_dates, xlsx_file)
+        df = compute_usd(trading_dates, xlsx_file)
         df["Equity"] = portvals
         df["Portfolio"] = df["Equity"] + df["Cash"]
     elif sheet == "IDR":

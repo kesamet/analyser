@@ -1,6 +1,3 @@
-"""
-Utility functions for data used in app.
-"""
 from datetime import date
 from dateutil import parser
 from typing import Optional
@@ -38,9 +35,8 @@ def get_portfolio(sheet: str) -> pd.DataFrame:
         return _load_portfolio("data/summary/portfolio_bond.csv")
     elif sheet == "SGD":
         df = _load_portfolio("data/summary/portfolio_sgd.csv")
-        df["bm"] = get_data(["ES3.SI"], df.index, col="adjclose", dirname=CFG.DATA_DIR)[
-            "ES3.SI"
-        ]
+        _df0 = get_data(["ES3.SI"], df.index, col="adjclose", dirname=CFG.DATA_DIR)
+        df["bm"] = _df0["ES3.SI"]
         return df
     else:
         raise NotImplementedError
@@ -159,7 +155,7 @@ def get_overall_portfolio(inclu_bond: bool = True) -> pd.DataFrame:
         tmp4["y4"] = tmp4["y4"] * idr_df["IDRSGD"]
         tmp = tmp.join(tmp4)
 
-        tmp.fillna(method="ffill", inplace=True)
+        tmp.ffill(inplace=True)
         tmp.fillna(0, inplace=True)
         tmp[c] = tmp.sum(axis=1)
         df = df.join(tmp[[c]])
