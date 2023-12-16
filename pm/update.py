@@ -10,8 +10,8 @@ from pm import CFG
 
 
 if __name__ == "__main__":
-    options = ["SRS", "Core", "ESG", "QED"]
-    i = int(input("  Enter sheet (SRS=0, Core=1, ESG=2, QED=3): "))
+    options = ["SRS", "Core", "ESG", "QGF"]
+    i = int(input("  Enter sheet (SRS=0, Core=1, ESG=2, QGF=3): "))
     if i not in [0, 1, 2, 3]:
         raise FileNotFoundError
 

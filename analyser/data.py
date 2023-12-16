@@ -1,5 +1,5 @@
 """
-Data.
+Load data.
 """
 import os
 from datetime import datetime, timedelta
@@ -110,8 +110,8 @@ def get_data_ohlcv(
 
 def fill_missing_values(df: pd.DataFrame) -> None:
     """Fill missing values in dataframe."""
-    df.fillna(method="ffill", inplace=True)
-    df.fillna(method="bfill", inplace=True)
+    df.ffill(inplace=True)
+    df.bfill(inplace=True)
 
 
 def rebase(df: pd.DataFrame, date: str = None) -> pd.DataFrame:

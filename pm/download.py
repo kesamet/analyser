@@ -23,7 +23,7 @@ if __name__ == "__main__":
     print(f"\nDownloading to {dest}/")
     print(f"Period: {start_date} to {end_date}\n")
 
-    symbols = list(CFG["ADDITIONS"].values()) + list(CFG["EQ_DICT"].values())
+    symbols = list(CFG.ADDITIONS.values()) + list(CFG.EQ_DICT.values())
     for i, symbol in enumerate(symbols):
         print(f"{i:2d} of {len(symbols)}: {symbol}")
         download_data(symbol, start_date, end_date, dirname=dest)

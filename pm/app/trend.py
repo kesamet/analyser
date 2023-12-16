@@ -9,12 +9,10 @@ from analyser.data import get_data
 import pm.ta as ta
 from pm import CFG
 
-EQ_DICT = CFG["EQ_DICT"]
-
 
 @st.cache_data
 def _table_trend_by_days(last_date: date, days: int) -> pd.DataFrame:
-    symbols = list(EQ_DICT.values())
+    symbols = list(CFG.EQ_DICT.values())
     dates = pd.date_range(last_date - timedelta(days=days), last_date)
 
     results = list()
@@ -40,7 +38,7 @@ def _table_trend_by_days(last_date: date, days: int) -> pd.DataFrame:
         columns=["symbol", "close", "level", "grad", "p0", "p25", "p50", "p75", "p100"],
     )
     results.index = symbols
-    results["symbol"] = list(EQ_DICT.keys())
+    results["symbol"] = list(CFG.EQ_DICT.keys())
     return results.sort_values("level")
 
 
@@ -97,7 +95,7 @@ def page_trend(last_date: date) -> None:
 
     st.subheader("Main")
     st.dataframe(
-        df1[df1.index.isin(CFG["TREND_SYMBOLS"])]
+        df1[df1.index.isin(CFG.TREND_SYMBOLS)]
         .style.format(precision=3)
         .applymap(lambda x: "color: red" if x < 0 else "", subset=["grad"])
         .applymap(highlight, subset=["level"]),
@@ -113,8 +111,8 @@ def page_trend(last_date: date) -> None:
 
     st.header("By equity")
     cols = st.columns((2, 1))
-    select_eq = cols[0].selectbox("Select equity", list(EQ_DICT.keys()))
-    symbol = EQ_DICT[select_eq]
+    select_eq = cols[0].selectbox("Select equity", list(CFG.EQ_DICT.keys()))
+    symbol = CFG.EQ_DICT[select_eq]
 
     s2 = cols[1].selectbox("Select period", ["3M", "6M", "9M", "1Y", "2Y"], 3)
     select_days2 = str2days[s2]
