@@ -38,7 +38,7 @@ def search_for_keywords(
     for i in page_nums:
         instances = list()
         for keyword in keywords:
-            instances.extend(doc[i].searchFor(keyword))
+            instances.extend(doc[i].search_for(keyword))
         if len(instances) > 0:
             all_instances[i] = instances
     return all_instances
@@ -87,7 +87,7 @@ def extract_pages_highlighted(
     doc = fitz.Document(filename)
     for page_num, rects in all_instances.items():
         for rect in rects:
-            doc[page_num].addHighlightAnnot(rect)
+            doc[page_num].add_highlight_annot(rect)
     doc.select(list(all_instances.keys()))
     return doc
 
@@ -165,8 +165,8 @@ def extract_line_slides(doc: fitz.Document, keyword: str) -> List[dict]:
 
     results = list()
     for page_num, rects in all_instances.items():
-        page = doc.loadPage(page_num)
-        blocks = page.getText("blocks")
+        page = doc.load_page(page_num)
+        blocks = page.get_text("blocks")
 
         for rect in rects:
             exact = get_line(blocks, rect)
@@ -213,8 +213,8 @@ def extract_line_report(doc: fitz.Document, keyword: str, aux_kw: str) -> List[d
 
     results = list()
     for page_num, rects in all_instances.items():
-        page = doc.loadPage(page_num)
-        blocks = page.getText("blocks")
+        page = doc.load_page(page_num)
+        blocks = page.get_text("blocks")
 
         for rect in rects:
             for line in get_lines(blocks, rect):
@@ -254,12 +254,12 @@ def extract_most_plausible(all_results: dict) -> pd.DataFrame:
 
 def ysearch(page: fitz.Page, heading: str, ending: str) -> Tuple[float, float]:
     """Get y-coords by heading and ending."""
-    search1 = page.searchFor(heading, hit_max=1)
+    search1 = page.search_for(heading, hit_max=1)
     if not search1:
         raise ValueError("table top delimiter not found")
     ymin = search1[0].y0 - 3  # table starts below this value
 
-    search2 = page.searchFor(ending, hit_max=1)
+    search2 = page.search_for(ending, hit_max=1)
     if not search2:
         print("warning: table bottom delimiter not found - using end of page")
         ymax = 99999
@@ -278,7 +278,7 @@ def parse_table(page: fitz.Page, heading: str, ending: str) -> tuple:
         words = list()
         xs = list()
         ys = list()
-        for w in page.getText("words"):
+        for w in page.get_text("words"):
             x0, y0, x1, y1 = w[:4]
             if ymin < y0 < ymax:
                 words.append(w)
@@ -364,5 +364,5 @@ def page_parse_table(
 ) -> pd.DataFrame:
     """Parse table from a PDF given page number."""
     doc = fitz.Document(filename)
-    page = doc.loadPage(page_num)
+    page = doc.load_page(page_num)
     return parse_table(page, heading, ending)
