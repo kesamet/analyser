@@ -63,7 +63,7 @@ def extract_tables(filename: str) -> List[Document]:
             try:
                 df = tab.to_pandas()
                 if df.shape == (1, 1):
-                    logging.info(f"  [!] dataframe shape is (1, 1)")
+                    logging.info("  [!] dataframe shape is (1, 1)")
                     continue
                 d = Document(
                     page_content=df.to_json(),
@@ -71,7 +71,7 @@ def extract_tables(filename: str) -> List[Document]:
                 )
                 table_docs.append(d)
             except Exception:
-                logging.info(f"  [!] unable to convert to dataframe")
+                logging.info("  [!] unable to convert to dataframe")
     return table_docs
 
 
@@ -131,13 +131,12 @@ def metrics():
         return
 
     filenames = sorted(glob(os.path.join(report_dir, "*.pdf")))
-    results = []
     with st.form("metrics"):
         filename = st.selectbox("Select file", filenames)
 
         submitted = st.form_submit_button("Submit")
         if submitted:
-            results = extract_metrics(filename)
+            _ = extract_metrics(filename)
 
 
 if __name__ == "__main__":
