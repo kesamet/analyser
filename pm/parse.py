@@ -61,10 +61,10 @@ def extract_contents(filename, output_dir="outputs/"):
     for i, page in enumerate(doc.pages()):
         page_num = i + 1
 
-        blocks = page.getText("blocks")
+        blocks = page.get_text("blocks")
         save_blocks(blocks, page_num, output_dir)
 
-        htmltext = page.getText("html")
+        htmltext = page.get_text("html")
         save_html(htmltext, page_num, os.path.join(output_dir, "html/"))
 
         for img in doc.getPageImageList(i):
@@ -89,8 +89,8 @@ def bbsearch(
     else:
         xs = [(page.rect.x0, page.rect.x1)]
 
-    search1 = page.searchFor(heading)
-    search2 = page.searchFor(ending)
+    search1 = page.search_for(heading)
+    search2 = page.search_for(ending)
 
     bbs = list()
     for xmin, xmax in xs:
