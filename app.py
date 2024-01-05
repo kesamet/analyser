@@ -22,7 +22,7 @@ def main():
         "Portfolio": page_data,
         "Trend": page_trend,
         "Charts": page_charts,
-        "Technical Analysis": lambda x: page_ta(x, CFG.EQ_DICT),
+        "Technical Analysis": lambda x: page_ta(x, CFG.SYMBOLS),
     }
 
     with st.sidebar:

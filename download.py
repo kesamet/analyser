@@ -20,6 +20,7 @@ if __name__ == "__main__":
     print(f"\nDownloading to {args.dest}/")
     print(f"Period: {start_date} to {end_date}\n")
 
-    for i, symbol in enumerate(SYMBOLS):
-        print(f"{i:2d} of {len(SYMBOLS) - 1}: {symbol}")
+    symbols = list(SYMBOLS.values())
+    for i, symbol in enumerate(symbols):
+        print(f"{i:2d} of {len(symbols) - 1}: {symbol}")
         download_data(symbol, start_date, end_date, dirname=args.dest)
