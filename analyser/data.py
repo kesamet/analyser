@@ -17,7 +17,6 @@ def download_nasdaqdata(symbol: str, **kwargs) -> Union[pd.DataFrame, None]:
         return nasdaqdatalink.get(symbol, authtoken=os.getenv("QUANDL_API_KEY"))
     except Exception:
         print(f"... Data not found for {symbol}")
-    
 
 
 def download_yahoofinance(
