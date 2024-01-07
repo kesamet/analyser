@@ -3,20 +3,30 @@ Load data.
 """
 import os
 from datetime import datetime, timedelta
-from typing import List, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
 
 
-def download_data(
+def download_nasdaqdata(symbol: str, **kwargs) -> Union[pd.DataFrame, None]:
+    """Download data from nasdaqdatalink."""
+    try:
+        import nasdaqdatalink
+
+        return nasdaqdatalink.get(symbol, authtoken=os.getenv("QUANDL_API_KEY"))
+    except Exception:
+        print(f"... Data not found for {symbol}")
+
+
+def download_yahoofinance(
     symbol: str,
     start_date: str,
     end_date: str,
     time_interval: str = "daily",
-    dirname: str = "data",
+    dirname: Optional[str] = None,
 ) -> Union[pd.DataFrame, None]:
-    """Download data given ticker symbols."""
+    """Download data from yahoofinancials given ticker symbols."""
     try:
         from yahoofinancials import YahooFinancials as yf
 

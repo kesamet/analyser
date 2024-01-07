@@ -4,7 +4,9 @@ Script to download data.
 import argparse
 import datetime
 
-from analyser.data import download_data
+from tqdm import tqdm
+
+from analyser.data import download_yahoofinance
 from symbols import SYMBOLS
 
 
@@ -20,6 +22,6 @@ if __name__ == "__main__":
     print(f"\nDownloading to {args.dest}/")
     print(f"Period: {start_date} to {end_date}\n")
 
-    for i, symbol in enumerate(SYMBOLS):
-        print(f"{i:2d} of {len(SYMBOLS) - 1}: {symbol}")
-        download_data(symbol, start_date, end_date, dirname=args.dest)
+    symbols = list(SYMBOLS.values())
+    for symbol in tqdm(symbols, desc="yahoofinance"):
+        download_yahoofinance(symbol, start_date, end_date, dirname=args.dest)

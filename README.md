@@ -7,13 +7,9 @@ You will need to set up your development environment using conda, which you can 
 conda env create --name analyser python=3.11
 ```
 
-Activate the environment.
+Activate the environment and install the Python packages.
 ```bash
 conda activate analyser
-```
-
-Install the Python packages.
-```bash
 pip install -r requirements.txt
 ```
 
@@ -43,3 +39,7 @@ To run Streamlit app,
 ```bash
 streamlit run app_analyser.py
 ```
+
+
+## Notebooks
+- FRED[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/kesamet/analyser/blob/master/notebooks/test_fred.ipynb)

@@ -12,7 +12,7 @@ from pm import CFG
 
 @st.cache_data
 def _table_trend_by_days(last_date: date, days: int) -> pd.DataFrame:
-    symbols = list(CFG.EQ_DICT.values())
+    symbols = list(CFG.SYMBOLS.values())
     dates = pd.date_range(last_date - timedelta(days=days), last_date)
 
     results = list()
@@ -38,7 +38,7 @@ def _table_trend_by_days(last_date: date, days: int) -> pd.DataFrame:
         columns=["symbol", "close", "level", "grad", "p0", "p25", "p50", "p75", "p100"],
     )
     results.index = symbols
-    results["symbol"] = list(CFG.EQ_DICT.keys())
+    results["symbol"] = list(CFG.SYMBOLS.keys())
     return results.sort_values("level")
 
 
@@ -111,8 +111,8 @@ def page_trend(last_date: date) -> None:
 
     st.header("By equity")
     cols = st.columns((2, 1))
-    select_eq = cols[0].selectbox("Select equity", list(CFG.EQ_DICT.keys()))
-    symbol = CFG.EQ_DICT[select_eq]
+    select_eq = cols[0].selectbox("Select equity", list(CFG.SYMBOLS.keys()))
+    symbol = CFG.SYMBOLS[select_eq]
 
     s2 = cols[1].selectbox("Select period", ["3M", "6M", "9M", "1Y", "2Y"], 3)
     select_days2 = str2days[s2]

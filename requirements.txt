@@ -14,5 +14,6 @@ seaborn
 streamlit
 streamlit_option_menu
 ta
+tqdm
 xlrd
 yahoofinancials

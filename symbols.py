@@ -1,6 +1,4 @@
-EQ_DICT = {
+SYMBOLS = {
     "MSCI ACWI": "ACWI",
     "MSCI World": "URTH",
 }
-
-SYMBOLS = list(EQ_DICT.values())

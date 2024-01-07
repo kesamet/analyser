@@ -1,4 +1,3 @@
-import argparse
 from datetime import datetime
 from typing import List, Optional, Tuple
 
@@ -541,50 +540,50 @@ def get_portfolio(end_date, start_date, sheet, xlsx_file):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-o", "--output", default="all", type=str)
-    args = parser.parse_args()
+    i = int(input("  Enter sheet (All=0, SGD=1, USD=2, Fund=3, SRS=4, Bond=5, IDR=6): "))
+    if i not in range(7):
+        raise IndexError
 
     end_date = datetime.today().date().isoformat()
 
-    if args.output in ["all", "sgd"]:
+    if i in [0, 1]:
         print("Generating portfolio_sgd...")
         sgd_df = get_portfolio(
-            end_date, "2015-03-23", "SGD", "data/summary/aSummary.xlsx"
+            end_date, "2015-03-23", "SGD", f"{CFG.SUMMARY_DIR}/aSummary.xlsx"
         )
-        sgd_df.to_csv("data/summary/portfolio_sgd.csv")
+        sgd_df.to_csv(f"{CFG.SUMMARY_DIR}/portfolio_sgd.csv")
 
-    if args.output in ["all", "usd"]:
+    if i in [0, 2]:
         print("Generating portfolio_usd...")
         usd_df = get_portfolio(
-            end_date, "2019-07-01", "USD", "data/summary/aSummary.xlsx"
+            end_date, "2019-07-01", "USD", f"{CFG.SUMMARY_DIR}/aSummary.xlsx"
         )
-        usd_df.to_csv("data/summary/portfolio_usd.csv")
+        usd_df.to_csv(f"{CFG.SUMMARY_DIR}/portfolio_usd.csv")
 
-    if args.output in ["all", "fund"]:
+    if i in [0, 3]:
         print("Generating portfolio_fund...")
         fund_df = get_portfolio(
-            end_date, "2021-04-06", "Fund", "data/summary/aSummary.xlsx"
+            end_date, "2021-04-06", "Fund", f"{CFG.SUMMARY_DIR}/aSummary.xlsx"
         )
-        fund_df.to_csv("data/summary/portfolio_fund.csv")
+        fund_df.to_csv(f"{CFG.SUMMARY_DIR}/portfolio_fund.csv")
 
-    if args.output in ["all", "srs"]:
+    if i in [0, 4]:
         print("Generating portfolio_srs...")
         srs_df = get_portfolio(
-            end_date, "2019-02-01", "SRS", "data/summary/aSummary.xlsx"
+            end_date, "2019-02-01", "SRS", f"{CFG.SUMMARY_DIR}/aSummary.xlsx"
         )
-        srs_df.to_csv("data/summary/portfolio_srs.csv")
+        srs_df.to_csv(f"{CFG.SUMMARY_DIR}/portfolio_srs.csv")
 
-    if args.output in ["all", "bond"]:
+    if i in [0, 5]:
         print("Generating portfolio_bond...")
         bond_df = get_portfolio(
-            end_date, "2015-11-01", "Bond", "data/summary/aSummary.xlsx"
+            end_date, "2015-11-01", "Bond", f"{CFG.SUMMARY_DIR}/aSummary.xlsx"
         )
-        bond_df.to_csv("data/summary/portfolio_bond.csv")
+        bond_df.to_csv(f"{CFG.SUMMARY_DIR}/portfolio_bond.csv")
 
-    if args.output in ["all", "idr"]:
+    if i in [0, 6]:
         print("Generating portfolio_idr...")
         idr_df = get_portfolio(
-            end_date, "2023-02-07", "IDR", "data/summary/aSummary2.xlsx"
+            end_date, "2023-02-07", "IDR", f"{CFG.SUMMARY_DIR}/aSummary2.xlsx"
         )
-        idr_df.to_csv("data/summary/portfolio_idr.csv")
+        idr_df.to_csv(f"{CFG.SUMMARY_DIR}/portfolio_idr.csv")
