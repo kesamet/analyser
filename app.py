@@ -13,6 +13,8 @@ from pm.app.data import page_data
 from pm.app.summary import page_summary
 from pm.app.trend import page_trend
 
+st.set_page_config(page_title="PM")
+
 
 def main():
     today_date = date.today()
