@@ -164,7 +164,7 @@ def assess_portfolio(
 
     ts_df = price_bm.join(port_val)
     return (
-        {"start_date": start_date, "end_date": end_date, "port_val": port_val[-1]},
+        {"start_date": start_date, "end_date": end_date, "port_val": port_val.iloc[-1]},
         results_df,
         ts_df,
     )

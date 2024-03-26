@@ -10,6 +10,8 @@ from analyser.app.charts import page_ta
 from analyser.app.parser import search_highlight, table_ocr, search_extract
 from symbols import SYMBOLS
 
+st.set_page_config(page_title="Analyser")
+
 
 def main():
     today_date = date.today()

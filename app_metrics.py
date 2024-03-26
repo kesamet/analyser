@@ -16,6 +16,8 @@ from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmb
 
 logging.basicConfig(level=logging.INFO)
 
+st.set_page_config(page_title="Metrics")
+
 _ = load_dotenv()
 
 LLM = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.0)
