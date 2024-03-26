@@ -82,10 +82,10 @@ def rebase_table(
         if "Equity" in df.columns:
             df["Equity"] *= fx
 
-    df["Div"] -= df["Div"][0]
-    df["Realised_Gain"] -= df["Realised_Gain"][0]
-    df["Paper_Gain"] -= df["Paper_Gain"][0]
-    df["Net_Gain"] -= df["Net_Gain"][0]
+    df["Div"] -= df["Div"].iloc[0]
+    df["Realised_Gain"] -= df["Realised_Gain"].iloc[0]
+    df["Paper_Gain"] -= df["Paper_Gain"].iloc[0]
+    df["Net_Gain"] -= df["Net_Gain"].iloc[0]
 
     df["Net_Yield"] = df["Net_Gain"] / df["Cost"]
     df["Div_Yield"] = df["Div"] / df["Cost"]
@@ -228,16 +228,16 @@ def tab_portfolio(last_date: date, sheet: str, tentative_start_date: date) -> No
 
     start_date = subset_df.index[0].date().isoformat()
     curr_val = subset_df["Portfolio"].iloc[-1]
-    cost = subset_df["Cost"][-1] - subset_df["Cost"][0]
+    cost = subset_df["Cost"].iloc[-1] - subset_df["Cost"].iloc[0]
 
-    net_gain = subset_df["Net_Gain"][-1]
-    div = subset_df["Div"][-1]
-    realised_gain = subset_df["Realised_Gain"][-1]
-    paper_gain = subset_df["Paper_Gain"][-1]
+    net_gain = subset_df["Net_Gain"].iloc[-1]
+    div = subset_df["Div"].iloc[-1]
+    realised_gain = subset_df["Realised_Gain"].iloc[-1]
+    paper_gain = subset_df["Paper_Gain"].iloc[-1]
 
     years = (last_date - parser.parse(start_date).date()).days / 365.25
-    net_yield = subset_df["Net_Yield"][-1]  # compute_dietz_ret(subset_df)
-    div_yield = subset_df["Div_Yield"][-1]
+    net_yield = subset_df["Net_Yield"].iloc[-1]  # compute_dietz_ret(subset_df)
+    div_yield = subset_df["Div_Yield"].iloc[-1]
     ann_div_yield = annualise(div_yield, years)
 
     c0, c1, c2 = st.columns(3)
@@ -311,9 +311,9 @@ def tab_portfolio(last_date: date, sheet: str, tentative_start_date: date) -> No
         return
 
     tu_map = {
-        "yearmonth": "1M",
-        "yearquarter": "1Q",
-        "year": "1Y",
+        "yearmonth": "1ME",
+        "yearquarter": "1QE",
+        "year": "1YE",
     }
     timeunits = st.selectbox("Select time units.", list(tu_map.keys()), 1, key=sheet)
     df = sum_by_time(sheet, last_date, tu_map[timeunits])

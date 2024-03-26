@@ -1,4 +1,4 @@
 -r requirements.txt
-black==23.7.0
-langchain==0.0.352
-langchain-google-genai==0.0.5
+black==24.3.0
+langchain==0.1.6
+langchain-google-genai==0.0.11
