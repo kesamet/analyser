@@ -97,16 +97,16 @@ def page_trend(last_date: date) -> None:
     st.dataframe(
         df1[df1.index.isin(CFG.TREND_SYMBOLS)]
         .style.format(precision=3)
-        .applymap(lambda x: "color: red" if x < 0 else "", subset=["grad"])
-        .applymap(highlight, subset=["level"]),
+        .map(lambda x: "color: red" if x < 0 else "", subset=["grad"])
+        .map(highlight, subset=["level"]),
         height=400,
     )
 
     st.subheader("All")
     st.dataframe(
         df1.style.format(precision=3)
-        .applymap(lambda x: "color: red" if x < 0 else "", subset=["grad"])
-        .applymap(highlight, subset=["level"]),
+        .map(lambda x: "color: red" if x < 0 else "", subset=["grad"])
+        .map(highlight, subset=["level"]),
     )
 
     st.header("By equity")

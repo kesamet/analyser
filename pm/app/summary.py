@@ -46,13 +46,12 @@ def page_summary(last_date: date) -> None:
     labels = [f"{k}: {v / total:.1%}" for k, v in zip(names, data)]
     st.plotly_chart(plotly_ringchart(data, labels))
 
-    names = ["World", "SG", "ID", "Bond", "Cash"]
+    names = ["World", "SGD", "IDR", "CCE"]
     data = [
         _last["USD"] + _last["Fund"] + _last["SRS"],
         _last["SGD"],
         _last["IDR"],
-        _last["Bond"],
-        _last["Cash"],
+        _last["Cash"] + _last["Bond"],
     ]
     total = sum(data)
     labels = [f"{k}: {v / total:.1%}" for k, v in zip(names, data)]
