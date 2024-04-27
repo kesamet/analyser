@@ -1,6 +1,7 @@
 """
 Constants and parameters
 """
+
 str2days = {
     "1M": 30,
     "2M": 60,

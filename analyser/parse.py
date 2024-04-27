@@ -1,6 +1,7 @@
 """
 Parse reports.
 """
+
 import os
 import tempfile
 from typing import List, Tuple, Union

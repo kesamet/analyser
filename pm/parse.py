@@ -1,6 +1,7 @@
 """
 Script containing utility functions for parsing.
 """
+
 import json
 import operator
 import os

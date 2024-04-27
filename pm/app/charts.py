@@ -98,19 +98,19 @@ def page_charts(last_date: date) -> None:
         )
         st.altair_chart(chart1, use_container_width=True)
 
-    with st.expander("MSCI"):
-        chart2 = _get_chart(
-            dates,
-            ["URTH", "EEM", "IEUR", "SPY", "ES3.SI"],
-            symbol_names=["MSCI World", "MSCI EM", "MSCI EUR", "S&P500", "ES3.SI"],
-            base_symbol="SPY",
-        )
-        st.altair_chart(chart2, use_container_width=True)
+    # with st.expander("MSCI"):
+    #     chart2 = _get_chart(
+    #         dates,
+    #         ["URTH", "EEM", "IEUR", "SPY", "ES3.SI"],
+    #         symbol_names=["MSCI World", "MSCI EM", "MSCI EUR", "S&P500", "ES3.SI"],
+    #         base_symbol="SPY",
+    #     )
+    #     st.altair_chart(chart2, use_container_width=True)
 
     with st.expander("ETFs"):
         chart3 = _get_chart(
             dates,
-            ["IWDA.L", "EIMI.L"],
+            ["VWRA.L", "IWDA.L", "EIMI.L", "SPY", "ES3.SI"],
             base_symbol="IWDA.L",
         )
         st.altair_chart(chart3, use_container_width=True)

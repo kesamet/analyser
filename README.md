@@ -5,10 +5,6 @@
 You will need to set up your development environment using conda, which you can install [directly](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html).
 ```bash
 conda env create --name analyser python=3.11
-```
-
-Activate the environment and install the Python packages.
-```bash
 conda activate analyser
 pip install -r requirements.txt
 ```

@@ -1,6 +1,7 @@
 """
 Script to update csv.
 """
+
 from datetime import timedelta
 from dateutil import parser
 

@@ -6,7 +6,7 @@ import datetime
 
 from tqdm import tqdm
 
-from analyser.data import download_yahoofinance
+from analyser.data import download_yfinance
 from symbols import SYMBOLS
 
 
@@ -23,5 +23,5 @@ if __name__ == "__main__":
     print(f"Period: {start_date} to {end_date}\n")
 
     symbols = list(SYMBOLS.values())
-    for symbol in tqdm(symbols, desc="yahoofinance"):
-        download_yahoofinance(symbol, start_date, end_date, dirname=args.dest)
+    for symbol in tqdm(symbols, desc="yfinance"):
+        download_yfinance(symbol, start_date, end_date, dirname=args.dest)
