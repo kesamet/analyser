@@ -1,6 +1,7 @@
 """
 Load data.
 """
+
 import os
 from datetime import datetime, timedelta
 from typing import List, Optional, Tuple, Union
@@ -19,30 +20,22 @@ def download_nasdaqdata(symbol: str, **kwargs) -> Union[pd.DataFrame, None]:
         print(f"... Data not found for {symbol}")
 
 
-def download_yahoofinance(
+def download_yfinance(
     symbol: str,
     start_date: str,
     end_date: str,
-    time_interval: str = "daily",
     dirname: Optional[str] = None,
 ) -> Union[pd.DataFrame, None]:
-    """Download data from yahoofinancials given ticker symbols."""
-    try:
-        from yahoofinancials import YahooFinancials as yf
+    """Download price data from yfinance given ticker symbol."""
+    import yfinance as yf
 
-        tick = yf(symbol)
-        data = tick.get_historical_price_data(
-            start_date=start_date, end_date=end_date, time_interval=time_interval
-        )
-        df = pd.DataFrame.from_dict(data[symbol]["prices"])
-        df["date"] = pd.to_datetime(df["formatted_date"])
-        df = df[["date", "adjclose", "close", "high", "low", "open", "volume"]]
-        df = df.drop_duplicates()
-        if dirname is None:
-            return df
-        df.to_csv(os.path.join(dirname, f"{symbol}.csv"), index=False)
-    except KeyError:
-        print(f"... Data not found for {symbol}")
+    df = yf.download(symbol, start=start_date, end=end_date)
+    df.index.name = "date"
+    df.columns = ["open", "high", "low", "close", "adjclose", "volume"]
+    # df = df.drop_duplicates()
+    if dirname is not None:
+        df.to_csv(os.path.join(dirname, f"{symbol}.csv"))
+    return df
 
 
 def get_data(

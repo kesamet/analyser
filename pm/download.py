@@ -1,12 +1,13 @@
 """
 Script to download data.
 """
+
 import argparse
 from datetime import date
 
 from tqdm import tqdm
 
-from analyser.data import download_yahoofinance, download_nasdaqdata
+from analyser.data import download_yfinance, download_nasdaqdata
 from pm import CFG
 
 
@@ -23,8 +24,8 @@ if __name__ == "__main__":
     print(f"Period: {start_date} to {end_date}\n")
 
     symbols = list(CFG.ADDITIONS.values()) + list(CFG.SYMBOLS.values())
-    for symbol in tqdm(symbols, desc="yahoofinance"):
-        download_yahoofinance(symbol, start_date, end_date, dirname=dest)
+    for symbol in tqdm(symbols, desc="yfinance"):
+        download_yfinance(symbol, start_date, end_date, dirname=dest)
 
     for name, symbol in tqdm(CFG.NASDAQDATA.items(), desc="nasdaqdata"):
         df = download_nasdaqdata(symbol)

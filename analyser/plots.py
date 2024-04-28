@@ -1,6 +1,7 @@
 """
 Plots.
 """
+
 from typing import Optional
 
 import altair as alt
