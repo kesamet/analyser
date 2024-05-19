@@ -11,8 +11,8 @@ from pm import CFG
 
 
 if __name__ == "__main__":
-    options = ["SRS", "Core", "ESG", "QGF"]
-    i = int(input("  Enter sheet (SRS=0, Core=1, ESG=2, QGF=3): "))
+    options = ["SRS", "Core", "QGF"]
+    i = int(input("  Enter sheet (SRS=0, Core=1, QGF=2): "))
     if i not in range(len(options)):
         raise IndexError
 
@@ -37,7 +37,7 @@ if __name__ == "__main__":
 
         close = float(close)
         print(f"  -- Entering date: {date}, close: {close}")
-        row = df.query("date == @ date")
+        row = df.query("date == @date")
         if row.empty:
             idx = len(df)
         else:
