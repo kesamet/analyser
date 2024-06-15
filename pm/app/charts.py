@@ -3,7 +3,6 @@ from datetime import date
 
 import pandas as pd
 import streamlit as st
-from streamlit.elements.arrow_altair import ChartType, _generate_chart
 
 from analyser.data import get_data, rebase
 from pm import CFG
@@ -59,8 +58,10 @@ def _load_pe_data(start_date: str = "1990-01-01") -> pd.DataFrame:
 
 
 def _linechart(df: pd.DataFrame):
-    """A simple streamlit.elements.arrow_altair._generate_chart wrapper."""
-    chart, _ = _generate_chart(chart_type=ChartType.LINE, data=df)
+    """A simple streamlit.elements.vega_charts.generate_chart wrapper."""
+    from streamlit.elements.vega_charts import ChartType, generate_chart
+
+    chart, _ = generate_chart(chart_type=ChartType.LINE, data=df)
     return chart
 
 
@@ -70,14 +71,14 @@ def _get_chart(
     symbol_names: Optional[List[str]] = None,
     base_symbol: str = "ES3.SI",
     to_rebase: bool = True,
-):
+) -> None:
     df = get_data(symbols, dates, base_symbol=base_symbol, dirname=CFG.DATA_DIR)
     df = df[symbols]
     if to_rebase:
         df = rebase(df)
     if symbol_names is not None:
         df.columns = symbol_names
-    return _linechart(df)
+    st.line_chart(df)
 
 
 def page_charts(last_date: date) -> None:
@@ -89,60 +90,53 @@ def page_charts(last_date: date) -> None:
     dates = pd.date_range(start_date, last_date)
 
     with st.expander("VIX"):
-        chart1 = _get_chart(
+        _get_chart(
             dates,
             ["^VIX"],
             symbol_names=["VIX"],
             base_symbol="^VIX",
             to_rebase=False,
         )
-        st.altair_chart(chart1, use_container_width=True)
 
     # with st.expander("MSCI"):
-    #     chart2 = _get_chart(
+    #     _get_chart(
     #         dates,
     #         ["URTH", "EEM", "IEUR", "SPY", "ES3.SI"],
     #         symbol_names=["MSCI World", "MSCI EM", "MSCI EUR", "S&P500", "ES3.SI"],
     #         base_symbol="SPY",
     #     )
-    #     st.altair_chart(chart2, use_container_width=True)
 
     with st.expander("ETFs"):
-        chart3 = _get_chart(
+        _get_chart(
             dates,
             ["VWRA.L", "IWDA.L", "EIMI.L", "SPY", "ES3.SI"],
             base_symbol="IWDA.L",
         )
-        st.altair_chart(chart3, use_container_width=True)
 
     with st.expander("Banks"):
-        chart4 = _get_chart(
+        _get_chart(
             dates,
             ["ES3.SI", "D05.SI", "O39.SI", "U11.SI"],
             symbol_names=["ES3", "DBS", "OCBC", "UOB"],
         )
-        st.altair_chart(chart4, use_container_width=True)
 
     with st.expander("Industrial"):
-        chart5 = _get_chart(
+        _get_chart(
             dates,
             ["ES3.SI", "O5RU.SI", "A17U.SI", "BUOU.SI", "ME8U.SI", "M44U.SI"],
             symbol_names=["ES3", "AA", "Ascendas", "FLCT", "MIT", "MLT"],
         )
-        st.altair_chart(chart5, use_container_width=True)
 
     with st.expander("Commercial"):
-        chart6 = _get_chart(
+        _get_chart(
             dates,
             ["ES3.SI", "C38U.SI", "J69U.SI", "N2IU.SI"],
             symbol_names=["ES3", "CICT", "FCT", "MPACT"],
         )
-        st.altair_chart(chart6, use_container_width=True)
 
     with st.expander("Tech"):
-        chart7 = _get_chart(
+        _get_chart(
             dates,
             ["GOTO.JK", "GRAB"],
             symbol_names=["GoTo", "Grab"],
         )
-        st.altair_chart(chart7, use_container_width=True)
