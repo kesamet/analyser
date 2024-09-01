@@ -82,9 +82,11 @@ def extract_metrics(filename):
     content_db = _get_content_db(filename)
     content_retriever = content_db.as_retriever()
 
-    content_template = """Based only on the following context, answer the question in a sentence:
-Context: {context}
-Question: {question}"""
+    content_template = (
+        "Based only on the following context, answer the question in a sentence:\n"
+        "Context: {context}\n"
+        "Question: {question}"
+)
     content_chain = (
         {"context": content_retriever, "question": RunnablePassthrough()}
         | ChatPromptTemplate.from_template(content_template)
@@ -105,14 +107,16 @@ Question: {question}"""
         | StrOutputParser()
     )
 
-    summarise_prompt = """From the answers below, summarise the final answer that contains information in a sentence:
-Answer 1: {content_answer}
-Answer 2: {table_answer}
-Final answer:"""
-
+    summarise_template = (
+        "From the answers below, summarise the final answer "
+        "that contains information in a sentence:\n"
+        "Answer 1: {content_answer}\n"
+        "Answer 2: {table_answer}\n"
+        "Final answer:"
+    )
     chain = (
         {"content_answer": content_chain, "table_answer": table_chain}
-        | ChatPromptTemplate.from_template(summarise_prompt)
+        | ChatPromptTemplate.from_template(summarise_template)
         | LLM
         | StrOutputParser()
     )
