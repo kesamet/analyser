@@ -1,26 +1,22 @@
-import logging
 import os
-from typing import List
 
 import fitz
+from loguru import logger
 import streamlit as st
 from dotenv import load_dotenv
-from glob import glob
-from langchain.document_loaders import PyPDFLoader
-from langchain.prompts import ChatPromptTemplate
+from langchain.prompts import PromptTemplate
 from langchain.schema import Document
 from langchain.schema.output_parser import StrOutputParser
 from langchain.schema.runnable import RunnablePassthrough
-from langchain.vectorstores import FAISS
+from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.vectorstores import FAISS
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
-
-logging.basicConfig(level=logging.INFO)
 
 st.set_page_config(page_title="Metrics")
 
 _ = load_dotenv()
 
-LLM = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.0)
+LLM = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.0)
 EMBEDDINGS = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 
 METRICS = [
@@ -53,19 +49,19 @@ def _get_tables_db(filename):
     return FAISS.from_documents(table_docs, EMBEDDINGS)
 
 
-def extract_tables(filename: str) -> List[Document]:
+def extract_tables(filename: str) -> list[Document]:
     """Extract tables from PDF."""
     pdf_file = fitz.open(filename)
     table_docs = list()
     for page in pdf_file:
         tabs = page.find_tables()
-        logging.info(f"[+] Found {len(tabs.tables)} table(s) on page {page.number}")
+        logger.info(f"[+] Found {len(tabs.tables)} table(s) on page {page.number}")
 
         for tab in tabs:
             try:
                 df = tab.to_pandas()
                 if df.shape == (1, 1):
-                    logging.info("  [!] dataframe shape is (1, 1)")
+                    logger.info("  [!] dataframe shape is (1, 1)")
                     continue
                 d = Document(
                     page_content=df.to_json(),
@@ -73,7 +69,7 @@ def extract_tables(filename: str) -> List[Document]:
                 )
                 table_docs.append(d)
             except Exception:
-                logging.info("  [!] unable to convert to dataframe")
+                logger.info("  [!] unable to convert to dataframe")
     return table_docs
 
 
@@ -82,12 +78,14 @@ def extract_metrics(filename):
     content_db = _get_content_db(filename)
     content_retriever = content_db.as_retriever()
 
-    content_template = """Based only on the following context, answer the question in a sentence:
-Context: {context}
-Question: {question}"""
+    content_template = (
+        "Based only on the following context, answer the question in a sentence:\n"
+        "Context: {context}\n"
+        "Question: {question}"
+    )
     content_chain = (
         {"context": content_retriever, "question": RunnablePassthrough()}
-        | ChatPromptTemplate.from_template(content_template)
+        | PromptTemplate.from_template(content_template)
         | LLM
         | StrOutputParser()
     )
@@ -95,24 +93,28 @@ Question: {question}"""
     tables_db = _get_tables_db(filename)
     tables_retriever = tables_db.as_retriever()
 
-    table_prompt = """Using the following tables, answer the question in a sentence:
-Tables: {context}
-Question: {question}"""
+    table_template = (
+        "Using the following tables, answer the question in a sentence:\n"
+        "Tables: {context}\n"
+        "Question: {question}"
+    )
     table_chain = (
         {"context": tables_retriever, "question": RunnablePassthrough()}
-        | ChatPromptTemplate.from_template(table_prompt)
+        | PromptTemplate.from_template(table_template)
         | LLM
         | StrOutputParser()
     )
 
-    summarise_prompt = """From the answers below, summarise the final answer that contains information in a sentence:
-Answer 1: {content_answer}
-Answer 2: {table_answer}
-Final answer:"""
-
+    summarise_template = (
+        "From the answers below, summarise the final answer "
+        "that contains information in a sentence:\n"
+        "Answer 1: {content_answer}\n"
+        "Answer 2: {table_answer}\n"
+        "Final answer:"
+    )
     chain = (
         {"content_answer": content_chain, "table_answer": table_chain}
-        | ChatPromptTemplate.from_template(summarise_prompt)
+        | PromptTemplate.from_template(summarise_template)
         | LLM
         | StrOutputParser()
     )
@@ -125,21 +127,12 @@ Final answer:"""
     return results
 
 
-def metrics():
+if __name__ == "__main__":
     st.title("Extract metrics")
 
-    report_dir = st.text_input("Input report directory")
-    if report_dir == "":
-        return
-
-    filenames = sorted(glob(os.path.join(report_dir, "*.pdf")))
     with st.form("metrics"):
-        filename = st.selectbox("Select file", filenames)
+        pdf_filepath = st.text_input("Input pdf filepath")
 
         submitted = st.form_submit_button("Submit")
         if submitted:
-            _ = extract_metrics(filename)
-
-
-if __name__ == "__main__":
-    metrics()
+            _ = extract_metrics(pdf_filepath)

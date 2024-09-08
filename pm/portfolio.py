@@ -20,7 +20,7 @@ def _get_data(
     df = get_data(
         symbols,
         dates,
-        base_symbol=CFG.CONFIG[sheet].BASE_SYMBOL,
+        base_symbol=CFG.PFL[sheet].BASE_SYMBOL,
         col=col,
         dirname=CFG.DATA_DIR,
     )
@@ -246,7 +246,7 @@ def compute_portvals(
         symbols = df_orders["Symbol"].drop_duplicates().values.tolist()
     else:
         # symbols = MAIN_SYMBOLS[sheet]
-        symbols = list(CFG.CONFIG[sheet].MAIN_SYMBOLS.values())
+        symbols = list(CFG.PFL[sheet].MAIN_SYMBOLS.values())
     dates = pd.date_range(start_date, end_date)
     prices = _get_data(symbols, dates, sheet=sheet, col="close")[symbols]
     if sheet == "IDR":  # HACK
@@ -376,7 +376,7 @@ def compute_usd(
         "SGD Deposit": "SGD_Deposit",
         "USD Deposit": "USD_Deposit",
     }
-    _cols_to_rename.update(CFG.CONFIG["USD"].MAIN_SYMBOLS)
+    _cols_to_rename.update(CFG.PFL["USD"].MAIN_SYMBOLS)
     cost_df.rename(columns=_cols_to_rename, inplace=True)
     cost_df = pd.DataFrame(index=trading_dates).join(cost_df)
 
@@ -386,7 +386,7 @@ def compute_usd(
     cost_df = cost_df.join(prices[["USDSGD"]])
     cost_df.fillna(0, inplace=True)
 
-    symbols = list(CFG.CONFIG["USD"].MAIN_SYMBOLS.values())
+    symbols = list(CFG.PFL["USD"].MAIN_SYMBOLS.values())
     for c in ["SGD_Deposit", "USD_Deposit", "USD-SGD"] + symbols:
         cost_df[c] = cost_df[c].cumsum()
 
@@ -444,7 +444,7 @@ def compute_idr(trading_dates: pd.DatetimeIndex, xlsx_file: str):
         "SGD Deposit": "SGD_Deposit",
         "IDR Deposit": "IDR_Deposit",
     }
-    _cols_to_rename.update(CFG.CONFIG["IDR"].MAIN_SYMBOLS)
+    _cols_to_rename.update(CFG.PFL["IDR"].MAIN_SYMBOLS)
     cost_df.rename(columns=_cols_to_rename, inplace=True)
     cost_df = pd.DataFrame(index=trading_dates).join(cost_df)
 
@@ -454,7 +454,7 @@ def compute_idr(trading_dates: pd.DatetimeIndex, xlsx_file: str):
     cost_df = cost_df.join(prices[["IDRSGD"]])
     cost_df.fillna(0, inplace=True)
 
-    symbols = list(CFG.CONFIG["IDR"].MAIN_SYMBOLS.values())
+    symbols = list(CFG.PFL["IDR"].MAIN_SYMBOLS.values())
     for c in ["SGD_Deposit", "IDR_Deposit", "IDR-SGD"] + symbols:
         cost_df[c] = cost_df[c].cumsum()
 
@@ -490,7 +490,7 @@ def agg_daily_gain(gain_type: str, sheet: str, xlsx_file: str) -> pd.DataFrame:
         usecols=["Date", "Type", "Stock", "Gains from Sale"],
     )
     if sheet in ["USD", "IDR"]:
-        df = df[df["Stock"].isin(list(CFG.CONFIG[sheet].MAIN_SYMBOLS.keys()))]
+        df = df[df["Stock"].isin(list(CFG.PFL[sheet].MAIN_SYMBOLS.keys()))]
     df.columns = ["Date", "Type", "Stock", "Value"]
 
     # Compute gains
