@@ -82,7 +82,7 @@ def page_trend(last_date: date) -> None:
     """Trend page."""
     st.header("By days")
     c0, _, _ = st.columns(3)
-    s1 = c0.selectbox("Select lookback period", ["3M", "6M", "9M", "1Y", "2Y"], 3)
+    s1 = c0.selectbox("Select lookback period", ["3M", "6M", "1Y", "2Y", "3Y"], 2)
     select_days1 = str2days[s1]
     df1 = _table_trend_by_days(last_date, select_days1)
 
@@ -114,11 +114,11 @@ def page_trend(last_date: date) -> None:
     select_eq = cols[0].selectbox("Select equity", list(CFG.SYMBOLS.keys()))
     symbol = CFG.SYMBOLS[select_eq]
 
-    s2 = cols[1].selectbox("Select period", ["3M", "6M", "9M", "1Y", "2Y"], 3)
+    s2 = cols[1].selectbox("Select period", ["3M", "6M", "1Y", "2Y", "3Y"], 2)
     select_days2 = str2days[s2]
 
     df2 = _table_trend_by_symbol(last_date, symbol)
-    st.table(df2)
+    st.dataframe(df2)
 
     df, level, grad = _get_trend_df(last_date, select_days2, symbol)
     st.text(
