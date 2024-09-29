@@ -6,7 +6,7 @@ import scipy.optimize as sco
 from analyser.data import get_data
 
 
-def linearfit(ts: pd.Series) -> tuple:
+def linearfit(ts: pd.Series) -> tuple[np.ndarray, float, float, float, float]:
     """Computes linear fit of values."""
     y = ts.values
     p = np.polyfit(range(len(y)), y, deg=1)

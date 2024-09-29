@@ -56,9 +56,7 @@ def subset_portfolio(df: pd.DataFrame, start_date: str) -> pd.DataFrame:
 
 
 @st.cache_data
-def rebase_table(
-    subset_df: pd.DataFrame, sheet: str, currency: str | None = None
-) -> pd.DataFrame:
+def rebase_table(subset_df: pd.DataFrame, sheet: str, currency: str | None = None) -> pd.DataFrame:
     df = subset_df.copy()
 
     if sheet != currency and currency == "SGD":
