@@ -81,9 +81,7 @@ def extract_pages_keyword(
     return None, None
 
 
-def extract_pages_highlighted(
-    filename: str, all_instances: List[fitz.Rect]
-) -> fitz.Document:
+def extract_pages_highlighted(filename: str, all_instances: List[fitz.Rect]) -> fitz.Document:
     """Extract pages by page numbers with highlighted text."""
     doc = fitz.Document(filename)
     for page_num, rects in all_instances.items():
@@ -134,9 +132,7 @@ def get_closest(blocks: list, rect: fitz.Rect, thres: float = 0.8) -> str:
     return candidate
 
 
-def get_lines(
-    blocks: list, rect: fitz.Rect, xbuf: float = 0.0, ybuf: float = 0.0
-) -> List[str]:
+def get_lines(blocks: list, rect: fitz.Rect, xbuf: float = 0.0, ybuf: float = 0.0) -> List[str]:
     """Get lines that intersect with the given bounding box."""
     new_rect = rect + [-xbuf, -ybuf, xbuf, ybuf]
     lines = list()
@@ -246,10 +242,7 @@ def extract_all_lines_report(filename: str, dict_keywords: dict) -> dict:
 
 
 def extract_most_plausible(all_results: dict) -> pd.DataFrame:
-    lst = [
-        [key, results[0]["value"] if results else None]
-        for key, results in all_results.items()
-    ]
+    lst = [[key, results[0]["value"] if results else None] for key, results in all_results.items()]
     return pd.DataFrame(lst, columns=["key", "Value"]).set_index("key")
 
 
@@ -360,9 +353,7 @@ def parse_table(page: fitz.Page, heading: str, ending: str) -> tuple:
     return pd.DataFrame(tab, columns=[str(i) for i in range(len(tab[0]))])
 
 
-def page_parse_table(
-    filename: str, page_num: int, heading: str, ending: str
-) -> pd.DataFrame:
+def page_parse_table(filename: str, page_num: int, heading: str, ending: str) -> pd.DataFrame:
     """Parse table from a PDF given page number."""
     doc = fitz.Document(filename)
     page = doc.load_page(page_num)

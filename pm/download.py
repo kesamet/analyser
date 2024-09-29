@@ -7,7 +7,7 @@ from datetime import date
 
 from tqdm import tqdm
 
-from analyser.data import download_yfinance, download_nasdaqdata
+from analyser.data import download_yfinance
 from pm import CFG
 
 
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     for symbol in tqdm(symbols, desc="yfinance"):
         download_yfinance(symbol, start_date, end_date, dirname=dest)
 
-    for name, symbol in tqdm(CFG.NASDAQDATA.items(), desc="nasdaqdata"):
-        df = download_nasdaqdata(symbol)
-        df.columns = [name]
-        df.to_csv(f"{CFG.SUMMARY_DIR}/pe_data.csv")
+    # for name, symbol in tqdm(CFG.NASDAQDATA.items(), desc="nasdaqdata"):
+    #     df = download_nasdaqdata(symbol)
+    #     df.columns = [name]
+    #     df.to_csv(f"{CFG.SUMMARY_DIR}/pe_data.csv")

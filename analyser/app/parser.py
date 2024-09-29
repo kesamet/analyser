@@ -34,9 +34,7 @@ def search_highlight(**kwargs):
         "options", ["Predefined", "Enter your own search"], label_visibility="collapsed"
     )
     if option == "Predefined":
-        input_txt = st.sidebar.selectbox(
-            "Predefined options", list(PHRASES_SEARCH.keys())
-        )
+        input_txt = st.sidebar.selectbox("Predefined options", list(PHRASES_SEARCH.keys()))
         mode = PHRASES_SEARCH[input_txt]
     else:
         input_txt = st.sidebar.text_input(

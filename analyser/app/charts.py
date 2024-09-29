@@ -3,7 +3,6 @@ Charting
 """
 
 from datetime import datetime, timedelta
-from typing import List
 
 import numpy as np
 import pandas as pd
@@ -26,16 +25,12 @@ def load_ohlcv_data(symbol: str, _dates: pd.DatetimeIndex) -> pd.DataFrame:
 
     # Apply technical analysis
     df = ta.add_volatility_ta(df, "high", "low", "close", fillna=False, colprefix="ta_")
-    df = ta.add_momentum_ta(
-        df, "high", "low", "close", "volume", fillna=False, colprefix="ta_"
-    )
+    df = ta.add_momentum_ta(df, "high", "low", "close", "volume", fillna=False, colprefix="ta_")
     df = add_custom_trend(df, "close", fillna=False, colprefix="ta_")
     return df
 
 
-def add_custom_trend(
-    df: pd.DataFrame, close: str, fillna: bool, colprefix: str
-) -> pd.DataFrame:
+def add_custom_trend(df: pd.DataFrame, close: str, fillna: bool, colprefix: str) -> pd.DataFrame:
     # MACD
     indicator_macd = ta.trend.MACD(
         close=df[close], window_slow=26, window_fast=12, window_sign=9, fillna=fillna
@@ -60,7 +55,7 @@ def add_custom_trend(
     return df
 
 
-def chart_candlestick(source: pd.DataFrame, cols: List = []) -> None:
+def chart_candlestick(source: pd.DataFrame, cols: list = []) -> None:
     """Candlestick chart."""
     base = alt.Chart(source).encode(
         alt.X("date:T"),
@@ -131,9 +126,7 @@ def page_ta(last_date: datetime, eq_dict: dict, **kwargs) -> None:
     col2, col3 = st.columns(2)
     select_days2 = col2.selectbox("Select period", ["6M", "9M", "1Y", "2Y"], 2)
     select_days2 = str2days[select_days2]
-    select_ta2 = col3.selectbox(
-        "Select TA", ["Bollinger", "SMA", "RSI", "MACD", "Momentum"]
-    )
+    select_ta2 = col3.selectbox("Select TA", ["Bollinger", "SMA", "RSI", "MACD", "Momentum"])
     st.line_chart(df[["close"] + ta_type[select_ta2]["price"]].iloc[-select_days2:])
     if ta_type[select_ta2].get("ind") is not None:
         st.line_chart(df[ta_type[select_ta2]["ind"]].iloc[-select_days2:])

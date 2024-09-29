@@ -188,9 +188,7 @@ def display_ef(avg_rets, cov_mat, rfr, bm_vol):
     ax.scatter(ann_vol, ann_ret, marker="o", s=100)
 
     for i, txt in enumerate(colnames):
-        ax.annotate(
-            txt, (ann_vol[i], ann_ret[i]), xytext=(10, 0), textcoords="offset points"
-        )
+        ax.annotate(txt, (ann_vol[i], ann_ret[i]), xytext=(10, 0), textcoords="offset points")
     ax.scatter(
         max_sharpe_vol,
         max_sharpe_ret,
@@ -199,9 +197,7 @@ def display_ef(avg_rets, cov_mat, rfr, bm_vol):
         s=200,
         label="Max Sharpe ratio",
     )
-    ax.scatter(
-        min_vol_vol, min_vol_ret, marker="*", color="g", s=200, label="Min volatility"
-    )
+    ax.scatter(min_vol_vol, min_vol_ret, marker="*", color="g", s=200, label="Min volatility")
 
     targets = np.linspace(min_vol_ret, min_vol_ret * 6, 20)
     eff_ports = efrontier_vol(avg_rets, cov_mat, targets)

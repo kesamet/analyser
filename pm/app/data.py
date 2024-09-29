@@ -1,6 +1,5 @@
 from datetime import date
 from dateutil import parser
-from typing import Optional
 
 import pandas as pd
 import streamlit as st
@@ -58,7 +57,7 @@ def subset_portfolio(df: pd.DataFrame, start_date: str) -> pd.DataFrame:
 
 @st.cache_data
 def rebase_table(
-    subset_df: pd.DataFrame, sheet: str, currency: Optional[str] = None
+    subset_df: pd.DataFrame, sheet: str, currency: str | None = None
 ) -> pd.DataFrame:
     df = subset_df.copy()
 
@@ -319,9 +318,7 @@ def tab_portfolio(last_date: date, sheet: str, tentative_start_date: date) -> No
     df = sum_by_time(sheet, last_date, tu_map[timeunits])
     st.altair_chart(barchart(df[["cost"]], "Cost", timeunits), use_container_width=True)
     if "div" in df.columns:
-        st.altair_chart(
-            barchart(df[["div"]], "Dividends", timeunits), use_container_width=True
-        )
+        st.altair_chart(barchart(df[["div"]], "Dividends", timeunits), use_container_width=True)
     if "gain" in df.columns:
         st.altair_chart(
             barchart(df[["gain"]], "Realised Gain", timeunits),
@@ -332,18 +329,12 @@ def tab_portfolio(last_date: date, sheet: str, tentative_start_date: date) -> No
         st.header("Assess portfolio")
         for i in [2, 1]:
             st.subheader(f"{i}Y")
-            results = get_whatif_portfolio(
-                last_date.replace(year=last_date.year - i), last_date
-            )
+            results = get_whatif_portfolio(last_date.replace(year=last_date.year - i), last_date)
             _print_results(*results)
 
 
 def _print_results(dct, results_df, ts_df):
-    st.write(
-        "Date Range: `{}` to `{}` (Values in %)".format(
-            dct["start_date"], dct["end_date"]
-        )
-    )
+    st.write("Date Range: `{}` to `{}` (Values in %)".format(dct["start_date"], dct["end_date"]))
     st.table(results_df * 100)
     # Compare daily portfolio value with index using a normalized plot
     st.line_chart(rebase(ts_df))

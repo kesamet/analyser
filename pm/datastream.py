@@ -8,10 +8,10 @@ class Datastream:
     """Class to call Datastream APIs."""
 
     def __init__(self, username, password):
-        self.token_url = (
-            "http://product.datastream.com/DSWSClient/V1/DSService.svc/rest/Token?"
+        self.token_url = "http://product.datastream.com/DSWSClient/V1/DSService.svc/rest/Token?"
+        self.data_url = (
+            "http://datastream.thomsonreuters.com/DswsClient/V1/DSService.svc/rest/Data?"
         )
-        self.data_url = "http://datastream.thomsonreuters.com/DswsClient/V1/DSService.svc/rest/Data?"
         self.token = self.get_token(username, password)
 
     def get_token(self, username, password):
@@ -26,10 +26,7 @@ class Datastream:
         # If dates is not available, the request is not constructed correctly
         if response_json["Dates"]:
             df = pd.DataFrame(
-                index=[
-                    datetime.utcfromtimestamp(float(d[6:-10]))
-                    for d in response_json["Dates"]
-                ]
+                index=[datetime.fromtimestamp(float(d[6:-10])) for d in response_json["Dates"]]
             )
             df.index.name = "Date"
 
@@ -39,18 +36,14 @@ class Datastream:
                     df[(e["Symbol"], item["DataType"])] = e["Value"]
 
             # Use Pandas MultiIndex to get from tuples to two header rows
-            df.columns = pd.MultiIndex.from_tuples(
-                df.columns, names=["Instrument", "Field"]
-            )
+            df.columns = pd.MultiIndex.from_tuples(df.columns, names=["Instrument", "Field"])
             return df
 
         print("Error - please check instruments and parameters (time series or static)")
         return None
 
     # pylint: disable=too-many-arguments
-    def get_data(
-        self, tickers, fields="", date="", start_date="", end_date="", freq=""
-    ):
+    def get_data(self, tickers, fields="", date="", start_date="", end_date="", freq=""):
         """Get data in Pandas dataframe."""
         # Decide if the request is a time series or static request
         if not start_date:
