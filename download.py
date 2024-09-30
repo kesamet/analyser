@@ -1,6 +1,7 @@
 """
 Script to download data.
 """
+
 import argparse
 import datetime
 

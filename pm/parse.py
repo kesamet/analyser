@@ -1,7 +1,3 @@
-"""
-Script containing utility functions for parsing.
-"""
-
 import json
 import operator
 import os
@@ -16,9 +12,7 @@ from PIL import Image
 def save_blocks(blocks, page_num, output_dir="outputs/"):
     """Save extracted blocks as csv."""
     colnames = ["x0", "y0", "x1", "y1", "text", "block_type", "block_no"]
-    pd.DataFrame(blocks, columns=colnames).to_csv(
-        output_dir + f"page{page_num}.csv", index=False
-    )
+    pd.DataFrame(blocks, columns=colnames).to_csv(output_dir + f"page{page_num}.csv", index=False)
 
 
 def save_html(htmltext, page_num, output_dir="outputs/"):

@@ -1,4 +1,3 @@
-from typing import List, Optional
 from datetime import date
 
 import pandas as pd
@@ -7,54 +6,25 @@ import streamlit as st
 from analyser.data import get_data, rebase
 from pm import CFG
 from pm.app.utils import get_start_date
-
-
-# @st.cache_data
-# def _load_ie_data(start_date: str = "1990-01-01") -> pd.DataFrame:
-#     """Data downloaded from http://www.econ.yale.edu/~shiller/data.htm."""
-#     df = pd.read_excel(f"{CFG.SUMMARY_DIR}/ie_data.xls", sheet_name="Data", skiprows=7)
-#     df.drop(["Fraction", "Unnamed: 13", "Unnamed: 15"], axis=1, inplace=True)
-#     df.columns = [
-#         "Date",
-#         "S&P500",
-#         "Dividend",
-#         "Earnings",
-#         "CPI",
-#         "Long_IR",
-#         "Real_Price",
-#         "Real_Dividend",
-#         "Real_TR_Price",
-#         "Real_Earnings",
-#         "Real_TR_Scaled_Earnings",
-#         "CAPE",
-#         "TRCAPE",
-#         "Excess_CAPE_Yield",
-#         "Mth_Bond_TR",
-#         "Bond_RTR",
-#         "10Y_Stock_RR",
-#         "10Y_Bond_RR",
-#         "10Y_Excess_RR",
-#     ]
-#     df["Date"] = pd.to_datetime(df["Date"].astype(str))
-#     df.set_index("Date", inplace=True)
-#     df = df.iloc[:-1]
-#     if start_date is not None:
-#         df = df[df.index >= start_date]
-
-#     df["10xReal_Earnings"] = 10 * df["Real_Earnings"]
-#     df["10xLong_IR"] = 10 * df["Long_IR"]
-#     return df[["Real_Price", "10xReal_Earnings", "CAPE", "10xLong_IR"]]
+from pm.ta import compute_trend
 
 
 @st.cache_data
-def _load_pe_data(start_date: str = "1990-01-01") -> pd.DataFrame:
-    """Shiller monthly PE data downloaded from nasdaq-data-link."""
-    df = pd.read_csv(f"{CFG.SUMMARY_DIR}/pe_data.csv")
-    df["Date"] = pd.to_datetime(df["Date"].astype(str))
-    df.set_index("Date", inplace=True)
-    if start_date is not None:
-        df = df[df.index >= start_date]
+def _load_ie_data():
+    """Data downloaded from https://shillerdata.com/."""
+    from pm.data import load_ie_data
+
+    df = load_ie_data(start_date="1946-01-01")
+    df, _, _ = compute_trend(df["CAPE"])
     return df
+
+
+@st.cache_data
+def _load_pe_data():
+    """Shiller monthly PE data downloaded from nasdaq-data-link."""
+    from pm.data import load_pe_data
+
+    return load_pe_data(start_date="1990-01-01")
 
 
 def _linechart(df: pd.DataFrame):
@@ -67,8 +37,8 @@ def _linechart(df: pd.DataFrame):
 
 def _get_chart(
     dates: pd.DatetimeIndex,
-    symbols: List[str],
-    symbol_names: Optional[List[str]] = None,
+    symbols: list[str],
+    symbol_names: list[str] | None = None,
     base_symbol: str = "ES3.SI",
     to_rebase: bool = True,
 ) -> None:
@@ -82,8 +52,8 @@ def _get_chart(
 
 
 def page_charts(last_date: date) -> None:
-    df0 = _load_pe_data()
-    chart0 = _linechart(df0[["CAPE"]]).properties(title="Shiller PE")
+    df0 = _load_ie_data()
+    chart0 = _linechart(df0).properties(title="Shiller PE")
     st.altair_chart(chart0, use_container_width=True)
 
     start_date = get_start_date(last_date, options=("1Y", "2Y", "3Y"))

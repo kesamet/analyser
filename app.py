@@ -1,6 +1,7 @@
 """
 Streamlit app
 """
+
 from datetime import date, timedelta
 
 import streamlit as st

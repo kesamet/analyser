@@ -1,18 +1,14 @@
-import os
-
 import fitz
-from loguru import logger
 import streamlit as st
 from dotenv import load_dotenv
-from langchain.prompts import PromptTemplate
-from langchain.schema import Document
-from langchain.schema.output_parser import StrOutputParser
-from langchain.schema.runnable import RunnablePassthrough
+from loguru import logger
+from langchain_core.prompts import PromptTemplate
+from langchain_core.documents import Document
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.vectorstores import FAISS
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
-
-st.set_page_config(page_title="Metrics")
 
 _ = load_dotenv()
 
@@ -37,21 +33,34 @@ METRICS = [
 
 
 @st.cache_data
-def _get_content_db(filename):
-    loader = PyPDFLoader(filename)
+def _get_content_db(pdf_filepath):
+    return build_content_db(pdf_filepath)
+
+
+@st.cache_data
+def _get_tables_db(pdf_filepath):
+    return build_tables_db(pdf_filepath)
+
+
+@st.cache_data
+def _get_metrics(_chain):
+    return extract_metrics(_chain)
+
+
+def build_content_db(pdf_filepath: str):
+    loader = PyPDFLoader(pdf_filepath)
     pages = loader.load_and_split()
     return FAISS.from_documents(pages, EMBEDDINGS)
 
 
-@st.cache_data
-def _get_tables_db(filename):
-    table_docs = extract_tables(filename)
+def build_tables_db(pdf_filepath):
+    table_docs = extract_tables(pdf_filepath)
     return FAISS.from_documents(table_docs, EMBEDDINGS)
 
 
-def extract_tables(filename: str) -> list[Document]:
+def extract_tables(pdf_filepath: str) -> list[Document]:
     """Extract tables from PDF."""
-    pdf_file = fitz.open(filename)
+    pdf_file = fitz.open(pdf_filepath)
     table_docs = list()
     for page in pdf_file:
         tabs = page.find_tables()
@@ -65,7 +74,7 @@ def extract_tables(filename: str) -> list[Document]:
                     continue
                 d = Document(
                     page_content=df.to_json(),
-                    metadata={"source": filename, "page": page.number},
+                    metadata={"source": pdf_filepath, "page": page.number},
                 )
                 table_docs.append(d)
             except Exception:
@@ -73,11 +82,7 @@ def extract_tables(filename: str) -> list[Document]:
     return table_docs
 
 
-@st.cache_data
-def extract_metrics(filename):
-    content_db = _get_content_db(filename)
-    content_retriever = content_db.as_retriever()
-
+def build_chain(content_retriever, tables_retriever):
     content_template = (
         "Based only on the following context, answer the question in a sentence:\n"
         "Context: {context}\n"
@@ -89,9 +94,6 @@ def extract_metrics(filename):
         | LLM
         | StrOutputParser()
     )
-
-    tables_db = _get_tables_db(filename)
-    tables_retriever = tables_db.as_retriever()
 
     table_template = (
         "Using the following tables, answer the question in a sentence:\n"
@@ -118,7 +120,10 @@ def extract_metrics(filename):
         | LLM
         | StrOutputParser()
     )
+    return chain
 
+
+def extract_metrics(chain):
     results = list()
     for metric in METRICS:
         res = chain.invoke(f"What is the portfolio {metric}?")
@@ -135,4 +140,9 @@ if __name__ == "__main__":
 
         submitted = st.form_submit_button("Submit")
         if submitted:
-            _ = extract_metrics(pdf_filepath)
+            content_db = _get_content_db(pdf_filepath)
+            content_retriever = content_db.as_retriever()
+            tables_db = _get_tables_db(pdf_filepath)
+            tables_retriever = tables_db.as_retriever()
+            chain = build_chain(content_retriever, tables_retriever)
+            _ = _get_metrics(chain)

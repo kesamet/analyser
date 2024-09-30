@@ -2,8 +2,6 @@
 Plots.
 """
 
-from typing import Optional
-
 import altair as alt
 import matplotlib.lines as mlines
 import matplotlib.pyplot as plt
@@ -57,7 +55,7 @@ def plot_with_two_scales(
     df2: pd.DataFrame,
     xlabel: str = "Date",
     ylabel1: str = "Normalized",
-    ylabel2: Optional[str] = None,
+    ylabel2: str | None = None,
 ):
     """Plot two graphs together."""
     import matplotlib.pyplot as plt
@@ -102,7 +100,7 @@ def barchart(source: pd.DataFrame, title: str = "", timeunits: str = "yearmonth"
     )
 
 
-def py_ringchart(values: list, labels: list, colors: list, title: Optional[str] = None):
+def py_ringchart(values: list, labels: list, colors: list, title: str | None = None):
     """Ring chart."""
     fig, ax = plt.subplots()
     fig.set_size_inches(4, 4)

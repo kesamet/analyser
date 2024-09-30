@@ -6,49 +6,43 @@ import scipy.optimize as sco
 from analyser.data import get_data
 
 
-def linearfit(ts):
+def linearfit(ts: pd.Series) -> tuple[np.ndarray, float, float, float, float]:
     """Computes linear fit of values."""
     y = ts.values
     p = np.polyfit(range(len(y)), y, deg=1)
     yfit = np.polyval(p, range(len(y)))
-    last = yfit[-1]
-    residual = np.sqrt(np.mean((yfit - y) ** 2))
-    level = 50 + 100 * (y[-1] - last) / (4 * residual)
-    grad = p[0] / y[0]
-    pred = np.polyval(p, [len(y)])[0]
-    return yfit, level, residual, last, grad, pred
+    residual = np.sqrt(np.mean((yfit - y) ** 2)).item()
+    level = (50 + 100 * (y[-1] - yfit[-1]) / (4 * residual)).item()
+    grad = (p[0] / y[0]).item()
+    pred = np.polyval(p, [len(y)])[0].item()
+    return yfit, level, residual, grad, pred
 
 
-def compute_trend(dates, symbol):
-    """Compute linear trend."""
-    if symbol in ["EIMI.L", "IWDA.L"]:
-        df = get_data([symbol], dates, base_symbol="USDSGD=X", col="close")[[symbol]]
-    else:
-        df = get_data([symbol], dates, base_symbol="ES3.SI", col="adjclose")[[symbol]]
-
-    yfit, level, residual, last, grad, pred = linearfit(df[symbol])
+def compute_trend(ts: pd.Series | pd.DataFrame) -> tuple[pd.DataFrame, float, float]:
+    yfit, level, residual, grad, _ = linearfit(ts)
+    df = ts.to_frame() if isinstance(ts, pd.Series) else ts
     df["p0"] = yfit - residual * 2
     df["p25"] = yfit - residual
     df["p50"] = yfit
     df["p75"] = yfit + residual
     df["p100"] = yfit + residual * 2
-    # pred_row = [pred - 2 * residual, pred - residual, pred, pred + residual, pred + 2 * residual]
     return df, level, grad
 
 
 def plot_trend(symbol, start_date, end_date, name="", ax=None):
     """Plot time series with trends."""
     dates = pd.date_range(start_date, end_date)
-    df, level, grad = compute_trend(dates, symbol)
+    df = get_data([symbol], dates, base_symbol="ES3.SI", col="adjclose")[[symbol]]
+    df, level, grad = compute_trend(df)
     close, p0, p25, p50, p75, p100 = df.iloc[-1]
 
-    title = f"""
-        {name} ({symbol}): {close:.3f} ({level:.1f}%)
-        [{p0:.3f}, {p25:.3f}, {p50:.3f}, {p75:.3f}, {p100:.3f}], {grad * 1e3:.3f}
-        """
+    title = (
+        f"{name} ({symbol}): {close:.3f} ({level:.1f}%)\n"
+        f"[{p0:.3f}, {p25:.3f}, {p50:.3f}, {p75:.3f}, {p100:.3f}], {grad * 1e3:.3f}"
+    )
 
     if ax is None:
-        fig, ax = plt.subplots()
+        _, ax = plt.subplots()
 
     df[symbol].plot(color="blue", ax=ax)
     df["p0"].plot(color="green", ax=ax)
