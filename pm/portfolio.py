@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 from analyser.data import get_data
 from analyser.plots import plot_normalized_data
-from pm import CFG
+from pm import CFG, logger
 
 
 def _get_data(
@@ -529,31 +529,31 @@ if __name__ == "__main__":
     end_date = datetime.today().date().isoformat()
 
     if i in [0, 1]:
-        print("Generating portfolio_sgd...")
+        logger.info("Generating portfolio_sgd...")
         sgd_df = get_portfolio(end_date, "2015-03-23", "SGD", f"{CFG.SUMMARY_DIR}/aSummary.xlsx")
         sgd_df.to_csv(f"{CFG.SUMMARY_DIR}/portfolio_sgd.csv")
 
     if i in [0, 2]:
-        print("Generating portfolio_usd...")
+        logger.info("Generating portfolio_usd...")
         usd_df = get_portfolio(end_date, "2019-07-01", "USD", f"{CFG.SUMMARY_DIR}/aSummary.xlsx")
         usd_df.to_csv(f"{CFG.SUMMARY_DIR}/portfolio_usd.csv")
 
     if i in [0, 3]:
-        print("Generating portfolio_fund...")
+        logger.info("Generating portfolio_fund...")
         fund_df = get_portfolio(end_date, "2021-04-06", "Fund", f"{CFG.SUMMARY_DIR}/aSummary.xlsx")
         fund_df.to_csv(f"{CFG.SUMMARY_DIR}/portfolio_fund.csv")
 
     if i in [0, 4]:
-        print("Generating portfolio_srs...")
+        logger.info("Generating portfolio_srs...")
         srs_df = get_portfolio(end_date, "2019-02-01", "SRS", f"{CFG.SUMMARY_DIR}/aSummary.xlsx")
         srs_df.to_csv(f"{CFG.SUMMARY_DIR}/portfolio_srs.csv")
 
     if i in [0, 5]:
-        print("Generating portfolio_bond...")
+        logger.info("Generating portfolio_bond...")
         bond_df = get_portfolio(end_date, "2015-11-01", "Bond", f"{CFG.SUMMARY_DIR}/aSummary.xlsx")
         bond_df.to_csv(f"{CFG.SUMMARY_DIR}/portfolio_bond.csv")
 
     if i in [0, 6]:
-        print("Generating portfolio_idr...")
+        logger.info("Generating portfolio_idr...")
         idr_df = get_portfolio(end_date, "2023-02-07", "IDR", f"{CFG.SUMMARY_DIR}/aSummary2.xlsx")
         idr_df.to_csv(f"{CFG.SUMMARY_DIR}/portfolio_idr.csv")

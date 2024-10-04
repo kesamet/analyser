@@ -124,7 +124,7 @@ def page_ta(last_date: datetime, eq_dict: dict, **kwargs) -> None:
     )
 
     col2, col3 = st.columns(2)
-    select_days2 = col2.selectbox("Select period", ["6M", "9M", "1Y", "2Y"], 2)
+    select_days2 = col2.selectbox("Select period", ["6M", "1Y", "2Y", "3Y"], 2)
     select_days2 = str2days[select_days2]
     select_ta2 = col3.selectbox("Select TA", ["Bollinger", "SMA", "RSI", "MACD", "Momentum"])
     st.line_chart(df[["close"] + ta_type[select_ta2]["price"]].iloc[-select_days2:])

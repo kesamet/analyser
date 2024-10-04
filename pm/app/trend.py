@@ -47,7 +47,7 @@ def _table_trend_by_symbol(last_date: date, symbol: str) -> pd.DataFrame:
     dates = pd.date_range(last_date - timedelta(days=730), last_date)
     df = get_data([symbol], dates, col="adjclose", dirname=CFG.DATA_DIR)
 
-    periods = ["3M", "6M", "9M", "1Y", "2Y"]
+    periods = ["3M", "6M", "1Y", "2Y", "3Y"]
     results = list()
     for period in periods:
         date = last_date - timedelta(days=str2days[period])

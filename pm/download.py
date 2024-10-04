@@ -8,7 +8,7 @@ from datetime import date
 from tqdm import tqdm
 
 from analyser.data import download_yfinance
-from pm import CFG
+from pm import CFG, logger
 
 
 if __name__ == "__main__":
@@ -20,11 +20,11 @@ if __name__ == "__main__":
     start_date = args.start_date
     end_date = date.today().strftime("%Y-%m-%d")
     dest = args.dest or CFG.DATA_DIR
-    print(f"\nDownloading to {dest}")
-    print(f"Period: {start_date} to {end_date}\n")
+    logger.info(f"Downloading to {dest}")
+    logger.info(f"Period: {start_date} to {end_date}\n")
 
     symbols = list(CFG.ADDITIONS.values()) + list(CFG.SYMBOLS.values())
-    for symbol in tqdm(symbols, desc="yfinance"):
+    for symbol in tqdm(symbols[:2], desc="yfinance"):
         download_yfinance(symbol, start_date, end_date, dirname=dest)
 
     # for name, symbol in tqdm(CFG.NASDAQDATA.items(), desc="nasdaqdata"):
