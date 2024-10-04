@@ -5,6 +5,7 @@ Script to download data.
 import argparse
 import datetime
 
+from loguru import logger
 from tqdm import tqdm
 
 from analyser.data import download_yfinance
@@ -20,8 +21,8 @@ if __name__ == "__main__":
     start_date = args.start_date
     end_date = datetime.date.today().strftime("%Y-%m-%d")
 
-    print(f"\nDownloading to {args.dest}/")
-    print(f"Period: {start_date} to {end_date}\n")
+    logger.info(f"Downloading to {args.dest}/")
+    logger.info(f"Period: {start_date} to {end_date}\n")
 
     symbols = list(SYMBOLS.values())
     for symbol in tqdm(symbols, desc="yfinance"):
