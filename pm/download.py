@@ -24,7 +24,7 @@ if __name__ == "__main__":
     logger.info(f"Period: {start_date} to {end_date}\n")
 
     symbols = list(CFG.ADDITIONS.values()) + list(CFG.SYMBOLS.values())
-    for symbol in tqdm(symbols[:2], desc="yfinance"):
+    for symbol in tqdm(symbols, desc="yfinance"):
         download_yfinance(symbol, start_date, end_date, dirname=dest)
 
     # for name, symbol in tqdm(CFG.NASDAQDATA.items(), desc="nasdaqdata"):
