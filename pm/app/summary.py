@@ -38,8 +38,6 @@ def page_summary(last_date: date) -> None:
 
         st.table(df.style.format("{:,.2f}").apply(_highlight_last))
 
-    # colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "black"]
-
     names = list(_last.keys())
     data = [_last[k] for k in names]
     total = sum(data)
@@ -54,11 +52,4 @@ def page_summary(last_date: date) -> None:
     ]
     total = sum(data)
     labels = [f"{k}: {v / total:.1%}" for k, v in zip(names, data)]
-    # st.pyplot(py_ringchart(data, labels, colors))
     st.plotly_chart(plotly_ringchart(data, labels))
-
-    names = ["USD", "Fund", "SRS"]
-    data = [_last[k] for k in names]
-    total = sum(data)
-    labels = [f"{k}: {v / total:.1%}" for k, v in zip(names, data)]
-    st.plotly_chart(plotly_ringchart(data, labels, title="World"))

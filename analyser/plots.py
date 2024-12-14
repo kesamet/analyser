@@ -134,11 +134,26 @@ def py_ringchart(values: list, labels: list, colors: list, title: str | None = N
 
 def plotly_ringchart(values: list, labels: list, title: str = ""):
     """Plotly ring chart."""
-    # Use `hole` to create a donut-like pie chart
     fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=0.5)])
-    fig.update_layout(
-        title=title,
+    fig.update_layout(title=title)
+    return fig
+
+
+def plotly_sunburst(names: list, parents: list, values: list, title: str = ""):
+    import plotly.express as px
+
+    data = dict(
+        names=names,
+        parents=parents,
+        values=values,
     )
+    fig = px.sunburst(
+        data,
+        names="names",
+        parents="parents",
+        values="values",
+    )
+    fig.update_layout(title=title)
     return fig
 
 
