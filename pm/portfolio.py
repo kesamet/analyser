@@ -243,8 +243,6 @@ def compute_portvals(
         symbols = list(CFG.PFL[sheet].MAIN_SYMBOLS.values())
     dates = pd.date_range(start_date, end_date)
     prices = _get_data(symbols, dates, sheet=sheet, col="close")[symbols]
-    if sheet == "IDR":  # HACK
-        prices /= 10000
 
     # Get daily units
     def _get_units(ttype):
@@ -398,70 +396,6 @@ def compute_usd(trading_dates: pd.DatetimeIndex, xlsx_file: str = CFG.FLOWDATA) 
     return cost_df[["USDSGD", "Cost", "Cash"]]
 
 
-def compute_idr(trading_dates: pd.DatetimeIndex, xlsx_file: str):
-    """Compute cumulative cost and cash specific to IDR."""
-    df = pd.read_excel(
-        xlsx_file,
-        sheet_name="IDR Txn",
-        parse_dates=["Date"],
-        usecols=[
-            "Date",
-            "Type",
-            "Stock",
-            "Transacted Units",
-            "Transacted Value",
-            "Gains from Sale",
-        ],
-    )
-    df.columns = ["Date", "Type", "Stock", "Units", "Value", "Realised_Gain"]
-    df["Value"] -= df["Realised_Gain"]  # to obtain original cost
-
-    # Compute cost
-    df = (
-        df[df["Type"].isin(["Buy", "Sell"])]
-        .groupby(["Date", "Type", "Stock"], as_index=False)
-        .sum()
-    )
-    for c in ["Units", "Value"]:
-        df[c] *= (df["Type"] == "Buy") * 2 - 1
-
-    cost_df = df.pivot(index="Date", columns="Stock", values="Value")
-    _cols_to_rename = {
-        "SGD Deposit": "SGD_Deposit",
-        "IDR Deposit": "IDR_Deposit",
-    }
-    _cols_to_rename.update(CFG.PFL["IDR"].MAIN_SYMBOLS)
-    cost_df.rename(columns=_cols_to_rename, inplace=True)
-    cost_df = pd.DataFrame(index=trading_dates).join(cost_df)
-
-    prices = _get_data(["SGDIDR=X"], trading_dates, "IDR", col="close")
-    prices["IDRSGD"] = 10000 / prices["SGDIDR=X"]  # HACK
-
-    cost_df = cost_df.join(prices[["IDRSGD"]])
-    cost_df.fillna(0, inplace=True)
-
-    symbols = list(CFG.PFL["IDR"].MAIN_SYMBOLS.values())
-    for c in ["SGD_Deposit", "IDR_Deposit", "IDR-SGD"] + symbols:
-        cost_df[c] = cost_df[c].cumsum()
-
-    # Compute Cash
-    units_df = df.query("Stock == 'IDR-SGD'").pivot(index="Date", columns="Stock", values="Units")
-    units_df = cost_df[["IDRSGD"]].join(units_df)[["IDR-SGD"]]
-    units_df.fillna(0, inplace=True)
-    units_df = units_df.cumsum()
-
-    cost_df["Cash_SGD"] = cost_df["SGD_Deposit"] - cost_df["IDR-SGD"]
-    cost_df["Cash_IDR"] = (
-        cost_df["IDR_Deposit"] + units_df["IDR-SGD"] - cost_df[symbols].sum(axis=1)
-    )
-    cost_df["Cash"] = cost_df["Cash_IDR"] + cost_df["Cash_SGD"] / cost_df["IDRSGD"]
-    # TODO: Cost fluctuating due to FX
-    cost_df["Cost"] = (
-        cost_df["IDR_Deposit"] + units_df["IDR-SGD"] + cost_df["Cash_SGD"] / cost_df["IDRSGD"]
-    )
-    return cost_df[["IDRSGD", "Cost", "Cash"]]
-
-
 def agg_daily_gain(gain_type: str, sheet: str, xlsx_file: str) -> pd.DataFrame:
     """Aggregate gain daily."""
     # Load data
@@ -471,7 +405,7 @@ def agg_daily_gain(gain_type: str, sheet: str, xlsx_file: str) -> pd.DataFrame:
         parse_dates=["Date"],
         usecols=["Date", "Type", "Stock", "Gains from Sale"],
     )
-    if sheet in ["USD", "IDR"]:
+    if sheet == "USD":
         df = df[df["Stock"].isin(list(CFG.PFL[sheet].MAIN_SYMBOLS.keys()))]
     df.columns = ["Date", "Type", "Stock", "Value"]
 
@@ -506,10 +440,6 @@ def get_portfolio(end_date, start_date, sheet, xlsx_file):
         df = compute_usd(trading_dates, xlsx_file)
         df["Equity"] = portvals
         df["Portfolio"] = df["Equity"] + df["Cash"]
-    elif sheet == "IDR":
-        df = compute_idr(trading_dates, xlsx_file)
-        df["Equity"] = portvals
-        df["Portfolio"] = df["Equity"] + df["Cash"]
     else:
         raise NotImplementedError
 
@@ -522,7 +452,7 @@ def get_portfolio(end_date, start_date, sheet, xlsx_file):
 
 
 if __name__ == "__main__":
-    i = int(input("  Enter sheet (All=0, SGD=1, USD=2, Fund=3, SRS=4, Bond=5, IDR=6): "))
+    i = int(input("  Enter sheet (All=0, SGD=1, USD=2, Fund=3, SRS=4, Bond=5): "))
     if i not in range(7):
         raise IndexError
 
@@ -552,8 +482,3 @@ if __name__ == "__main__":
         logger.info("Generating portfolio_bond...")
         bond_df = get_portfolio(end_date, "2015-11-01", "Bond", f"{CFG.SUMMARY_DIR}/aSummary.xlsx")
         bond_df.to_csv(f"{CFG.SUMMARY_DIR}/portfolio_bond.csv")
-
-    if i in [0, 6]:
-        logger.info("Generating portfolio_idr...")
-        idr_df = get_portfolio(end_date, "2023-02-07", "IDR", f"{CFG.SUMMARY_DIR}/aSummary2.xlsx")
-        idr_df.to_csv(f"{CFG.SUMMARY_DIR}/portfolio_idr.csv")

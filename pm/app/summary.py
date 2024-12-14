@@ -30,7 +30,7 @@ def page_summary(last_date: date) -> None:
 
     with c0:
         df = pd.DataFrame.from_dict(_last, orient="index", columns=["Value"])
-        df = df.loc[["Cash", "SRS", "Fund", "USD", "SGD", "Bond", "IDR"]]
+        df = df.loc[["Cash", "SRS", "Fund", "USD", "SGD", "Bond"]]
         df.loc["Total"] = df["Value"].sum()
 
         def _highlight_last(x):
@@ -46,11 +46,10 @@ def page_summary(last_date: date) -> None:
     labels = [f"{k}: {v / total:.1%}" for k, v in zip(names, data)]
     st.plotly_chart(plotly_ringchart(data, labels))
 
-    names = ["World", "SGD", "IDR", "CCE"]
+    names = ["World", "SGD", "CCE"]
     data = [
         _last["USD"] + _last["Fund"] + _last["SRS"],
         _last["SGD"],
-        _last["IDR"],
         _last["Cash"] + _last["Bond"],
     ]
     total = sum(data)
@@ -58,7 +57,7 @@ def page_summary(last_date: date) -> None:
     # st.pyplot(py_ringchart(data, labels, colors))
     st.plotly_chart(plotly_ringchart(data, labels))
 
-    names = ["USD", "Fund", "SRS", "IDR"]
+    names = ["USD", "Fund", "SRS"]
     data = [_last[k] for k in names]
     total = sum(data)
     labels = [f"{k}: {v / total:.1%}" for k, v in zip(names, data)]
