@@ -103,10 +103,3 @@ def page_charts(last_date: date) -> None:
             ["ES3.SI", "C38U.SI", "J69U.SI", "N2IU.SI"],
             symbol_names=["ES3", "CICT", "FCT", "MPACT"],
         )
-
-    with st.expander("Tech"):
-        _get_chart(
-            dates,
-            ["GOTO.JK", "GRAB"],
-            symbol_names=["GoTo", "Grab"],
-        )

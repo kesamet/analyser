@@ -11,8 +11,8 @@ from pm import CFG
 
 
 if __name__ == "__main__":
-    options = ["SRS", "Core", "QGF", "HGPS"]
-    i = int(input("  Enter sheet (SRS=0, Core=1, QGF=2, HGPS=3): "))
+    options = ["SRS", "Core", "CoreEnhanced", "QGF", "HGPS"]
+    i = int(input("  Enter sheet (SRS=0, Core=1, CoreEnhanced=2, QGF=3, HGPS=4): "))
     if i not in range(len(options)):
         raise IndexError
 

@@ -28,8 +28,6 @@ def get_portfolio(sheet: str) -> pd.DataFrame:
         return _load_portfolio("data/summary/portfolio_srs.csv")
     elif sheet == "Fund":
         return _load_portfolio("data/summary/portfolio_fund.csv")
-    elif sheet == "IDR":
-        return _load_portfolio("data/summary/portfolio_idr.csv")
     elif sheet == "Bond":
         return _load_portfolio("data/summary/portfolio_bond.csv")
     elif sheet == "SGD":
@@ -112,13 +110,11 @@ def get_overall_portfolio(inclu_bond: bool = True) -> pd.DataFrame:
     usd_df = get_portfolio("USD")
     fund_df = get_portfolio("Fund")
     srs_df = get_portfolio("SRS")
-    idr_df = get_portfolio("IDR")
     last = {
         "SGD": sgd_df["Portfolio"].iloc[-1],
         "USD": usd_df["Portfolio"].iloc[-1] * usd_df["USDSGD"].iloc[-1],
         "Fund": fund_df["Portfolio"].iloc[-1],
         "SRS": srs_df["Portfolio"].iloc[-1],
-        "IDR": idr_df["Portfolio"].iloc[-1] * idr_df["IDRSGD"].iloc[-1],
     }
     if inclu_bond:
         bond_df = get_portfolio("Bond")
@@ -146,11 +142,6 @@ def get_overall_portfolio(inclu_bond: bool = True) -> pd.DataFrame:
             tmp3 = bond_df[[c]].copy()
             tmp3.columns = ["y3"]
             tmp = tmp.join(tmp3)
-
-        tmp4 = idr_df[[c]].copy()
-        tmp4.columns = ["y4"]
-        tmp4["y4"] = tmp4["y4"] * idr_df["IDRSGD"]
-        tmp = tmp.join(tmp4)
 
         tmp.ffill(inplace=True)
         tmp.fillna(0, inplace=True)
@@ -192,7 +183,7 @@ def page_data(last_date: date) -> None:
     """Portfolio page."""
     tentative_start_date = get_start_date(last_date)
 
-    sheets = ["Overall", "Overall Equity", "SGD", "USD", "Fund", "SRS", "IDR", "Bond"]
+    sheets = ["Overall", "Overall Equity", "SGD", "USD", "Fund", "SRS", "Bond"]
     tabs = st.tabs(sheets)
 
     for tab, sheet in zip(tabs, sheets):
@@ -249,7 +240,7 @@ def tab_portfolio(last_date: date, sheet: str, tentative_start_date: date) -> No
     if sheet in ["Overall", "Overall Equity"]:
         st.line_chart(subset_df[["Portfolio", "Cost"]])
         st.line_chart(subset_df[["Net_Gain", "Paper_Gain", "Div"]])
-    elif sheet in ["USD", "IDR"]:
+    elif sheet == "USD":
         st.line_chart(subset_df[["Portfolio", "Cost", "Equity", "Cash"]])
         st.line_chart(subset_df[["Paper_Gain"]])
     elif sheet == "SGD":
@@ -280,18 +271,6 @@ def tab_portfolio(last_date: date, sheet: str, tentative_start_date: date) -> No
             "Cash",
             "USDSGD",
         ]
-    elif sheet == "IDR":
-        cols = [
-            "Portfolio",
-            "Cost",
-            "Net_Gain",
-            "Net_Yield",
-            "Realised_Gain",
-            "Paper_Gain",
-            "Equity",
-            "Cash",
-            "IDRSGD",
-        ]
     else:
         cols = [
             "Portfolio",
@@ -304,7 +283,7 @@ def tab_portfolio(last_date: date, sheet: str, tentative_start_date: date) -> No
         ]
     st.write(subset_df[cols].tail(30)[::-1])
 
-    if sheet in ["Overall", "Overall Equity", "IDR"]:
+    if sheet in ["Overall", "Overall Equity"]:
         return
 
     tu_map = {
