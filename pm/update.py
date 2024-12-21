@@ -20,7 +20,7 @@ if __name__ == "__main__":
     df = pd.read_csv(filepath)
     print(df.tail())
 
-    days = input("  Enter ndays (default=1): ")
+    days = input("\n  Enter ndays to amend (default=1): ")
     days = 1 if days == "" else int(days)
     _date = parser.parse(df["date"].iloc[-1]) - timedelta(days=days)
     while True:
