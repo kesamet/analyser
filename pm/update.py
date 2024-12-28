@@ -38,7 +38,7 @@ if __name__ == "__main__":
 
         close = float(close)
         print(f"  -- Entering date: {ddate}, close: {close}")
-        row = df.query("date == @date")
+        row = df.query("date == @ddate")
         if row.empty:
             idx = len(df)
         else:
