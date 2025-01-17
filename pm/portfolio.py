@@ -452,9 +452,10 @@ def get_portfolio(end_date, start_date, sheet, xlsx_file):
 
 
 if __name__ == "__main__":
-    i = int(input("  Enter sheet (All=0, SGD=1, USD=2, Fund=3, SRS=4, Bond=5): "))
-    if i not in range(7):
-        raise IndexError
+    i = input("  Enter sheet (SGD=1, USD=2, Fund=3, SRS=4, Bond=5) (default=All): ")
+    i = 0 if i == "" else int(i)
+    if i not in range(6):
+        raise ValueError("Invalid sheet. Number must be between 1 and 5.")
 
     end_date = datetime.today().date().isoformat()
 
