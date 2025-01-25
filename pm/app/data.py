@@ -291,7 +291,9 @@ def tab_portfolio(last_date: date, sheet: str, tentative_start_date: date) -> No
         "yearquarter": "1QE",
         "year": "1YE",
     }
-    timeunits = st.selectbox("Select time units.", list(tu_map.keys()), 1, key=sheet)
+    timeunits = st.pills(
+        "Select time units", list(tu_map.keys()), default="yearquarter", key=sheet
+    )
     df = sum_by_time(sheet, last_date, tu_map[timeunits])
     st.altair_chart(barchart(df[["cost"]], "Cost", timeunits), use_container_width=True)
     if "div" in df.columns:

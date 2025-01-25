@@ -113,9 +113,9 @@ def page_ta(last_date: datetime, eq_dict: dict, **kwargs) -> None:
     df = load_ohlcv_data(eq_dict[select_eq], dates)
 
     col0, col1 = st.columns(2)
-    select_days = col0.selectbox("Lookback period", ["1M", "2M", "3M", "6M"], 2)
+    select_days = col0.segmented_control("Lookback period", ["1M", "2M", "3M", "6M"], default="3M")
     select_days = str2days[select_days]
-    select_ta = col1.selectbox("Add TA", ["Bollinger", "SMA", "RSI"])
+    select_ta = col1.pills("Add TA", ["Bollinger", "SMA", "RSI"], default="Bollinger")
 
     source = df.iloc[-select_days:].reset_index()
     st.altair_chart(
@@ -124,9 +124,11 @@ def page_ta(last_date: datetime, eq_dict: dict, **kwargs) -> None:
     )
 
     col2, col3 = st.columns(2)
-    select_days2 = col2.selectbox("Select period", ["6M", "1Y", "2Y", "3Y"], 2)
+    select_days2 = col2.segmented_control("Select period", ["6M", "1Y", "2Y", "3Y"], default="2Y")
     select_days2 = str2days[select_days2]
-    select_ta2 = col3.selectbox("Select TA", ["Bollinger", "SMA", "RSI", "MACD", "Momentum"])
+    select_ta2 = col3.pills(
+        "Select TA", ["Bollinger", "SMA", "RSI", "MACD", "Momentum"], default="Bollinger"
+    )
     st.line_chart(df[["close"] + ta_type[select_ta2]["price"]].iloc[-select_days2:])
     if ta_type[select_ta2].get("ind") is not None:
         st.line_chart(df[ta_type[select_ta2]["ind"]].iloc[-select_days2:])

@@ -8,7 +8,7 @@ def get_start_date(
     start_date: str = "2015-01-01",
     options: tuple[str] = ("YTD", "1M", "6M", "1Y", "2Y", "3Y", "All time"),
 ) -> str:
-    select_range = st.selectbox("Select time range", options)
+    select_range = st.segmented_control("Select time range", options, default=options[0])
     if select_range[-1] == "Y":
         _yr = today_date.year - int(select_range[:-1])
         return today_date.replace(year=_yr).strftime("%Y-%m-%d")
