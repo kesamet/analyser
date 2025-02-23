@@ -9,9 +9,9 @@ plotly==5.23.0
 python-dotenv==1.0.1
 scipy==1.14.0
 seaborn==0.13.2
-streamlit==1.39.0
+streamlit==1.42.2
 streamlit_option_menu==0.3.13
 ta==0.11.0
-tqdm==4.66.2
+tqdm==4.67.1
 xlrd==2.0.1
-yfinance==0.2.41
+yfinance==0.2.54
