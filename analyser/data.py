@@ -29,10 +29,10 @@ def download_yfinance(
     """Download price data from yfinance given ticker symbol."""
     import yfinance as yf
 
-    df = yf.download(symbol, start=start_date, end=end_date)
+    df = yf.download(symbol, start=start_date, end=end_date, auto_adjust=False)
     df.index.name = "date"
-    df.columns = ["open", "high", "low", "close", "adjclose", "volume"]
-    # df = df.drop_duplicates()
+    df.columns = ["adjclose", "close", "high", "low", "open", "volume"]
+    df = df[["open", "high", "low", "close", "volume", "adjclose"]]
     if dirname is not None:
         df.to_csv(os.path.join(dirname, f"{symbol}.csv"))
     return df
