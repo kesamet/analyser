@@ -5,7 +5,6 @@ import streamlit as st
 
 from analyser.app.constants import str2days
 from analyser.data import get_data
-
 from pm import CFG
 from pm.ta import linearfit, compute_trend
 
@@ -85,9 +84,8 @@ def _get_trend_df(last_date: date, days: int, symbol: str) -> tuple[pd.DataFrame
 def page_trend(last_date: date) -> None:
     """Trend page."""
     st.header("By days")
-    c0, _, _ = st.columns(3)
-    s1 = c0.segmented_control(
-        "Select lookback period", ["3M", "6M", "1Y", "2Y", "3Y"], default="1Y"
+    s1 = st.segmented_control(
+        "Select lookback period", ["3M", "6M", "1Y", "2Y", "3Y"], default="1Y", key="seg1"
     )
     select_days1 = str2days[s1]
     df1 = _table_trend_by_days(last_date, select_days1)
@@ -116,21 +114,23 @@ def page_trend(last_date: date) -> None:
     )
 
     st.header("By equity")
-    cols = st.columns((2, 1))
-    select_eq = cols[0].selectbox("Select equity", list(CFG.SYMBOLS.keys()))
+    c0, _ = st.columns(2)
+    select_eq = c0.selectbox("Select equity", list(CFG.SYMBOLS.keys()))
     symbol = CFG.SYMBOLS[select_eq]
 
-    s2 = cols[1].segmented_control("Select period", ["3M", "6M", "1Y", "2Y", "3Y"], default="1Y")
+    s2 = st.segmented_control(
+        "Select period", ["3M", "6M", "1Y", "2Y", "3Y"], default="1Y", key="seg2"
+    )
     select_days2 = str2days[s2]
 
     df2 = _table_trend_by_symbol(last_date, symbol)
     st.dataframe(df2)
 
     df, level, grad = _get_trend_df(last_date, select_days2, symbol)
-    st.text(
+    st.info(
         f"""
-        Price = {df[symbol].iloc[-1]:.2f}
-        Level = {level:.1f}%
+        Price = {df[symbol].iloc[-1]:.2f}\n
+        Level = {level:.1f}%\n
         Gradient = {grad * 1e3:.3f}
         """
     )
