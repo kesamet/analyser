@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import scipy.optimize as sco
 
 from analyser.data import get_data
@@ -31,6 +30,8 @@ def compute_trend(ts: pd.Series | pd.DataFrame) -> tuple[pd.DataFrame, float, fl
 
 def plot_trend(symbol, start_date, end_date, name="", ax=None):
     """Plot time series with trends."""
+    import matplotlib.pyplot as plt
+
     dates = pd.date_range(start_date, end_date)
     df = get_data([symbol], dates, base_symbol="ES3.SI", col="adjclose")[[symbol]]
     df, level, grad = compute_trend(df)

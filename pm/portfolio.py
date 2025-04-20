@@ -3,7 +3,6 @@ from typing import Optional
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
 from analyser.data import get_data
 from analyser.plots import plot_normalized_data
@@ -168,6 +167,7 @@ def assess_portfolio(
 
 def print_results(dct: dict, results_df: pd.DataFrame, ts_df: pd.DataFrame) -> None:
     """Print statistics."""
+    import matplotlib.pyplot as plt
     from IPython.display import display
 
     print("Date Range: {} to {}\n".format(dct["start_date"], dct["end_date"]))
