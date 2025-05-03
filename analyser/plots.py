@@ -3,8 +3,6 @@ Plots.
 """
 
 import altair as alt
-import matplotlib.lines as mlines
-import matplotlib.pyplot as plt
 import pandas as pd
 import plotly.graph_objects as go
 
@@ -102,6 +100,9 @@ def barchart(source: pd.DataFrame, title: str = "", timeunits: str = "yearmonth"
 
 def py_ringchart(values: list, labels: list, colors: list, title: str | None = None):
     """Ring chart."""
+    import matplotlib.pyplot as plt
+    import matplotlib.lines as mlines
+
     fig, ax = plt.subplots()
     fig.set_size_inches(4, 4)
     ax.axis("equal")
