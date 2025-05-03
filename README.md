@@ -4,7 +4,7 @@
 
 You will need to set up your development environment using conda, which you can install [directly](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html).
 ```bash
-conda env create --name analyser python=3.11
+conda env create --name analyser python=3.12
 conda activate analyser
 pip install -r requirements.txt
 ```
@@ -16,6 +16,10 @@ Stock data is download from Yahoo Finance. The symbols of the stocks of interest
 The data can then be downloaded by
 ```bash
 python -m download
+```
+or
+```bash
+uv run download.py
 ```
 
 <details><summary>Shiller data</summary>
