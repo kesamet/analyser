@@ -35,11 +35,13 @@ wget http://www.econ.yale.edu/~shiller/data/ie_data.xls -P ./data/summary
 
 ## 💻 App
 
-To run Streamlit app,
+To run Streamlit app (which should be done in conda or venv),
 ```bash
 streamlit run app_analyser.py
 ```
 
 
 ## Notebooks
-- FRED[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/kesamet/analyser/blob/master/notebooks/test_fred.ipynb)
+- FRED
+
+  [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/kesamet/analyser/blob/master/notebooks/test_fred.ipynb)
