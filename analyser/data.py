@@ -3,6 +3,7 @@ Load data.
 """
 
 import os
+from curl_cffi import requests
 from datetime import datetime, timedelta
 from typing import List, Optional, Tuple, Union
 
@@ -29,7 +30,8 @@ def download_yfinance(
     """Download price data from yfinance given ticker symbol."""
     import yfinance as yf
 
-    df = yf.download(symbol, start=start_date, end=end_date, auto_adjust=False)
+    session = requests.Session(impersonate="chrome")
+    df = yf.download(symbol, start=start_date, end=end_date, auto_adjust=False, session=session)
     df.index.name = "date"
     df.columns = ["adjclose", "close", "high", "low", "open", "volume"]
     df = df[["open", "high", "low", "close", "volume", "adjclose"]]
