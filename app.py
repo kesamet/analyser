@@ -14,7 +14,7 @@ from pm.app.data import page_data
 from pm.app.summary import page_summary
 from pm.app.trend import page_trend
 
-st.set_page_config(page_title="PM")
+st.set_page_config(page_title="PM", page_icon=":material/account_balance:")
 
 
 def main():
@@ -29,7 +29,7 @@ def main():
     }
 
     with st.sidebar:
-        selected = option_menu("PM", list(dict_pages.keys()), menu_icon="cast")
+        selected = option_menu("PM", list(dict_pages.keys()), menu_icon="house")
 
     st.title(selected)
     dict_pages[selected](today_date - timedelta(days=1))
