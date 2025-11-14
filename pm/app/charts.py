@@ -54,7 +54,7 @@ def _get_chart(
 def page_charts(last_date: date) -> None:
     df0 = _load_ie_data()
     chart0 = _linechart(df0).properties(title="Shiller PE")
-    st.altair_chart(chart0, use_container_width=True)
+    st.altair_chart(chart0, width="stretch")
 
     start_date = get_start_date(last_date, options=("1Y", "2Y", "3Y"))
     dates = pd.date_range(start_date, last_date)

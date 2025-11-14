@@ -295,13 +295,13 @@ def tab_portfolio(last_date: date, sheet: str, tentative_start_date: date) -> No
         "Select time units", list(tu_map.keys()), default="yearquarter", key=sheet
     )
     df = sum_by_time(sheet, last_date, tu_map[timeunits])
-    st.altair_chart(barchart(df[["cost"]], "Cost", timeunits), use_container_width=True)
+    st.altair_chart(barchart(df[["cost"]], "Cost", timeunits), width="stretch")
     if "div" in df.columns:
-        st.altair_chart(barchart(df[["div"]], "Dividends", timeunits), use_container_width=True)
+        st.altair_chart(barchart(df[["div"]], "Dividends", timeunits), width="stretch")
     if "gain" in df.columns:
         st.altair_chart(
             barchart(df[["gain"]], "Realised Gain", timeunits),
-            use_container_width=True,
+            width="stretch",
         )
 
     if sheet == "SGD":

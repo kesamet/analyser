@@ -120,7 +120,7 @@ def page_ta(last_date: datetime, eq_dict: dict, **kwargs) -> None:
     source = df.iloc[-select_days:].reset_index()
     st.altair_chart(
         chart_candlestick(source, cols=ta_type[select_ta]["price"]),
-        use_container_width=True,
+        width="stretch",
     )
 
     col2, col3 = st.columns(2)
