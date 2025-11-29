@@ -16,7 +16,11 @@ if __name__ == "__main__":
     if i not in range(len(options)):
         raise IndexError
 
-    filepath = f"{CFG.SUMMARY_DIR}/{options[i]}.csv"
+    _data = options[i]
+    if _data == "CoreEnhanced":
+        usd_sgd = pd.read_csv(f"./data/USDSGD=X.csv")
+
+    filepath = f"{CFG.SUMMARY_DIR}/{_data}.csv"
     df = pd.read_csv(filepath)
     print(df.tail())
 
@@ -32,18 +36,33 @@ if __name__ == "__main__":
                 break
 
         print(f"\nDate: {ddate} {dow}")
-        close = input("  Input close or enter to cancel: ")
-        if close == "":
-            break
+        if _data == "CoreEnhanced":
+            row = usd_sgd.query("date == @ddate")
+            if row.empty:
+                print("  -- USDSGD data not available, skipping")
+                break
+            usd_sgd_close = row["close"].values[0]
+            print(f"  -- USDSGD close: {usd_sgd_close:.4f}")
 
-        close = float(close)
-        print(f"  -- Entering date: {ddate}, close: {close}")
         row = df.query("date == @ddate")
         if row.empty:
             idx = len(df)
         else:
             idx = row.index[0]
-        df.loc[idx] = [ddate, close]
+
+        close = input("  Input close or enter to cancel: ")
+        if close == "":
+            break
+
+        close = float(close)
+        if _data == "CoreEnhanced":
+            usd_close = close
+            close = round(usd_close * usd_sgd_close, 2)
+            print(f"  -- Entering date: {ddate}, close: {close}, usd_close: {usd_close}")
+            df.loc[idx] = [ddate, close, usd_close]
+        else:
+            print(f"  -- Entering date: {ddate}, close: {close}")
+            df.loc[idx] = [ddate, close]
 
     print("\nSaving")
     df.to_csv(filepath, index=False)

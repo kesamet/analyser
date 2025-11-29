@@ -196,7 +196,12 @@ def _map_stock_to_symbol(sheet: str, xlsx_file: str) -> pd.DataFrame:
 def _load_fund_portvals():
     dfs = None
     for fn in CFG.FUNDNAMES:
-        df = pd.read_csv(f"{CFG.SUMMARY_DIR}/{fn}.csv", index_col="date", parse_dates=True)
+        df = pd.read_csv(
+            f"{CFG.SUMMARY_DIR}/{fn}.csv",
+            index_col="date",
+            parse_dates=True,
+            usecols=["date", "close"],
+        )
         df.columns = [fn]
         if dfs is None:
             dfs = df
