@@ -9,34 +9,47 @@ import pandas as pd
 
 from pm import CFG
 
+USE_USD = ["CoreEnhanced", "QGF", "HGPS", "EPC"]
 
-if __name__ == "__main__":
-    options = ["SRS", "Core", "CoreEnhanced", "QGF", "HGPS"]
-    i = int(input("  Enter sheet (SRS=0, Core=1, CoreEnhanced=2, QGF=3, HGPS=4): "))
+
+def main():
+    options = ["SRS", "Core", "CoreEnhanced", "QGF", "HGPS", "EPC"]
+    i = int(input("  Enter sheet (SRS=0, Core=1, CoreEnhanced=2, QGF=3, HGPS=4, EPC=5): "))
     if i not in range(len(options)):
         raise IndexError
 
-    _data = options[i]
-    if _data == "CoreEnhanced":
-        usd_sgd = pd.read_csv(f"./data/USDSGD=X.csv")
+    sheet = options[i]
+    if sheet in USE_USD:
+        usd_sgd = pd.read_csv(f"{CFG.DATA_DIR}/USDSGD=X.csv")
 
-    filepath = f"{CFG.SUMMARY_DIR}/{_data}.csv"
+    filepath = f"{CFG.SUMMARY_DIR}/{sheet}.csv"
     df = pd.read_csv(filepath)
     print(df.tail())
 
-    days = input("\n  Enter ndays to amend (default=1): ")
-    days = 1 if days == "" else int(days)
-    _date = parser.parse(df["date"].iloc[-1]) - timedelta(days=days)
+    periods = input("\n  Enter num periods to amend (default=1): ")
+    periods = 1 if periods == "" else int(periods)
+    if sheet in ["QGF", "HGPS", "EPC"]:
+        _date = parser.parse(df["date"].iloc[-1]).replace(day=1) - pd.DateOffset(months=periods)
+    else:
+        _date = parser.parse(df["date"].iloc[-1]) - timedelta(days=periods)
+
     while True:
+        if sheet in ["QGF", "HGPS", "EPC"]:
+            _date += pd.DateOffset(months=periods)
+        else:
+            _date += timedelta(days=periods)
+
+        # Skip weekends
         while True:
-            _date += timedelta(days=1)
-            ddate = _date.strftime("%Y-%m-%d")
             dow = _date.strftime("%A")
-            if dow not in ["Saturday", "Sunday"]:
+            if dow in ["Saturday", "Sunday"]:
+                _date += timedelta(days=1)
+            else:
                 break
 
+        ddate = _date.strftime("%Y-%m-%d")
         print(f"\nDate: {ddate} {dow}")
-        if _data == "CoreEnhanced":
+        if sheet in USE_USD:
             row = usd_sgd.query("date == @ddate")
             if row.empty:
                 print("  -- USDSGD data not available, skipping")
@@ -55,7 +68,7 @@ if __name__ == "__main__":
             break
 
         close = float(close)
-        if _data == "CoreEnhanced":
+        if sheet in USE_USD:
             usd_close = close
             close = round(usd_close * usd_sgd_close, 2)
             print(f"  -- Entering date: {ddate}, close: {close}, usd_close: {usd_close}")
@@ -66,3 +79,7 @@ if __name__ == "__main__":
 
     print("\nSaving")
     df.to_csv(filepath, index=False)
+
+
+if __name__ == "__main__":
+    main()
