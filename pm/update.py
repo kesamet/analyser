@@ -35,6 +35,7 @@ def main():
 
     while True:
         if sheet in ["QGF", "HGPS", "EPC"]:
+            _date = _date.replace(day=1)
             _date += pd.DateOffset(months=periods)
         else:
             _date += timedelta(days=periods)
