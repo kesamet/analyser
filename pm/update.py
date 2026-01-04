@@ -52,9 +52,9 @@ def main():
         if sheet in USE_USD:
             row = usd_sgd.query("date == @ddate")
             if row.empty:
-                print("  -- USDSGD data not available, skipping")
-                break
-            usd_sgd_close = row["close"].values[0]
+                print("  -- USDSGD data not available, using previous close")
+            else:
+                usd_sgd_close = row["close"].values[0]
             print(f"  -- USDSGD close: {usd_sgd_close:.4f}")
 
         row = df.query("date == @ddate")
