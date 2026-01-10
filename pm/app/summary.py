@@ -4,7 +4,6 @@ import pandas as pd
 import streamlit as st
 
 from analyser.plots import plotly_ringchart
-from pm import CFG
 from pm.app.data import get_overall_portfolio
 
 
