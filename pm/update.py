@@ -13,8 +13,8 @@ USE_USD = ["CoreEnhanced", "QGF", "HGPS", "EPC"]
 
 
 def main():
-    options = ["SRS", "Core", "CoreEnhanced", "QGF", "HGPS", "EPC"]
-    i = int(input("  Enter sheet (SRS=0, Core=1, CoreEnhanced=2, QGF=3, HGPS=4, EPC=5): "))
+    options = ["SRS", "Core", "CoreEnhanced", "QGF", "HGPS", "EPC", "Gold"]
+    i = int(input("  Enter sheet (SRS=0, Core=1, CoreEnhanced=2, QGF=3, HGPS=4, EPC=5, Gold=6): "))
     if i not in range(len(options)):
         raise IndexError
 
