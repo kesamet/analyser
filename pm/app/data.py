@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from dateutil import parser
 
 import pandas as pd
@@ -110,17 +110,8 @@ def get_overall_portfolio(inclu_bond: bool = True) -> pd.DataFrame:
     usd_df = get_portfolio("USD")
     fund_df = get_portfolio("Fund")
     srs_df = get_portfolio("SRS")
-    last = {
-        "SGD": sgd_df["Portfolio"].iloc[-1],
-        "USD": usd_df["Portfolio"].iloc[-1] * usd_df["USDSGD"].iloc[-1],
-        "Fund": fund_df["Portfolio"].iloc[-1],
-        "SRS": srs_df["Portfolio"].iloc[-1],
-    }
     if inclu_bond:
         bond_df = get_portfolio("Bond")
-        last["Bond"] = bond_df["Portfolio"].iloc[-1]
-
-    dfs = [sgd_df, fund_df, srs_df]
 
     # Use trading days of "USDSGD=X"
     dates = pd.date_range(srs_df.index[0], srs_df.index[-1])
@@ -128,7 +119,7 @@ def get_overall_portfolio(inclu_bond: bool = True) -> pd.DataFrame:
     for c in ["Div", "Realised_Gain", "Paper_Gain", "Cost"]:
         tmp = pd.DataFrame(index=dates)
 
-        for i, df0 in enumerate(dfs):
+        for i, df0 in enumerate([sgd_df, fund_df, srs_df]):
             tmp1 = df0[[c]].copy()
             tmp1.columns = [f"x{i}"]
             tmp = tmp.join(tmp1)
@@ -151,6 +142,34 @@ def get_overall_portfolio(inclu_bond: bool = True) -> pd.DataFrame:
     # fill_missing_values(df)
     df["Net_Gain"] = df["Div"] + df["Realised_Gain"] + df["Paper_Gain"]
     df["Portfolio"] = df["Paper_Gain"] + df["Cost"]
+
+    last_date = sgd_df.index[-1]
+    start_date = last_date.replace(day=1, month=1) - timedelta(days=1)
+    last = {
+        "SGD": [
+            sgd_df["Portfolio"].iloc[-1],
+            sgd_df.query("index == @start_date")["Portfolio"].iloc[-1],
+        ],
+        "USD": [
+            usd_df["Portfolio"].iloc[-1] * usd_df["USDSGD"].iloc[-1],
+            usd_df.query("index == @start_date")["Portfolio"].iloc[-1]
+            * usd_df.query("index == @start_date")["USDSGD"].iloc[-1],
+        ],
+        "Fund": [
+            fund_df["Portfolio"].iloc[-1],
+            fund_df.query("index == @start_date")["Portfolio"].iloc[-1],
+        ],
+        "SRS": [
+            srs_df["Portfolio"].iloc[-1],
+            srs_df.query("index == @start_date")["Portfolio"].iloc[-1],
+        ],
+    }
+    if inclu_bond:
+        last["Bond"] = [
+            bond_df["Portfolio"].iloc[-1],
+            bond_df.query("index == @start_date")["Portfolio"].iloc[-1],
+        ]
+
     return df, last
 
 
