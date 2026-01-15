@@ -144,7 +144,7 @@ def get_overall_portfolio(inclu_bond: bool = True) -> pd.DataFrame:
     df["Portfolio"] = df["Paper_Gain"] + df["Cost"]
 
     last_date = sgd_df.index[-1]
-    start_date = last_date.replace(day=1, month=1) - timedelta(days=1)
+    start_date = last_date.replace(day=1, month=1) - timedelta(days=1)  # noqa: F841
     last = {
         "SGD": [
             sgd_df["Portfolio"].iloc[-1],
