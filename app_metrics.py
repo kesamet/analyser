@@ -1,5 +1,6 @@
-import streamlit as st
 import os
+
+import streamlit as st
 from google import genai
 from dotenv import load_dotenv
 from loguru import logger
@@ -61,7 +62,10 @@ def analyze_pdf(pdf_bytes, prompt, model_name):
     try:
         response = client.models.generate_content(
             model=model_name,
-            contents=[genai.types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf"), prompt],
+            contents=[
+                genai.types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf"),
+                prompt,
+            ],
         )
         return response.text, None
     except Exception as e:
