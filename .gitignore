@@ -142,4 +142,5 @@ config.yaml
 .states
 .web
 *.db
+uploads/
 assets/external/
