@@ -139,7 +139,7 @@ dev/
 data/
 config.yaml
 .gemini
-*.db
 .states
-assets/external/
 .web
+*.db
+assets/external/
