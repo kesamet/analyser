@@ -138,3 +138,8 @@ ML4T/
 dev/
 data/
 config.yaml
+.gemini
+.states
+.web
+*.db
+assets/external/
