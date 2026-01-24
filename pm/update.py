@@ -47,17 +47,24 @@ def main():
             else:
                 break
 
-        ddate = _date.strftime("%Y-%m-%d")
-        print(f"\nDate: {ddate} {dow}")
+        date_str = _date.strftime("%Y-%m-%d")
+        print(f"\nDate: {date_str}")
+
+        curr_date = _date
+        curr_date_str = curr_date.strftime("%Y-%m-%d")
         if sheet in USE_USD:
-            row = usd_sgd.query("date == @ddate")
-            if row.empty:
-                print("  -- USDSGD data not available, using previous close")
-            else:
-                usd_sgd_close = row["close"].values[0]
+            while True:
+                row = usd_sgd.query("date == @curr_date_str")
+                if not row.empty:
+                    print(f"  -- Using close on {curr_date_str}")
+                    usd_sgd_close = row["close"].values[0]
+                    break
+                else:
+                    curr_date -= timedelta(days=1)
+                    curr_date_str = curr_date.strftime("%Y-%m-%d")
             print(f"  -- USDSGD close: {usd_sgd_close:.4f}")
 
-        row = df.query("date == @ddate")
+        row = df.query("date == @date_str")
         if row.empty:
             idx = len(df)
         else:
@@ -71,11 +78,11 @@ def main():
         if sheet in USE_USD:
             usd_close = close
             close = round(usd_close * usd_sgd_close, 2)
-            print(f"  -- Entering date: {ddate}, close: {close}, usd_close: {usd_close}")
-            df.loc[idx] = [ddate, close, usd_close]
+            print(f"  -- Entering date: {date_str}, close: {close}, usd_close: {usd_close}")
+            df.loc[idx] = [date_str, close, usd_close]
         else:
-            print(f"  -- Entering date: {ddate}, close: {close}")
-            df.loc[idx] = [ddate, close]
+            print(f"  -- Entering date: {date_str}, close: {close}")
+            df.loc[idx] = [date_str, close]
 
     print("\nSaving")
     df.to_csv(filepath, index=False)
