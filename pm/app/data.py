@@ -333,6 +333,6 @@ def tab_portfolio(last_date: date, sheet: str, tentative_start_date: date) -> No
 
 def _print_results(dct, results_df, ts_df):
     st.write("Date Range: `{}` to `{}` (Values in %)".format(dct["start_date"], dct["end_date"]))
-    st.table(results_df * 100)
+    st.dataframe(results_df * 100)
     # Compare daily portfolio value with index using a normalized plot
     st.line_chart(rebase(ts_df))

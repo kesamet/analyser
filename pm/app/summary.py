@@ -16,7 +16,7 @@ def page_summary(last_date: date) -> None:
     df["% Change YTD"] = (df["Value"] / df["start"] - 1) * 100
     total = df["Value"].sum()
     st.metric("Portfolio Value (SGD)", f"{total:,.2f}")
-    st.table(
+    st.dataframe(
         df[["Value", "% Change YTD"]].style.format({"Value": "{:,.2f}", "% Change YTD": "{:.2f}"})
     )
 

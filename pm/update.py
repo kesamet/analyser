@@ -93,6 +93,8 @@ def main():
         df_merged = pd.merge(df1, df2, on="date", suffixes=("_SGD", "_USD"), how="outer").fillna(0)
         df_merged["close"] = df_merged["close_SGD"] + df_merged["close_USD"]
         df_merged = df_merged[["date", "close"]]
+        print("Gold aggregated:")
+        print(df_merged.tail())
         df_merged.to_csv(f"{CFG.SUMMARY_DIR}/Gold.csv", index=False)
 
 
