@@ -6,7 +6,6 @@ import streamlit as st
 from analyser.data import get_data, rebase
 from pm import CFG
 from pm.app.utils import get_start_date
-from pm.ta import compute_trend
 
 
 @st.cache_data
