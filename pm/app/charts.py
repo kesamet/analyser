@@ -15,7 +15,6 @@ def _load_ie_data():
     from pm.data import load_ie_data
 
     df = load_ie_data(start_date="1946-01-01")
-    df, _, _ = compute_trend(df["CAPE"])
     return df
 
 
@@ -53,8 +52,7 @@ def _get_chart(
 
 def page_charts(last_date: date) -> None:
     df0 = _load_ie_data()
-    chart0 = _linechart(df0).properties(title="Shiller PE")
-    st.altair_chart(chart0, width="stretch")
+    st.line_chart(df0[["CAPE"]].loc[:last_date], width="stretch", y_label="CAPE")
 
     start_date = get_start_date(last_date, options=("1Y", "2Y", "3Y"))
     dates = pd.date_range(start_date, last_date)
