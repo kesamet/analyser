@@ -193,9 +193,9 @@ def _map_stock_to_symbol(sheet: str, xlsx_file: str) -> pd.DataFrame:
     return all_symbols
 
 
-def _load_fund_portvals():
+def _load_fund_portvals(filter: dict) -> pd.Series:
     dfs = None
-    for fn in CFG.FUNDNAMES:
+    for fn in filter.keys():
         df = pd.read_csv(
             f"{CFG.SUMMARY_DIR}/{fn}.csv",
             index_col="date",
@@ -210,7 +210,7 @@ def _load_fund_portvals():
 
     dfs.ffill(inplace=True)
     dfs.fillna(0, inplace=True)
-    portvals = dfs[CFG.FUNDNAMES].sum(axis=1)
+    portvals = dfs[filter].sum(axis=1)
     return portvals
 
 
@@ -221,10 +221,6 @@ def compute_portvals(
     xlsx_file: str = CFG.FLOWDATA,
 ) -> pd.DataFrame:
     """Compute daily portfolio value."""
-    if sheet == "Fund":
-        # HACK: bypass
-        return _load_fund_portvals()
-
     # Load data
     df = pd.read_excel(
         xlsx_file,
@@ -241,7 +237,7 @@ def compute_portvals(
     df_orders = pd.merge(df, all_symbols, on=["Stock"])
 
     # Get daily prices
-    if sheet in ["SRS", "Fund", "SGD", "Bond"]:
+    if sheet in ["SRS", "SGD", "Bond"]:
         symbols = df_orders["Symbol"].drop_duplicates().values.tolist()
     else:
         # symbols = MAIN_SYMBOLS[sheet]
@@ -279,7 +275,7 @@ def compute_portvals(
     return portvals
 
 
-def agg_daily_cost(sheet: str, xlsx_file: str) -> pd.DataFrame:
+def agg_daily_cost(sheet: str, xlsx_file: str, filter: dict | None = None) -> pd.DataFrame:
     """Aggregate daily cost from a sheet in an xlsx file.
 
     Args:
@@ -299,6 +295,9 @@ def agg_daily_cost(sheet: str, xlsx_file: str) -> pd.DataFrame:
     df.columns = ["Date", "Type", "Stock", "Value", "Realised_Gain"]
     df["Value"] -= df["Realised_Gain"]  # to obtain original cost
 
+    if filter is not None:
+        df = df[df["Stock"].isin(filter.values())]
+
     # Compute cost
     cost_df = df[df["Type"].isin(["Buy", "Sell"])].copy()
 
@@ -308,10 +307,13 @@ def agg_daily_cost(sheet: str, xlsx_file: str) -> pd.DataFrame:
 
 
 def compute_cost(
-    trading_dates: pd.DatetimeIndex, sheet: str, xlsx_file: str = CFG.FLOWDATA
+    trading_dates: pd.DatetimeIndex,
+    sheet: str,
+    xlsx_file: str = CFG.FLOWDATA,
+    filter: dict | None = None,
 ) -> pd.DataFrame:
     """Compute cumulative cost and daily benchmark portfolio value."""
-    cost_df = agg_daily_cost(sheet, xlsx_file)
+    cost_df = agg_daily_cost(sheet, xlsx_file, filter=filter)
     cost_df = pd.DataFrame(index=trading_dates).join(cost_df)
     cost_df.fillna(0, inplace=True)
 
@@ -336,7 +338,9 @@ def compute_cost(
     return cost_df
 
 
-def compute_usd(trading_dates: pd.DatetimeIndex, xlsx_file: str = CFG.FLOWDATA) -> pd.DataFrame:
+def compute_usd(
+    trading_dates: pd.DatetimeIndex, xlsx_file: str = CFG.FLOWDATA, filter: dict | None = None
+) -> pd.DataFrame:
     """Compute cumulative cost and cash specific to USD."""
     # Load data
     df = pd.read_excel(
@@ -354,6 +358,9 @@ def compute_usd(trading_dates: pd.DatetimeIndex, xlsx_file: str = CFG.FLOWDATA) 
     )
     df.columns = ["Date", "Type", "Stock", "Units", "Value", "Realised_Gain"]
     df["Value"] -= df["Realised_Gain"]  # to obtain original cost
+
+    if filter is not None:
+        df = df[df["Stock"].isin(filter.values())]
 
     # Compute cost
     df = (
@@ -401,7 +408,9 @@ def compute_usd(trading_dates: pd.DatetimeIndex, xlsx_file: str = CFG.FLOWDATA) 
     return cost_df[["USDSGD", "Cost", "Cash"]]
 
 
-def agg_daily_gain(gain_type: str, sheet: str, xlsx_file: str) -> pd.DataFrame:
+def agg_daily_gain(
+    gain_type: str, sheet: str, xlsx_file: str, filter: dict | None = None
+) -> pd.DataFrame:
     """Aggregate gain daily."""
     # Load data
     df = pd.read_excel(
@@ -415,6 +424,8 @@ def agg_daily_gain(gain_type: str, sheet: str, xlsx_file: str) -> pd.DataFrame:
     df.columns = ["Date", "Type", "Stock", "Value"]
 
     # Compute gains
+    if filter is not None:
+        df = df[df["Stock"].isin(filter.values())]
     gains_df = df[df["Type"] == gain_type].groupby(["Date"])[["Value"]].sum()
     return gains_df
 
@@ -424,9 +435,10 @@ def compute_gains(
     trading_dates: pd.DatetimeIndex,
     sheet: str = "SGD",
     xlsx_file: str = CFG.FLOWDATA,
+    filter: dict | None = None,
 ) -> pd.DataFrame:
     """Compute cumulative gains."""
-    gains_df = agg_daily_gain(gain_type, sheet, xlsx_file)
+    gains_df = agg_daily_gain(gain_type, sheet=sheet, xlsx_file=xlsx_file, filter=filter)
     gains_df = gains_df.cumsum()
     gains_df = pd.DataFrame(index=trading_dates).join(gains_df)
     gains_df.iloc[0] = 0
@@ -434,22 +446,25 @@ def compute_gains(
     return gains_df["Value"]
 
 
-def get_portfolio(end_date, start_date, sheet, xlsx_file):
-    portvals = compute_portvals(end_date, start_date, sheet, xlsx_file)
+def get_portfolio(end_date, start_date, sheet, xlsx_file, filter=None):
+    if sheet == "Fund" and filter is not None:
+        portvals = _load_fund_portvals(filter)
+    else:
+        portvals = compute_portvals(end_date, start_date, sheet, xlsx_file)
     trading_dates = portvals.index
 
     if sheet in ["SGD", "Fund", "SRS", "Bond"]:
-        df = compute_cost(trading_dates, sheet, xlsx_file)
+        df = compute_cost(trading_dates, sheet, xlsx_file=xlsx_file, filter=filter)
         df["Portfolio"] = portvals
     elif sheet == "USD":
-        df = compute_usd(trading_dates, xlsx_file)
+        df = compute_usd(trading_dates, xlsx_file=xlsx_file, filter=filter)
         df["Equity"] = portvals
         df["Portfolio"] = df["Equity"] + df["Cash"]
     else:
         raise NotImplementedError
 
-    df["Div"] = compute_gains("Div", trading_dates, sheet, xlsx_file)
-    df["Realised_Gain"] = compute_gains("Sell", trading_dates, sheet, xlsx_file)
+    df["Div"] = compute_gains("Div", trading_dates, sheet, xlsx_file, filter=filter)
+    df["Realised_Gain"] = compute_gains("Sell", trading_dates, sheet, xlsx_file, filter=filter)
     df["Paper_Gain"] = df["Portfolio"] - df["Cost"]
     df["Net_Gain"] = df["Paper_Gain"] + df["Realised_Gain"] + df["Div"]
     df = df.dropna()
@@ -457,10 +472,10 @@ def get_portfolio(end_date, start_date, sheet, xlsx_file):
 
 
 if __name__ == "__main__":
-    i = input("  Enter sheet (SGD=1, USD=2, Fund=3, SRS=4, Bond=5) (default=All): ")
+    i = input("  Enter sheet (SGD=1, USD=2, Core=3, Enhanced=4, SRS=5, Bond=6) (default=All): ")
     i = 0 if i == "" else int(i)
-    if i not in range(6):
-        raise ValueError("Invalid sheet. Number must be between 1 and 5.")
+    if i not in range(7):
+        raise ValueError("Invalid sheet. Number must be between 1 and 6.")
 
     end_date = datetime.today().date().isoformat()
 
@@ -475,16 +490,33 @@ if __name__ == "__main__":
         usd_df.to_csv(f"{CFG.SUMMARY_DIR}/portfolio_usd.csv")
 
     if i in [0, 3]:
-        logger.info("Generating portfolio_fund...")
-        fund_df = get_portfolio(end_date, "2021-04-06", "Fund", f"{CFG.SUMMARY_DIR}/aSummary.xlsx")
-        fund_df.to_csv(f"{CFG.SUMMARY_DIR}/portfolio_fund.csv")
+        logger.info("Generating portfolio_core...")
+        core_df = get_portfolio(
+            end_date,
+            "2021-04-06",
+            "Fund",
+            f"{CFG.SUMMARY_DIR}/aSummary.xlsx",
+            filter=CFG.FUNDS_CORE,
+        )
+        core_df.to_csv(f"{CFG.SUMMARY_DIR}/portfolio_core.csv")
 
     if i in [0, 4]:
+        logger.info("Generating portfolio_enhanced ...")
+        enh_df = get_portfolio(
+            end_date,
+            "2021-04-06",
+            "Fund",
+            f"{CFG.SUMMARY_DIR}/aSummary.xlsx",
+            filter=CFG.FUNDS_ENHANCED,
+        )
+        enh_df.to_csv(f"{CFG.SUMMARY_DIR}/portfolio_enhanced.csv")
+
+    if i in [0, 5]:
         logger.info("Generating portfolio_srs...")
         srs_df = get_portfolio(end_date, "2019-02-01", "SRS", f"{CFG.SUMMARY_DIR}/aSummary.xlsx")
         srs_df.to_csv(f"{CFG.SUMMARY_DIR}/portfolio_srs.csv")
 
-    if i in [0, 5]:
+    if i in [0, 6]:
         logger.info("Generating portfolio_bond...")
         bond_df = get_portfolio(end_date, "2015-11-01", "Bond", f"{CFG.SUMMARY_DIR}/aSummary.xlsx")
         bond_df.to_csv(f"{CFG.SUMMARY_DIR}/portfolio_bond.csv")
