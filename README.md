@@ -2,35 +2,11 @@
 
 ## 🔧 Getting Started
 
-### 1. Set up a virtual environment
-
-**conda**
-```bash
-conda env create --name analyser python=3.12
-conda activate analyser
-pip install -r requirements.txt
-```
-
-**venv**
-```bash
-# On Windows:
-python -m venv .venv
-.venv\Scripts\activate
-
-# On macOS/Linux:
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-### 2. Download data
+### Download data
 Stock data is download from Yahoo Finance. The symbols of the stocks of interest are first added to the file `symbols.py`.
 
 The data can then be downloaded by
 ```bash
-python -m download
-
-# or
-
 uv run download.py
 ```
 
@@ -45,16 +21,15 @@ wget http://www.econ.yale.edu/~shiller/data/ie_data.xls -P ./data/summary
 </details>
 
 
-### 3. Run the app
+### Run the Streamlit app
 
 ```bash
 # Streamlit app
-streamlit run app_analyser.py
+uv run streamlit run app_analyser.py
 
 # reflex app
 reflex run
 ```
-
 
 ## Notebooks
 - FRED
