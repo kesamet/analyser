@@ -26,8 +26,10 @@ def get_portfolio(sheet: str) -> pd.DataFrame:
         return _load_portfolio("data/summary/portfolio_usd.csv")
     elif sheet == "SRS":
         return _load_portfolio("data/summary/portfolio_srs.csv")
-    elif sheet == "Fund":
-        return _load_portfolio("data/summary/portfolio_fund.csv")
+    elif sheet == "Core":
+        return _load_portfolio("data/summary/portfolio_core.csv")
+    elif sheet == "Enhanced":
+        return _load_portfolio("data/summary/portfolio_enhanced.csv")
     elif sheet == "Bond":
         return _load_portfolio("data/summary/portfolio_bond.csv")
     elif sheet == "SGD":
@@ -108,7 +110,8 @@ def get_whatif_portfolio(start_date: date, end_date: date) -> pd.DataFrame:
 def get_overall_portfolio(inclu_bond: bool = True) -> pd.DataFrame:
     sgd_df = get_portfolio("SGD")
     usd_df = get_portfolio("USD")
-    fund_df = get_portfolio("Fund")
+    core_df = get_portfolio("Core")
+    enhanced_df = get_portfolio("Enhanced")
     srs_df = get_portfolio("SRS")
     if inclu_bond:
         bond_df = get_portfolio("Bond")
@@ -119,7 +122,7 @@ def get_overall_portfolio(inclu_bond: bool = True) -> pd.DataFrame:
     for c in ["Div", "Realised_Gain", "Paper_Gain", "Cost"]:
         tmp = pd.DataFrame(index=dates)
 
-        for i, df0 in enumerate([sgd_df, fund_df, srs_df]):
+        for i, df0 in enumerate([sgd_df, core_df, enhanced_df, srs_df]):
             tmp1 = df0[[c]].copy()
             tmp1.columns = [f"x{i}"]
             tmp = tmp.join(tmp1)
@@ -155,9 +158,13 @@ def get_overall_portfolio(inclu_bond: bool = True) -> pd.DataFrame:
             usd_df.query("index == @start_date")["Portfolio"].iloc[-1]
             * usd_df.query("index == @start_date")["USDSGD"].iloc[-1],
         ],
-        "Fund": [
-            fund_df["Portfolio"].iloc[-1],
-            fund_df.query("index == @start_date")["Portfolio"].iloc[-1],
+        "Core": [
+            core_df["Portfolio"].iloc[-1],
+            core_df.query("index == @start_date")["Portfolio"].iloc[-1],
+        ],
+        "Enhanced": [
+            enhanced_df["Portfolio"].iloc[-1],
+            enhanced_df.query("index == @start_date")["Portfolio"].iloc[-1],
         ],
         "SRS": [
             srs_df["Portfolio"].iloc[-1],
@@ -174,21 +181,31 @@ def get_overall_portfolio(inclu_bond: bool = True) -> pd.DataFrame:
 
 
 @st.cache_data
-def sum_by_time(sheet: str, last_date: date, timeunits: str) -> pd.DataFrame:
+def sum_by_time(cat: str, last_date: date, timeunits: str) -> pd.DataFrame:
     def filter_before_today(df):
         return df[df.index <= last_date.isoformat()]
 
-    df = filter_before_today(F.agg_daily_cost(sheet, CFG.FLOWDATA))
+    if cat == "Core":
+        sheet = "Fund"
+        filter = CFG.FUNDS_CORE
+    elif cat == "Enhanced":
+        sheet = "Fund"
+        filter = CFG.FUNDS_ENHANCED
+    else:
+        sheet = cat
+        filter = None
+
+    df = filter_before_today(F.agg_daily_cost(sheet, CFG.FLOWDATA, filter=filter))
     df = df.resample(timeunits).sum()
     df.columns = ["cost"]
 
-    div_df = filter_before_today(F.agg_daily_gain("Div", sheet, CFG.FLOWDATA))
+    div_df = filter_before_today(F.agg_daily_gain("Div", sheet, CFG.FLOWDATA, filter=filter))
     if not div_df.empty:
         div_df = div_df.resample(timeunits).sum()
         div_df.columns = ["div"]
         df = df.join(div_df, how="outer")
 
-    gain_df = filter_before_today(F.agg_daily_gain("Sell", sheet, CFG.FLOWDATA))
+    gain_df = filter_before_today(F.agg_daily_gain("Sell", sheet, CFG.FLOWDATA, filter=filter))
     if not gain_df.empty:
         gain_df = gain_df.resample(timeunits).sum()
         gain_df.columns = ["gain"]
@@ -202,34 +219,34 @@ def page_data(last_date: date) -> None:
     """Portfolio page."""
     tentative_start_date = get_start_date(last_date)
 
-    sheets = ["Overall", "Overall Equity", "SGD", "USD", "Fund", "SRS", "Bond"]
-    tabs = st.tabs(sheets)
+    cats = ["Overall", "Overall Equity", "SGD", "USD", "Core", "Enhanced", "SRS", "Bond"]
+    tabs = st.tabs(cats)
 
-    for tab, sheet in zip(tabs, sheets):
+    for tab, cat in zip(tabs, cats):
         with tab:
-            tab_portfolio(last_date, sheet, tentative_start_date)
+            tab_portfolio(last_date, cat, tentative_start_date)
 
 
-def tab_portfolio(last_date: date, sheet: str, tentative_start_date: date) -> None:
+def tab_portfolio(last_date: date, cat: str, tentative_start_date: date) -> None:
     """Portfolio page."""
-    if sheet == "Overall":
+    if cat == "Overall":
         df, _ = get_overall_portfolio()
-    elif sheet == "Overall Equity":
+    elif cat == "Overall Equity":
         df, _ = get_overall_portfolio(inclu_bond=False)
     else:
-        df = get_portfolio(sheet)
+        df = get_portfolio(cat)
 
     _df = subset_portfolio(df, tentative_start_date)
     if _df is None:
         st.warning("No data found")
         return
 
-    if sheet in ["USD"]:
-        currency = st.radio("Currency", [sheet, "SGD"])
+    if cat in ["USD"]:
+        currency = st.radio("Currency", [cat, "SGD"])
     else:
         currency = None
 
-    subset_df = rebase_table(_df, sheet, currency)
+    subset_df = rebase_table(_df, cat, currency)
 
     st.write(subset_df.index[-1].strftime("Last updated on `%Y-%m-%d`"))
 
@@ -256,13 +273,13 @@ def tab_portfolio(last_date: date, sheet: str, tentative_start_date: date) -> No
     d1.metric("Realised Gain", f"{realised_gain:,.2f}")
     d2.metric("Paper Gain", f"{paper_gain:,.2f}")
 
-    if sheet in ["Overall", "Overall Equity"]:
+    if cat in ["Overall", "Overall Equity"]:
         st.line_chart(subset_df[["Portfolio", "Cost"]])
         st.line_chart(subset_df[["Net_Gain", "Paper_Gain", "Div"]])
-    elif sheet == "USD":
+    elif cat == "USD":
         st.line_chart(subset_df[["Portfolio", "Cost", "Equity", "Cash"]])
         st.line_chart(subset_df[["Paper_Gain"]])
-    elif sheet == "SGD":
+    elif cat == "SGD":
         st.line_chart(subset_df[["Benchmark", "Portfolio", "Cost"]])
         st.line_chart(subset_df[["Net_Gain", "Paper_Gain", "Div"]])
     else:
@@ -278,7 +295,7 @@ def tab_portfolio(last_date: date, sheet: str, tentative_start_date: date) -> No
     tmp_df["min"] = tmp_df["Net_Yield"].min()
     st.line_chart(tmp_df)
 
-    if sheet == "USD":
+    if cat == "USD":
         cols = [
             "Portfolio",
             "Cost",
@@ -302,7 +319,7 @@ def tab_portfolio(last_date: date, sheet: str, tentative_start_date: date) -> No
         ]
     st.write(subset_df[cols].tail(30)[::-1])
 
-    if sheet in ["Overall", "Overall Equity"]:
+    if cat in ["Overall", "Overall Equity"]:
         return
 
     tu_map = {
@@ -310,10 +327,8 @@ def tab_portfolio(last_date: date, sheet: str, tentative_start_date: date) -> No
         "yearquarter": "1QE",
         "year": "1YE",
     }
-    timeunits = st.pills(
-        "Select time units", list(tu_map.keys()), default="yearquarter", key=sheet
-    )
-    df = sum_by_time(sheet, last_date, tu_map[timeunits])
+    timeunits = st.pills("Select time units", list(tu_map.keys()), default="yearquarter", key=cat)
+    df = sum_by_time(cat, last_date, tu_map[timeunits])
     st.altair_chart(barchart(df[["cost"]], "Cost", timeunits), width="stretch")
     if "div" in df.columns:
         st.altair_chart(barchart(df[["div"]], "Dividends", timeunits), width="stretch")
@@ -323,7 +338,7 @@ def tab_portfolio(last_date: date, sheet: str, tentative_start_date: date) -> No
             width="stretch",
         )
 
-    if sheet == "SGD":
+    if cat == "SGD":
         st.header("Assess portfolio")
         for i in [2, 1]:
             st.subheader(f"{i}Y")
