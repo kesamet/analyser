@@ -6,14 +6,14 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "loguru==0.7.3",
-    "matplotlib>=3.10.1",
+    "matplotlib==3.10.1",
     "numpy==1.26.4",
     "omegaconf==2.3.0",
     "openpyxl==3.1.5",
     "pandas==2.2.3",
     "plotly==6.5.1",
     "python-dotenv==1.2.1",
-    "questionary>=2.1.1",
+    "questionary==2.1.1",
     "scipy==1.16.3",
     "streamlit==1.59.1",
     "streamlit-option-menu==0.3.13",
@@ -24,7 +24,7 @@ dependencies = [
 ]
 
 [tool.ruff]
-line-length = 99
+line-length = 100
 
 [tool.ruff.lint]
 # Add the `line-too-long` rule to the enforced rule set.

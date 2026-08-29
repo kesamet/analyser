@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 Unified CLI command runner for Portfolio Manager.
 Provides short-cut arguments and an interactive selection menu.

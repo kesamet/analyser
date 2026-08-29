@@ -1,6 +1,0 @@
--r requirements.txt
-langchain==0.3.25
-langchain-google-genai==2.1.4
-matplotlib==3.10.1
-seaborn==0.13.2
-ruff==0.11.8
