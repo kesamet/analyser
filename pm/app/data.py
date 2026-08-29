@@ -1,13 +1,12 @@
 from datetime import date, timedelta
-from dateutil import parser
 
 import pandas as pd
 import streamlit as st
-
-from analyser.data import get_data, rebase, annualise
-from analyser.plots import barchart
+from dateutil import parser
 
 import pm.portfolio as F
+from analyser.data import annualise, get_data, rebase
+from analyser.plots import barchart
 from pm import CFG
 from pm.app.utils import get_start_date
 

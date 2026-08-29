@@ -2,10 +2,10 @@
 Compute efficient frontier using Modern Portfolio Theory.
 """
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy.optimize as sco
-import matplotlib.pyplot as plt
 from IPython.display import display
 
 plt.style.use("seaborn-darkgrid")
@@ -184,7 +184,7 @@ def display_ef(avg_rets, cov_mat, rfr, bm_vol):
         print(f"{txt}: return {ann_ret[i]:.2f}, volatility: {ann_vol[i]:.2f}")
 
     print("-" * 80)
-    fig, ax = plt.subplots(figsize=(10, 7))
+    _, ax = plt.subplots(figsize=(10, 7))
     ax.scatter(ann_vol, ann_ret, marker="o", s=100)
 
     for i, txt in enumerate(colnames):

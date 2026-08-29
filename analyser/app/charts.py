@@ -4,11 +4,11 @@ Charting
 
 from datetime import datetime, timedelta
 
+import altair as alt
 import numpy as np
 import pandas as pd
-import ta
-import altair as alt
 import streamlit as st
+import ta
 
 from analyser.app.constants import str2days
 from analyser.data import get_data_ohlcv, pct_change
@@ -55,7 +55,7 @@ def add_custom_trend(df: pd.DataFrame, close: str, fillna: bool, colprefix: str)
     return df
 
 
-def chart_candlestick(source: pd.DataFrame, cols: list = []) -> None:
+def chart_candlestick(source: pd.DataFrame, cols: list | None = None) -> None:
     """Candlestick chart."""
     base = alt.Chart(source).encode(
         alt.X("date:T"),
@@ -70,17 +70,18 @@ def chart_candlestick(source: pd.DataFrame, cols: list = []) -> None:
     )
     bar = base.mark_bar().encode(alt.Y("open:Q"), alt.Y2("close:Q"))
     chart = rule + bar
-    for col in cols:
-        line = (
-            alt.Chart(source)
-            .mark_line(color="gray")
-            .encode(
-                alt.X("date:T"),
-                alt.Y(col),
-                tooltip=["date", alt.Tooltip(col, format=".4f")],
+    if cols is not None:
+        for col in cols:
+            line = (
+                alt.Chart(source)
+                .mark_line(color="gray")
+                .encode(
+                    alt.X("date:T"),
+                    alt.Y(col),
+                    tooltip=["date", alt.Tooltip(col, format=".4f")],
+                )
             )
-        )
-        chart += line
+            chart += line
     return chart
 
 
@@ -145,9 +146,8 @@ def page_ta(last_date: datetime, eq_dict: dict, **kwargs) -> None:
     hist_values, hist_indexes = np.histogram(df1["y"], bins=np.arange(-10, 10, 0.5))
     st.bar_chart(pd.DataFrame(data=hist_values, index=hist_indexes[0:-1]))
     st.write(
-        "Target value min: `{0:.2f}%`; max: `{1:.2f}%`; mean: `{2:.2f}%`; std: `{3:.2f}`".format(
-            np.min(df1["y"]), np.max(df1["y"]), np.mean(df1["y"]), np.std(df1["y"])
-        )
+        f"Target value min: `{df1['y'].min():.2f}%`; max: `{df1['y'].max():.2f}%`; "
+        f"mean: `{df1['y'].mean():.2f}%`; std: `{df1['y'].std():.2f}`"
     )
 
     # Univariate Analysis

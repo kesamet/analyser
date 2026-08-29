@@ -1,8 +1,8 @@
 from datetime import datetime
-from typing import Optional
 
 import numpy as np
 import pandas as pd
+import questionary
 
 from analyser.data import get_data
 from analyser.plots import plot_normalized_data
@@ -30,9 +30,9 @@ def _get_data(
 
 def get_portfolio_value(
     prices: pd.DataFrame,
-    allocs: Optional[np.ndarray] = None,
+    allocs: np.ndarray | None = None,
     start_val: float = 1.0,
-    units: Optional[int] = None,
+    units: int | None = None,
 ) -> pd.Series:
     """Compute daily portfolio value given stock prices, allocations and
     starting value, or units.
@@ -59,9 +59,9 @@ def portfolio_const(
     start_date: str,
     end_date: str,
     symbols: list[str],
-    allocs: Optional[np.ndarray] = None,
+    allocs: np.ndarray | None = None,
     start_val: float = 1.0,
-    units: Optional[int] = None,
+    units: int | None = None,
 ) -> pd.Series:
     """Constructs a constant portfolio.
 
@@ -165,20 +165,19 @@ def assess_portfolio(
     )
 
 
-def print_results(dct: dict, results_df: pd.DataFrame, ts_df: pd.DataFrame) -> None:
+def print_results(dct: dict, results_df: pd.DataFrame, ts_df: pd.DataFrame) -> pd.DataFrame:
     """Print statistics."""
     import matplotlib.pyplot as plt
-    from IPython.display import display
 
     print("Date Range: {} to {}\n".format(dct["start_date"], dct["end_date"]))
     print("Final Portfolio Value: {:.2f}".format(dct["port_val"]))
-
-    display(results_df)
 
     # Compare daily portfolio value with index using a normalized plot
     _, ax = plt.subplots()
     plot_normalized_data(ts_df, title="Daily portfolio value and benchmark", ax=ax)
     plt.show()
+
+    return results_df
 
 
 def _map_stock_to_symbol(sheet: str, xlsx_file: str) -> pd.DataFrame:
@@ -195,7 +194,7 @@ def _map_stock_to_symbol(sheet: str, xlsx_file: str) -> pd.DataFrame:
 
 def _load_fund_portvals(filter: dict) -> pd.Series:
     dfs = None
-    for fn in filter.keys():
+    for fn in filter:
         df = pd.read_csv(
             f"{CFG.SUMMARY_DIR}/{fn}.csv",
             index_col="date",
@@ -471,52 +470,45 @@ def get_portfolio(end_date, start_date, sheet, xlsx_file, filter=None):
     return df
 
 
+def select_portfolios() -> list[str]:
+    """Select which portfolios to generate using questionary checkbox."""
+    choices = [
+        questionary.Choice(title="SGD Portfolio", value="sgd"),
+        questionary.Choice(title="USD Portfolio", value="usd"),
+        questionary.Choice(title="Core Portfolio", value="core"),
+        questionary.Choice(title="Enhanced Portfolio", value="enhanced"),
+        questionary.Choice(title="SRS Portfolio", value="srs"),
+        questionary.Choice(title="Bond Portfolio", value="bond"),
+    ]
+    selected = questionary.checkbox(
+        "Select portfolios to generate (Space to select, Enter to confirm, Default: all):",
+        choices=choices,
+    ).ask()
+    if selected is None:
+        raise KeyboardInterrupt("Selection cancelled")
+    return selected if selected else ["sgd", "usd", "core", "enhanced", "srs", "bond"]
+
+
+def main():
+    end_date = datetime.now().date().isoformat()
+    selected = select_portfolios()
+
+    portfolio_configs = {
+        "sgd": ("SGD", "2015-03-23", None, "portfolio_sgd.csv"),
+        "usd": ("USD", "2019-07-01", None, "portfolio_usd.csv"),
+        "core": ("Fund", "2021-04-06", CFG.FUNDS_CORE, "portfolio_core.csv"),
+        "enhanced": ("Fund", "2021-04-06", CFG.FUNDS_ENHANCED, "portfolio_enhanced.csv"),
+        "srs": ("SRS", "2019-02-01", None, "portfolio_srs.csv"),
+        "bond": ("Bond", "2015-11-01", None, "portfolio_bond.csv"),
+    }
+    for key in selected:
+        sheet, start_date, filter_dict, output_file = portfolio_configs[key]
+        logger.info(f"Generating {output_file}...")
+        df = get_portfolio(
+            end_date, start_date, sheet, f"{CFG.SUMMARY_DIR}/aSummary.xlsx", filter=filter_dict
+        )
+        df.to_csv(f"{CFG.SUMMARY_DIR}/{output_file}")
+
+
 if __name__ == "__main__":
-    i = input("  Enter sheet (SGD=1, USD=2, Core=3, Enhanced=4, SRS=5, Bond=6) (default=All): ")
-    i = 0 if i == "" else int(i)
-    if i not in range(7):
-        raise ValueError("Invalid sheet. Number must be between 1 and 6.")
-
-    end_date = datetime.today().date().isoformat()
-
-    if i in [0, 1]:
-        logger.info("Generating portfolio_sgd...")
-        sgd_df = get_portfolio(end_date, "2015-03-23", "SGD", f"{CFG.SUMMARY_DIR}/aSummary.xlsx")
-        sgd_df.to_csv(f"{CFG.SUMMARY_DIR}/portfolio_sgd.csv")
-
-    if i in [0, 2]:
-        logger.info("Generating portfolio_usd...")
-        usd_df = get_portfolio(end_date, "2019-07-01", "USD", f"{CFG.SUMMARY_DIR}/aSummary.xlsx")
-        usd_df.to_csv(f"{CFG.SUMMARY_DIR}/portfolio_usd.csv")
-
-    if i in [0, 3]:
-        logger.info("Generating portfolio_core...")
-        core_df = get_portfolio(
-            end_date,
-            "2021-04-06",
-            "Fund",
-            f"{CFG.SUMMARY_DIR}/aSummary.xlsx",
-            filter=CFG.FUNDS_CORE,
-        )
-        core_df.to_csv(f"{CFG.SUMMARY_DIR}/portfolio_core.csv")
-
-    if i in [0, 4]:
-        logger.info("Generating portfolio_enhanced ...")
-        enh_df = get_portfolio(
-            end_date,
-            "2021-04-06",
-            "Fund",
-            f"{CFG.SUMMARY_DIR}/aSummary.xlsx",
-            filter=CFG.FUNDS_ENHANCED,
-        )
-        enh_df.to_csv(f"{CFG.SUMMARY_DIR}/portfolio_enhanced.csv")
-
-    if i in [0, 5]:
-        logger.info("Generating portfolio_srs...")
-        srs_df = get_portfolio(end_date, "2019-02-01", "SRS", f"{CFG.SUMMARY_DIR}/aSummary.xlsx")
-        srs_df.to_csv(f"{CFG.SUMMARY_DIR}/portfolio_srs.csv")
-
-    if i in [0, 6]:
-        logger.info("Generating portfolio_bond...")
-        bond_df = get_portfolio(end_date, "2015-11-01", "Bond", f"{CFG.SUMMARY_DIR}/aSummary.xlsx")
-        bond_df.to_csv(f"{CFG.SUMMARY_DIR}/portfolio_bond.csv")
+    main()

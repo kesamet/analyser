@@ -6,7 +6,7 @@ import streamlit as st
 from analyser.app.constants import str2days
 from analyser.data import get_data
 from pm import CFG
-from pm.ta import linearfit, compute_trend
+from pm.ta import compute_trend, linearfit
 
 
 @st.cache_data
@@ -14,7 +14,7 @@ def _table_trend_by_days(last_date: date, days: int) -> pd.DataFrame:
     symbols = list(CFG.SYMBOLS.values())
     dates = pd.date_range(last_date - timedelta(days=days), last_date)
 
-    results = list()
+    results = []
     df1 = get_data(symbols, dates, col="adjclose", dirname=CFG.DATA_DIR)
     for symbol in symbols:
         _, level, res, grad, pred = linearfit(df1[symbol])
@@ -47,7 +47,7 @@ def _table_trend_by_symbol(last_date: date, symbol: str) -> pd.DataFrame:
     df = get_data([symbol], dates, col="adjclose", dirname=CFG.DATA_DIR)
 
     periods = ["3M", "6M", "1Y", "2Y", "3Y"]
-    results = list()
+    results = []
     for period in periods:
         date = last_date - timedelta(days=str2days[period])
         df1 = df[df.index.date >= date]

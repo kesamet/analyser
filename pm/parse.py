@@ -3,8 +3,8 @@ import operator
 import os
 import tempfile
 
-import pandas as pd
 import fitz
+import pandas as pd
 import tabula
 from PIL import Image
 
@@ -87,7 +87,7 @@ def bbsearch(
     search1 = page.search_for(heading)
     search2 = page.search_for(ending)
 
-    bbs = list()
+    bbs = []
     for xmin, xmax in xs:
         alls = sorted(
             [[rect1.y0, 0] for rect1 in search1 if xmin <= rect1.x1 <= xmax]
@@ -104,7 +104,7 @@ def extract_image(
     src: fitz.Document,
     spage: fitz.Page,
     rx: fitz.Rect,
-    save: str = None,
+    save: str | None = None,
 ) -> None:
     """Copy image from a page to a new PDF."""
     new_doc = fitz.open()

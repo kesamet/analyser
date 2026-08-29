@@ -21,7 +21,7 @@ def uri_encode_path(path: str, mime: str = "image/png") -> str:
 
 def add_header(path: str) -> None:
     st.markdown(
-        "<img src='{}' class='img-fluid'>".format(uri_encode_path(path)),
+        f"<img src='{uri_encode_path(path)}' class='img-fluid'>",
         unsafe_allow_html=True,
     )
 
@@ -156,6 +156,6 @@ def colour_text(notes: str, color: str = "red") -> None:
 def local_css(filename: str) -> None:
     with open(filename, "r") as f:
         st.markdown(
-            "<style>{}</style>".format(f.read()),
+            f"<style>{f.read()}</style>",
             unsafe_allow_html=True,
         )
