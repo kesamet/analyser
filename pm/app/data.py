@@ -57,27 +57,6 @@ def subset_portfolio(df: pd.DataFrame, start_date: str) -> pd.DataFrame:
 @st.cache_data
 def rebase_table(subset_df: pd.DataFrame) -> pd.DataFrame:
     df = subset_df.copy()
-
-    # if sheet != currency and currency == "SGD":
-    #     if f"{sheet}SGD" in df.columns:
-    #         fx = df[f"{sheet}SGD"]
-    #     else:
-    #         fx = 1 / df[f"SGD{sheet}"]
-
-    #     for c in [
-    #         "Cost",
-    #         "Portfolio",
-    #         "Div",
-    #         "Realised_Gain",
-    #         "Paper_Gain",
-    #         "Net_Gain",
-    #     ]:
-    #         df[c] *= fx
-    #     if "Cash" in df.columns:
-    #         df["Cash"] *= fx
-    #     if "Equity" in df.columns:
-    #         df["Equity"] *= fx
-
     df["Div"] -= df["Div"].iloc[0]
     df["Realised_Gain"] -= df["Realised_Gain"].iloc[0]
     df["Paper_Gain"] -= df["Paper_Gain"].iloc[0]
