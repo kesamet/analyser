@@ -12,7 +12,7 @@ def page_summary(last_date: date) -> None:
     _, last = get_overall_portfolio()
 
     df = pd.DataFrame.from_dict(last, orient="index", columns=["Value", "start"])
-    df = df.loc[["SRS", "Core", "Enhanced", "USD", "SGD", "Bond"]]
+    df = df.loc[["SRS", "Core", "Private", "USD", "SGD", "Bond"]]
     df["% Change YTD"] = (df["Value"] / df["start"] - 1) * 100
     total = df["Value"].sum()
     st.metric("Portfolio Value (SGD)", f"{total:,.2f}")
@@ -28,7 +28,7 @@ def page_summary(last_date: date) -> None:
 
     names = ["World", "SGD", "CCE"]
     data = [
-        last["USD"][0] + last["Core"][0] + last["Enhanced"][0] + last["SRS"][0],
+        last["USD"][0] + last["Core"][0] + last["Private"][0] + last["SRS"][0],
         last["SGD"][0],
         last["Bond"][0],
     ]
