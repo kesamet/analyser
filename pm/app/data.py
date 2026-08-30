@@ -1,13 +1,12 @@
 from datetime import date, timedelta
-from dateutil import parser
 
 import pandas as pd
 import streamlit as st
-
-from analyser.data import get_data, rebase, annualise
-from analyser.plots import barchart
+from dateutil import parser
 
 import pm.portfolio as F
+from analyser.data import annualise, get_data, rebase
+from analyser.plots import barchart
 from pm import CFG
 from pm.app.utils import get_start_date
 
@@ -28,8 +27,8 @@ def get_portfolio(sheet: str) -> pd.DataFrame:
         return _load_portfolio("data/summary/portfolio_srs.csv")
     elif sheet == "Core":
         return _load_portfolio("data/summary/portfolio_core.csv")
-    elif sheet == "Enhanced":
-        return _load_portfolio("data/summary/portfolio_enhanced.csv")
+    elif sheet == "Private":
+        return _load_portfolio("data/summary/portfolio_private.csv")
     elif sheet == "Bond":
         return _load_portfolio("data/summary/portfolio_bond.csv")
     elif sheet == "SGD":
@@ -56,29 +55,8 @@ def subset_portfolio(df: pd.DataFrame, start_date: str) -> pd.DataFrame:
 
 
 @st.cache_data
-def rebase_table(subset_df: pd.DataFrame, sheet: str, currency: str | None = None) -> pd.DataFrame:
+def rebase_table(subset_df: pd.DataFrame) -> pd.DataFrame:
     df = subset_df.copy()
-
-    if sheet != currency and currency == "SGD":
-        if f"{sheet}SGD" in df.columns:
-            fx = df[f"{sheet}SGD"]
-        else:
-            fx = 1 / df[f"SGD{sheet}"]
-
-        for c in [
-            "Cost",
-            "Portfolio",
-            "Div",
-            "Realised_Gain",
-            "Paper_Gain",
-            "Net_Gain",
-        ]:
-            df[c] *= fx
-        if "Cash" in df.columns:
-            df["Cash"] *= fx
-        if "Equity" in df.columns:
-            df["Equity"] *= fx
-
     df["Div"] -= df["Div"].iloc[0]
     df["Realised_Gain"] -= df["Realised_Gain"].iloc[0]
     df["Paper_Gain"] -= df["Paper_Gain"].iloc[0]
@@ -111,7 +89,7 @@ def get_overall_portfolio(inclu_bond: bool = True) -> pd.DataFrame:
     sgd_df = get_portfolio("SGD")
     usd_df = get_portfolio("USD")
     core_df = get_portfolio("Core")
-    enhanced_df = get_portfolio("Enhanced")
+    private_df = get_portfolio("Private")
     srs_df = get_portfolio("SRS")
     if inclu_bond:
         bond_df = get_portfolio("Bond")
@@ -122,15 +100,10 @@ def get_overall_portfolio(inclu_bond: bool = True) -> pd.DataFrame:
     for c in ["Div", "Realised_Gain", "Paper_Gain", "Cost"]:
         tmp = pd.DataFrame(index=dates)
 
-        for i, df0 in enumerate([sgd_df, core_df, enhanced_df, srs_df]):
+        for i, df0 in enumerate([sgd_df, usd_df, core_df, private_df, srs_df]):
             tmp1 = df0[[c]].copy()
             tmp1.columns = [f"x{i}"]
             tmp = tmp.join(tmp1)
-
-        tmp2 = usd_df[[c]].copy()
-        tmp2.columns = ["y2"]
-        tmp2["y2"] = tmp2["y2"] * usd_df["USDSGD"]
-        tmp = tmp.join(tmp2)
 
         if inclu_bond:
             tmp3 = bond_df[[c]].copy()
@@ -154,17 +127,16 @@ def get_overall_portfolio(inclu_bond: bool = True) -> pd.DataFrame:
             sgd_df.query("index == @start_date")["Portfolio"].iloc[-1],
         ],
         "USD": [
-            usd_df["Portfolio"].iloc[-1] * usd_df["USDSGD"].iloc[-1],
-            usd_df.query("index == @start_date")["Portfolio"].iloc[-1]
-            * usd_df.query("index == @start_date")["USDSGD"].iloc[-1],
+            usd_df["Portfolio"].iloc[-1],
+            usd_df.query("index == @start_date")["Portfolio"].iloc[-1],
         ],
         "Core": [
             core_df["Portfolio"].iloc[-1],
             core_df.query("index == @start_date")["Portfolio"].iloc[-1],
         ],
-        "Enhanced": [
-            enhanced_df["Portfolio"].iloc[-1],
-            enhanced_df.query("index == @start_date")["Portfolio"].iloc[-1],
+        "Private": [
+            private_df["Portfolio"].iloc[-1],
+            private_df.query("index == @start_date")["Portfolio"].iloc[-1],
         ],
         "SRS": [
             srs_df["Portfolio"].iloc[-1],
@@ -188,9 +160,9 @@ def sum_by_time(cat: str, last_date: date, timeunits: str) -> pd.DataFrame:
     if cat == "Core":
         sheet = "Fund"
         filter = CFG.FUNDS_CORE
-    elif cat == "Enhanced":
+    elif cat == "Private":
         sheet = "Fund"
-        filter = CFG.FUNDS_ENHANCED
+        filter = CFG.FUNDS_PRIVATE
     else:
         sheet = cat
         filter = None
@@ -219,7 +191,7 @@ def page_data(last_date: date) -> None:
     """Portfolio page."""
     tentative_start_date = get_start_date(last_date)
 
-    cats = ["Overall", "Overall Equity", "SGD", "USD", "Core", "Enhanced", "SRS", "Bond"]
+    cats = ["Overall", "Overall Equity", "SGD", "USD", "Core", "Private", "SRS", "Bond"]
     tabs = st.tabs(cats)
 
     for tab, cat in zip(tabs, cats):
@@ -241,12 +213,7 @@ def tab_portfolio(last_date: date, cat: str, tentative_start_date: date) -> None
         st.warning("No data found")
         return
 
-    if cat in ["USD"]:
-        currency = st.radio("Currency", [cat, "SGD"])
-    else:
-        currency = None
-
-    subset_df = rebase_table(_df, cat, currency)
+    subset_df = rebase_table(_df)
 
     st.write(subset_df.index[-1].strftime("Last updated on `%Y-%m-%d`"))
 

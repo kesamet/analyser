@@ -11,7 +11,6 @@ from tqdm import tqdm
 from analyser.data import download_yfinance
 from symbols import SYMBOLS
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-s", "--start_date", default="2015-01-01", type=str)

@@ -100,8 +100,8 @@ def barchart(source: pd.DataFrame, title: str = "", timeunits: str = "yearmonth"
 
 def py_ringchart(values: list, labels: list, colors: list, title: str | None = None):
     """Ring chart."""
-    import matplotlib.pyplot as plt
     import matplotlib.lines as mlines
+    import matplotlib.pyplot as plt
 
     fig, ax = plt.subplots()
     fig.set_size_inches(4, 4)
@@ -112,7 +112,7 @@ def py_ringchart(values: list, labels: list, colors: list, title: str | None = N
     plt.setp(pie, width=width, edgecolor="white")
 
     # setting up the legend
-    bars = list()
+    bars = []
     for label, color in zip(labels, colors):
         bars.append(
             mlines.Line2D(
@@ -143,11 +143,11 @@ def plotly_ringchart(values: list, labels: list, title: str = ""):
 def plotly_sunburst(names: list, parents: list, values: list, title: str = ""):
     import plotly.express as px
 
-    data = dict(
-        names=names,
-        parents=parents,
-        values=values,
-    )
+    data = {
+        "names": names,
+        "parents": parents,
+        "values": values,
+    }
     fig = px.sunburst(
         data,
         names="names",

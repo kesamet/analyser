@@ -3,13 +3,12 @@ Script to download data.
 """
 
 import argparse
-from datetime import date
+from datetime import datetime
 
 from tqdm import tqdm
 
 from analyser.data import download_yfinance
 from pm import CFG, logger
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -18,7 +17,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     start_date = args.start_date
-    end_date = date.today().strftime("%Y-%m-%d")
+    end_date = datetime.now().date().isoformat()
     dest = args.dest or CFG.DATA_DIR
     logger.info(f"Downloading to {dest}")
     logger.info(f"Period: {start_date} to {end_date}\n")

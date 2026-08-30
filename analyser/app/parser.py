@@ -8,19 +8,19 @@ import tempfile
 import streamlit as st
 
 from analyser.app.constants import (
-    PHRASES_SEARCH,
-    KEYWORDS_EXTRACT_SLIDES,
     KEYWORDS_EXTRACT_REPORT,
+    KEYWORDS_EXTRACT_SLIDES,
+    PHRASES_SEARCH,
 )
+from analyser.app.utils import download_button, get_pdf_display
 from analyser.parse import (
-    perform,
-    extract_pages_keyword,
-    extract_all_lines_slides,
     extract_all_lines_report,
+    extract_all_lines_slides,
     extract_most_plausible,
+    extract_pages_keyword,
     page_parse_table,
+    perform,
 )
-from analyser.app.utils import get_pdf_display, download_button
 
 
 def search_highlight(**kwargs):

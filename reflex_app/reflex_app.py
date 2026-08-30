@@ -1,11 +1,9 @@
-import asyncio
-import os
 import json
-from typing import Optional
+import os
+
 import reflex as rx
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
-
 
 # Default template from mcp_server.py
 DEFAULT_TEMPLATE = """Retrieve the following metrics from the document. 
@@ -44,7 +42,7 @@ class State(rx.State):
     """The app state."""
 
     # File upload
-    uploaded_file: Optional[str] = None
+    uploaded_file: str | None = None
     file_name: str = ""
 
     # Configuration
@@ -146,7 +144,7 @@ class State(rx.State):
                     self.success_message = "Analysis completed successfully!"
 
         except Exception as e:
-            self.error_message = f"Error during analysis: {str(e)}"
+            self.error_message = f"Error during analysis: {e!s}"
 
         finally:
             self.is_analyzing = False

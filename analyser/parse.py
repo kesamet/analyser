@@ -4,11 +4,10 @@ Parse reports.
 
 import os
 import tempfile
-from typing import List, Tuple, Union
 
+import fitz
 import numpy as np
 import pandas as pd
-import fitz
 
 
 def perform(func, filebytes, **kwargs):
@@ -26,18 +25,18 @@ def perform(func, filebytes, **kwargs):
 
 def search_for_keywords(
     doc: fitz.Document,
-    keywords: Union[str, List[str]],
-    page_nums: list = None,
-) -> List[fitz.Rect]:
+    keywords: str | list[str],
+    page_nums: list | None = None,
+) -> list[fitz.Rect]:
     """Search for keywords in a doc."""
     if isinstance(keywords, str):
         keywords = [keywords]
     if page_nums is None:
         page_nums = range(len(doc))
 
-    all_instances = dict()
+    all_instances = {}
     for i in page_nums:
-        instances = list()
+        instances = []
         for keyword in keywords:
             instances.extend(doc[i].search_for(keyword))
         if len(instances) > 0:
@@ -47,24 +46,24 @@ def search_for_keywords(
 
 def and_search_for_keywords(
     doc: fitz.Document,
-    keywords: List[str],
-    page_nums: list = None,
-) -> List[fitz.Rect]:
+    keywords: list[str],
+    page_nums: list | None = None,
+) -> list[fitz.Rect]:
     """Search for keywords in a doc. All keywords must present on a single page."""
     all_instances = search_for_keywords(doc, keywords[0], page_nums=page_nums)
     for keyword in keywords:
         tmp = all_instances.copy()
         all_instances = search_for_keywords(doc, keyword, page_nums=list(tmp.keys()))
-        for page_num in all_instances.keys():
+        for page_num in all_instances:
             all_instances[page_num].extend(tmp[page_num])
     return all_instances
 
 
 def extract_pages_keyword(
     filename: str,
-    keywords: Union[str, List[str]],
+    keywords: str | list[str],
     mode: str = "or",
-) -> Tuple[fitz.Document, list]:
+) -> tuple[fitz.Document, list]:
     """Select pages with keyword from a PDF."""
     doc = fitz.Document(filename)
     if isinstance(keywords, str):
@@ -81,7 +80,7 @@ def extract_pages_keyword(
     return None, None
 
 
-def extract_pages_highlighted(filename: str, all_instances: List[fitz.Rect]) -> fitz.Document:
+def extract_pages_highlighted(filename: str, all_instances: list[fitz.Rect]) -> fitz.Document:
     """Extract pages by page numbers with highlighted text."""
     doc = fitz.Document(filename)
     for page_num, rects in all_instances.items():
@@ -132,23 +131,23 @@ def get_closest(blocks: list, rect: fitz.Rect, thres: float = 0.8) -> str:
     return candidate
 
 
-def get_lines(blocks: list, rect: fitz.Rect, xbuf: float = 0.0, ybuf: float = 0.0) -> List[str]:
+def get_lines(blocks: list, rect: fitz.Rect, xbuf: float = 0.0, ybuf: float = 0.0) -> list[str]:
     """Get lines that intersect with the given bounding box."""
     new_rect = rect + [-xbuf, -ybuf, xbuf, ybuf]
-    lines = list()
+    lines = []
     for block in blocks:
         if "<image: " != block[4][:8] and new_rect.intersects(fitz.Rect(block[:4])):
             lines.append(block[4])
     return lines
 
 
-def extract_numeric(line: str) -> List[float]:
+def extract_numeric(line: str) -> list[float]:
     """Extract numerics from a string."""
     # nums = re.findall(r"\d+", line.replace(",", ""))
     for s in ["%", "$", "¢"]:
         line = line.replace(s, " ")
     line = line.replace(",", "")
-    nums = list()
+    nums = []
     for t in line.split():
         try:
             nums.append(float(t))
@@ -157,10 +156,10 @@ def extract_numeric(line: str) -> List[float]:
     return nums
 
 
-def extract_line_slides(doc: fitz.Document, keyword: str) -> List[dict]:
+def extract_line_slides(doc: fitz.Document, keyword: str) -> list[dict]:
     all_instances = search_for_keywords(doc, keyword)
 
-    results = list()
+    results = []
     for page_num, rects in all_instances.items():
         page = doc.load_page(page_num)
         blocks = page.get_text("blocks")
@@ -193,9 +192,9 @@ def extract_line_slides(doc: fitz.Document, keyword: str) -> List[dict]:
 
 def extract_all_lines_slides(filename: str, dict_keywords: dict) -> dict:
     doc = fitz.Document(filename)
-    all_results = dict()
+    all_results = {}
     for key, val in dict_keywords.items():
-        results = list()
+        results = []
         for keyword in val["keywords"]:
             extracted = extract_line_slides(doc, keyword)
             if extracted:
@@ -204,11 +203,11 @@ def extract_all_lines_slides(filename: str, dict_keywords: dict) -> dict:
     return all_results
 
 
-def extract_line_report(doc: fitz.Document, keyword: str, aux_kw: str) -> List[dict]:
+def extract_line_report(doc: fitz.Document, keyword: str, aux_kw: str) -> list[dict]:
     res = search_for_keywords(doc, aux_kw)
     all_instances = search_for_keywords(doc, keyword, page_nums=list(res.keys()))
 
-    results = list()
+    results = []
     for page_num, rects in all_instances.items():
         page = doc.load_page(page_num)
         blocks = page.get_text("blocks")
@@ -229,9 +228,9 @@ def extract_line_report(doc: fitz.Document, keyword: str, aux_kw: str) -> List[d
 
 def extract_all_lines_report(filename: str, dict_keywords: dict) -> dict:
     doc = fitz.Document(filename)
-    all_results = dict()
+    all_results = {}
     for key, val in dict_keywords.items():
-        results = list()
+        results = []
         for keyword in val["keywords"]:
             for aux_kw in val["aux_kws"]:
                 extracted = extract_line_report(doc, keyword, aux_kw)
@@ -246,7 +245,7 @@ def extract_most_plausible(all_results: dict) -> pd.DataFrame:
     return pd.DataFrame(lst, columns=["key", "Value"]).set_index("key")
 
 
-def ysearch(page: fitz.Page, heading: str, ending: str) -> Tuple[float, float]:
+def ysearch(page: fitz.Page, heading: str, ending: str) -> tuple[float, float]:
     """Get y-coords by heading and ending."""
     search1 = page.search_for(heading, hit_max=1)
     if not search1:
@@ -269,9 +268,9 @@ def parse_table(page: fitz.Page, heading: str, ending: str) -> tuple:
     """Parse table from a page."""
 
     def filter_page(page, ymin, ymax):
-        words = list()
-        xs = list()
-        ys = list()
+        words = []
+        xs = []
+        ys = []
         for w in page.get_text("words"):
             x0, y0, x1, y1 = w[:4]
             if ymin < y0 < ymax:
@@ -316,13 +315,13 @@ def parse_table(page: fitz.Page, heading: str, ending: str) -> tuple:
     part_ys = sorted(list(set(part_ys)))
     # print(f"  Number or rows, columns = {len(part_ys)}, {len(part_xs)}")
 
-    rects = list()
+    rects = []
     for rn, y in enumerate(part_ys):
         for cn, x in enumerate(part_xs):
             rects.append((fitz.Rect([x[0], y[0], x[1], y[1]]), rn, cn))
 
-    alltxt = dict()
-    notfound = list()
+    alltxt = {}
+    notfound = []
     for w in words:
         ir = fitz.Rect(w[:4])
         found = False

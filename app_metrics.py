@@ -1,8 +1,8 @@
 import os
 
 import streamlit as st
-from google import genai
 from dotenv import load_dotenv
+from google import genai
 from loguru import logger
 
 # Load environment variables

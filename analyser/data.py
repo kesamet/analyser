@@ -3,15 +3,14 @@ Load data.
 """
 
 import os
-from curl_cffi import requests
 from datetime import datetime, timedelta
-from typing import List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
+from curl_cffi import requests
 
 
-def download_nasdaqdata(symbol: str, **kwargs) -> Union[pd.DataFrame, None]:
+def download_nasdaqdata(symbol: str, **kwargs) -> pd.DataFrame | None:
     """Download data from nasdaqdatalink."""
     try:
         import nasdaqdatalink
@@ -25,8 +24,8 @@ def download_yfinance(
     symbol: str,
     start_date: str,
     end_date: str,
-    dirname: Optional[str] = None,
-) -> Union[pd.DataFrame, None]:
+    dirname: str | None = None,
+) -> pd.DataFrame | None:
     """Download price data from yfinance given ticker symbol."""
     import yfinance as yf
 
@@ -41,7 +40,7 @@ def download_yfinance(
 
 
 def get_data(
-    symbols: List[str],
+    symbols: list[str],
     dates: pd.DatetimeIndex,
     base_symbol: str = "ES3.SI",
     col: str = "adjclose",
@@ -119,7 +118,7 @@ def fill_missing_values(df: pd.DataFrame) -> None:
     df.bfill(inplace=True)
 
 
-def rebase(df: pd.DataFrame, date: str = None) -> pd.DataFrame:
+def rebase(df: pd.DataFrame, date: str | None = None) -> pd.DataFrame:
     """Rebase."""
     if date is not None:
         return df.divide(df[df.index == date].values[0])
@@ -141,7 +140,7 @@ def diff_change(df: pd.DataFrame, periods: int = 1, freq: int = 1) -> pd.DataFra
     return (df - df.shift(periods)) * freq
 
 
-def last_bdate(df: pd.DataFrame, date: datetime) -> Tuple[datetime, float]:
+def last_bdate(df: pd.DataFrame, date: datetime) -> tuple[datetime, float]:
     """Get value for the most recent business date."""
     date = datetime.strptime(date, "%Y-%m-%d")
     v = df.loc[df.index == date]

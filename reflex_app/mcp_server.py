@@ -1,10 +1,11 @@
 import os
 import sys
+
+from dotenv import load_dotenv
 from google import genai
 from google.genai import types
-from dotenv import load_dotenv
-from mcp.server.fastmcp import FastMCP
 from loguru import logger
+from mcp.server.fastmcp import FastMCP
 
 # Configure loguru to use stderr to avoid corrupting MCP stdout transport
 logger.remove()
@@ -67,7 +68,7 @@ mcp = FastMCP("PDF Analyzer")
     description="Analyzes a PDF file and extracts metrics.",
 )
 async def analyze_pdf(
-    pdf_path: str, prompt: str = None, model_name: str = "gemini-2.0-flash"
+    pdf_path: str, prompt: str | None = None, model_name: str = "gemini-2.0-flash"
 ) -> str:
     """
     Analyzes a PDF file using Gemini and extracts metrics.
@@ -104,7 +105,7 @@ async def analyze_pdf(
         return result
     except Exception as e:
         logger.error(f"Error during Gemini API call: {e}")
-        return f"An error occurred: {str(e)}"
+        return f"An error occurred: {e!s}"
 
 
 if __name__ == "__main__":

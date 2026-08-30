@@ -8,7 +8,7 @@ import streamlit as st
 from streamlit_option_menu import option_menu
 
 from analyser.app.charts import page_ta
-from analyser.app.parser import search_highlight, table_ocr, search_extract
+from analyser.app.parser import search_extract, search_highlight, table_ocr
 from symbols import SYMBOLS
 
 st.set_page_config(page_title="Analyser")
