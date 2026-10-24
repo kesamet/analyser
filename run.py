@@ -7,6 +7,8 @@ import argparse
 import subprocess
 import sys
 
+import questionary
+
 
 def run_command(cmd: list[str]) -> None:
     """Executes a command using subprocess, sharing the parent stdin/stdout."""
@@ -46,35 +48,32 @@ def app() -> None:
 
 def show_menu() -> None:
     """Displays an interactive selection menu and runs the selected option."""
-    print("\n" + "=" * 50)
-    print("       PORTFOLIO MANAGER CLI RUNNER       ")
-    print("=" * 50)
-    print("  1) Download stock data    (pm.download)")
-    print("  2) Update fund sheets     (pm.update)")
-    print("  3) Generate portfolio     (pm.portfolio)")
-    print("  4) Run Streamlit app      (app.py)")
-    print("  5) Exit")
-    print("=" * 50)
+    runners = [
+        "Download stock data    (pm.download)",
+        "Update fund sheets     (pm.update)",
+        "Generate portfolio     (pm.portfolio)",
+        "Run Streamlit app      (app.py)",
+    ]
+    choices = [
+        questionary.Choice(title=f"{i}: {runner}", value=i) for i, runner in enumerate(runners)
+    ]
+    choice = questionary.select(
+        "Select runner:",
+        choices=choices,
+    ).ask()
 
-    try:
-        choice = input("Select an option (1-5): ").strip()
-        print()
-        if choice == "1":
-            download()
-        elif choice == "2":
-            update()
-        elif choice == "3":
-            portfolio()
-        elif choice == "4":
-            app()
-        elif choice == "5" or choice.lower() in ("q", "exit", "quit"):
-            print("Goodbye!")
-            sys.exit(0)
-        else:
-            print("⚠️ Invalid choice. Please enter 1, 2, 3, 4, or 5.")
-    except KeyboardInterrupt:
-        print("\n\nGoodbye!")
-        sys.exit(0)
+    if choice == 0:
+        download()
+    elif choice == 1:
+        update()
+    elif choice == 2:
+        portfolio()
+    elif choice == 3:
+        app()
+    else:
+        print("👋 Selection cancelled. Goodbye!")
+
+    sys.exit(0)
 
 
 def main() -> None:
